@@ -30,7 +30,7 @@ export function AuthProvider({children}) {
         setAuthState({
           userToken: token,
           isAuthenticated: true,
-          selectedEventId: eventId || null,
+          selectedEventId: eventId,
           events,
         });
       }
@@ -40,7 +40,7 @@ export function AuthProvider({children}) {
 
   const setSelectedEventId = async id => {
     try {
-      await AsyncStorage.setItem('eventId', id);
+      await AsyncStorage.setItem('eventId', id.toString());
       setAuthState(prevState => ({...prevState, selectedEventId: id}));
     } catch (e) {
       console.error(e);
