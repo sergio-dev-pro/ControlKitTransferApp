@@ -33,7 +33,7 @@ function Navigators() {
           <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
           {!hasOnlyOneEvent && (
             <Drawer.Screen
-              name="EventSelection"
+              name="Mudar evento"
               component={EventSelectionDrawerScreen}
             />
           )}
@@ -43,7 +43,7 @@ function Navigators() {
           <Stack.Group screenOptions={{headerShown: false}}>
             {userToken ? (
               <Stack.Screen
-                name="EventSelection"
+                name="Mudar evento"
                 component={EventSelectionScreen}
                 options={{headerShown: false}}
               />

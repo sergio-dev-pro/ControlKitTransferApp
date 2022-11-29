@@ -1,4 +1,5 @@
 import {ListItem} from '@rneui/base';
+import {Text} from '@rneui/themed';
 import React, {useContext} from 'react';
 import {FlatList, View} from 'react-native';
 import AuthHeader from '../components/AuthHeader';
@@ -16,6 +17,9 @@ function EventSelectionScreen() {
     <View style={GStyles.view}>
       <AuthHeader />
       <View style={GStyles.container}>
+        <Text h3 h3Style={{textAlign: 'center'}}>
+          Selecione o evento
+        </Text>
         <FlatList
           data={events}
           renderItem={({item}) => (

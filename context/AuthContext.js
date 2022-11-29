@@ -3,6 +3,7 @@ import React, {createContext, useEffect, useState} from 'react';
 import jwt_decode from 'jwt-decode';
 import axios from 'axios';
 import BASE_URL from '../constants/api';
+import { useAlert } from './AlertContext';
 export const AuthContext = createContext();
 
 const initialState = {
@@ -16,6 +17,7 @@ const initialState = {
 export function AuthProvider({children}) {
   const [authState, setAuthState] = useState(initialState);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const setAlertMessage = useAlert();
 
   useEffect(() => {
     getUserToken();
@@ -82,7 +84,7 @@ export function AuthProvider({children}) {
       }));
     } catch (error) {
       console.log(error);
-      alert(error.response.data.errors);
+      setAlertMessage(error.response.data.errors);
       return null;
     } finally {
       setIsAuthenticating(false);

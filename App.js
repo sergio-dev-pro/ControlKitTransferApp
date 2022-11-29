@@ -6,6 +6,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {ThemeProvider, createTheme} from '@rneui/themed';
 import THEME from './style/theme';
 import Navigators from './navigators/Navigators';
+import {AlertProvider} from './context/AlertContext';
 
 const theme = createTheme({
   lightColors: {
@@ -27,9 +28,11 @@ function App() {
     <NavigationContainer theme={navigationTheme}>
       <SafeAreaProvider>
         <ThemeProvider theme={theme}>
-          <AuthProvider>
-            <Navigators />
-          </AuthProvider>
+          <AlertProvider>
+            <AuthProvider>
+              <Navigators />
+            </AuthProvider>
+          </AlertProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </NavigationContainer>
