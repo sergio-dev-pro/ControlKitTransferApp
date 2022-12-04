@@ -6,6 +6,7 @@ const THEME = {
     warnning: '#faad14',
     grey: '#86939E',
     darkGrey: '#5E6977',
+    success: '#52C41A',
   },
 };
 export default THEME;

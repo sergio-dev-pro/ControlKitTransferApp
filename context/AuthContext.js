@@ -3,7 +3,8 @@ import React, {createContext, useEffect, useState} from 'react';
 import jwt_decode from 'jwt-decode';
 import axios from 'axios';
 import BASE_URL from '../constants/api';
-import { useAlert } from './AlertContext';
+import {useAlert} from './AlertContext';
+import {getEventRequiredFields} from '../api/EventApi';
 export const AuthContext = createContext();
 
 const initialState = {
@@ -12,11 +13,14 @@ const initialState = {
   selectedEventId: null,
   isAuthenticated: false,
   events: null,
+  requiredFieldsForUserRegistration: null,
 };
 
 export function AuthProvider({children}) {
   const [authState, setAuthState] = useState(initialState);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const [isSearchingEventSettings, setIsSearchingEventSettings] =
+    useState(false);
   const setAlertMessage = useAlert();
 
   useEffect(() => {
@@ -26,13 +30,16 @@ export function AuthProvider({children}) {
   const getUserToken = async () => {
     await AsyncStorage.getItem('userToken').then(async token => {
       if (token) {
-        const eventId = await AsyncStorage.getItem('eventId');
+        const eventInJsonFormat = await AsyncStorage.getItem('event');
+        const event = JSON.parse(eventInJsonFormat);
         var decodedToken = jwt_decode(token);
         const events = JSON.parse(decodedToken.Events);
         setAuthState({
           userToken: token,
           isAuthenticated: true,
-          selectedEventId: eventId,
+          selectedEventId: parseInt(event?.id),
+          requiredFieldsForUserRegistration:
+            event?.requiredFieldsForUserRegistration,
           events,
         });
       }
@@ -42,11 +49,33 @@ export function AuthProvider({children}) {
 
   const setSelectedEventId = async id => {
     try {
-      await AsyncStorage.setItem('eventId', id.toString());
-      setAuthState(prevState => ({...prevState, selectedEventId: id}));
+      setIsSearchingEventSettings(true);
+      const {data: requiredFieldsForUserRegistration} =
+        await getEventRequiredFields(id);
+
+      await AsyncStorage.setItem(
+        'event',
+        JSON.stringify({
+          id: id.toString(),
+          requiredFieldsForUserRegistration,
+        }),
+      );
+      setIsSearchingEventSettings(false);
+      setAuthState(prevState => ({
+        ...prevState,
+        selectedEventId: id,
+        requiredFieldsForUserRegistration,
+      }));
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const setUserToken = token => {
+    setAuthState(prevState => ({
+      ...prevState,
+      token,
+    }));
   };
 
   const authenticateUser = async loginData => {
@@ -114,6 +143,8 @@ export function AuthProvider({children}) {
         setIsAuthenticating,
         setSelectedEventId,
         logout,
+        setUserToken,
+        isSearchingEventSettings,
       }}>
       {children}
     </AuthContext.Provider>

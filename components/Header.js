@@ -4,7 +4,7 @@ import THEME from '../style/theme';
 import {AuthContext} from '../context/AuthContext';
 /* @props openDawer
  */
-function Header({openDrawer}) {
+function Header({openDrawer, style = {}}) {
   const [showDialog, setShowDialog] = useState(false);
   const {logout} = useContext(AuthContext);
   if (!openDrawer) {
@@ -15,16 +15,19 @@ function Header({openDrawer}) {
   return (
     <>
       <HeaderRNE
-        containerStyle={{
-          backgroundColor: 'white',
-          flex: 0,
-          borderBottomWidth: 3,
-          marginBottom: 16,
-          paddingVertical: 20,
-          paddingHorizontal: 40,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        containerStyle={[
+          {
+            backgroundColor: 'white',
+            flex: 0,
+            borderBottomWidth: 3,
+            marginBottom: 16,
+            paddingVertical: 20,
+            paddingHorizontal: 40,
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          style,
+        ]}
         centerComponent={
           <Text h3 style={{color: THEME.cor.primary}}>
             Controle Kit/Transfer

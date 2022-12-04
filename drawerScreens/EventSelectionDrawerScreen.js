@@ -6,36 +6,45 @@ import {FlatList, View} from 'react-native';
 import Button from '../components/Button';
 import {AuthContext} from '../context/AuthContext';
 import Header from '../components/Header';
+import Loading from '../components/Loading';
 
 function EventSelectionDrawerScreen({navigation}) {
-  const {setSelectedEventId, selectedEventId, events} = useContext(AuthContext);
+  const {
+    setSelectedEventId,
+    selectedEventId,
+    events,
+    isSearchingEventSettings,
+  } = useContext(AuthContext);
   const handleEventSelection = async eventId => {
-    setSelectedEventId(eventId);
+    eventId !== selectedEventId && (await setSelectedEventId(eventId));
     navigation.navigate('Kits');
   };
 
   return (
-    <View style={{...GStyles.view}}>
-      <Header openDrawer={() => navigation.openDrawer()} />
-      <View style={GStyles.container}>
-        <Text h3>Eventos</Text>
-        <FlatList
-          data={events}
-          renderItem={({item}) => (
-            <ListItem containerStyle={GStyles.maxWidth} key={item.id}>
-              <Button
-                onPress={() => handleEventSelection(item.id)}
-                type={selectedEventId === item.id ? 'solid' : 'outline'}
-                size="lg"
-                containerStyle={{width: '100%'}}
-                titleStyle={{fontWeight: 'bold', fontSize: 20}}>
-                {item.name}
-              </Button>
-            </ListItem>
-          )}
-        />
+    <>
+      <View style={{...GStyles.view}}>
+        <Header openDrawer={() => navigation.openDrawer()} />
+        <View style={GStyles.container}>
+          <Text h3>Eventos</Text>
+          <FlatList
+            data={events}
+            renderItem={({item}) => (
+              <ListItem containerStyle={GStyles.maxWidth} key={item.id}>
+                <Button
+                  onPress={() => handleEventSelection(item.id)}
+                  type={selectedEventId === item.id ? 'solid' : 'outline'}
+                  size="lg"
+                  containerStyle={{width: '100%'}}
+                  titleStyle={{fontWeight: 'bold', fontSize: 20}}>
+                  {item.name}
+                </Button>
+              </ListItem>
+            )}
+          />
+        </View>
       </View>
-    </View>
+      <Loading isActive={isSearchingEventSettings} />
+    </>
   );
 }
 

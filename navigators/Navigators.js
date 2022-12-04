@@ -7,6 +7,7 @@ import EventSelectionScreen from '../screens/EventSelectionScreen';
 import {AuthContext} from '../context/AuthContext';
 import KitsDrawerScreen from '../drawerScreens/KitsDrawerScreen';
 import EventSelectionDrawerScreen from '../drawerScreens/EventSelectionDrawerScreen';
+import ManualRegisterScreen from '../drawerScreens/ManualRegisterScreen';
 // import CustomDrawer from '../components/CustomDrawer';
 
 const Drawer = createDrawerNavigator();
@@ -20,7 +21,7 @@ function Navigators() {
     <>
       {userToken && selectedEventId ? (
         <Drawer.Navigator
-          initialRouteName="Kits"
+          initialRouteName="Cadastro manual"
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {
@@ -31,6 +32,10 @@ function Navigators() {
             },
           }}>
           <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
+          <Drawer.Screen
+            name="Cadastro manual"
+            component={ManualRegisterScreen}
+          />
           {!hasOnlyOneEvent && (
             <Drawer.Screen
               name="Mudar evento"
