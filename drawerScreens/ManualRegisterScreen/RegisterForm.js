@@ -123,7 +123,7 @@ const RegisterForm = React.memo(({requiredForms, onRegistered}) => {
       setIsLoading(false);
       if (response) {
         setAlertMessage('Foto salva com sucesso!');
-        onRegistered();
+        onRegistered(registerState);
       } else {
         setAlertMessage('Erro ao enviar imagem, tente novamente');
       }

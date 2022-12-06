@@ -1,4 +1,4 @@
-import {Badge, Button, Card, Divider, Input, Text} from '@rneui/themed';
+import {Badge, Button, Card, Divider, Icon, Input, Text} from '@rneui/themed';
 import React, {
   createContext,
   useContext,
@@ -16,7 +16,11 @@ import {useAlert} from '../../context/AlertContext';
 import {AuthContext} from '../../context/AuthContext';
 import GStyles from '../../style/global';
 import {cpfValidation, isValidEmail} from '../../helpers/validation';
-import {getUserByCpf, getUserByEmail} from '../../api/UserApi';
+import {
+  completeManualRegister,
+  getUserByCpf,
+  getUserByEmail,
+} from '../../api/UserApi';
 import {useNavigation} from '@react-navigation/native';
 import Modal, {ReactNativeModal} from 'react-native-modal';
 import THEME from '../../style/theme';
@@ -83,13 +87,14 @@ function ManualRegisterScreen({navigation}) {
   // const [requiredForms, setRequiredForms] = useState();
   const [user, setUser] = useState();
   // TODO: setado tru temporariamente
-  const [isUserRegistered, setIsUserRegistered] = useState(false);
+  const [registerData, setRegisterData] = useState();
   const {requiredFieldsForUserRegistration, setUserToken, userToken} =
     useContext(AuthContext);
   const isFocused = useIsFocused();
   const [isVisible, setIsVisible] = useState(true);
-  const [completeKitDelivery, setCompleteKitDelivery] = useState();
+  const [getTicketIdType, setGetTicketIdType] = useState();
   const [loading, setLoading] = useState(false);
+  const [dayCodes, setDayCodes] = useState();
   const ref = useRef();
   const setAlertMessage = useAlert();
 
@@ -110,26 +115,36 @@ function ManualRegisterScreen({navigation}) {
     setUserToken(userFounded.token);
   };
 
-  const handleQRCodeRead = async code => {
-    setCompleteKitDelivery(undefined);
+  const handleReadCodes = readCodes => {
+    let codes = {};
+    readCodes.forEach(code => {
+      codes = {...codes, ...code};
+    });
+    setDayCodes(codes);
+  };
+
+  const completeRegister = async () => {
+    const payload = {
+      ...registerData,
+      token: user.token,
+      dayCodes,
+    };
     try {
       setLoading(true);
-      const url = BASE_URL + `/api/tickets/${code}/kitDelivery`;
-      await axios({
-        url,
-        method: 'PATCH',
-        headers: {
-          Accept: 'text/plain',
-          'Content-Type': 'application/json-patch+json',
-          Authorization: 'Bearer ' + userToken,
-        },
-      });
+      await completeManualRegister(payload, userToken);
+      setLoading(false);
+      const clearStates = () => {
+        setUser();
+        setRegisterData();
+        setGetTicketIdType();
+        setDayCodes();
+      };
+      clearStates();
       navigation.navigate('Kits');
-      setAlertMessage(
-        'Ingresso encontrado! Registro de entrega de kit realizado.',
-      );
+      setAlertMessage(`Usuário ${user.id} cadastrado com sucesso!`);
     } catch (error) {
-      console.log(error);
+      console.log('error', error);
+      console.log('error error.response.data', error.response.data);
       setAlertMessage(error.response.data.errors);
       return null;
     } finally {
@@ -137,8 +152,8 @@ function ManualRegisterScreen({navigation}) {
     }
   };
 
-  console.log('User', user);
-  console.log('requiredForms', requiredForms);
+  // console.log('@@@ user', user);
+  // console.log('@@@ dayCodes', dayCodes);
 
   return (
     <>
@@ -170,21 +185,13 @@ function ManualRegisterScreen({navigation}) {
               </View>
             </>
           )}
-          {user && !isUserRegistered && (
+          {user && !registerData && (
             <RegisterForm
               requiredForms={requiredForms}
-              onRegistered={() => setIsUserRegistered(true)}
+              onRegistered={setRegisterData}
             />
           )}
-          {user && isUserRegistered && completeKitDelivery && (
-            <ReactNativeModal isVisible={completeKitDelivery}>
-              <QrCodeReader
-                onRead={handleQRCodeRead}
-                onClose={() => setCompleteKitDelivery(undefined)}
-              />
-            </ReactNativeModal>
-          )}
-          {user && isUserRegistered && !completeKitDelivery && (
+          {user && registerData && !getTicketIdType && (
             <View>
               <Text h4 h4Style={{marginVertical: 20}}>
                 Dar baixa no sistema
@@ -192,25 +199,34 @@ function ManualRegisterScreen({navigation}) {
               <Button
                 containerStyle={{marginBottom: 10}}
                 onPress={() => {
-                  setCompleteKitDelivery('readCode');
+                  setGetTicketIdType('readBarCode');
                 }}>
                 Ler código de barras
               </Button>
               <Button
                 containerStyle={{marginBottom: 10}}
                 onPress={() => {
-                  setCompleteKitDelivery('readCode');
+                  setGetTicketIdType('readQRcode');
                 }}>
                 Ler QRcode
               </Button>
               <Button
                 containerStyle={{marginBottom: 10}}
                 onPress={() => {
-                  setCompleteKitDelivery('PDF');
+                  setGetTicketIdType('PDF');
                 }}>
                 PDF
               </Button>
             </View>
+          )}
+          {dayCodes && (
+            <Button
+              type="solid"
+              size="lg"
+              containerStyle={{marginTop: 20}}
+              onPress={completeRegister}>
+              Finalizar cadastro
+            </Button>
           )}
         </View>
         {!user && (
@@ -223,16 +239,150 @@ function ManualRegisterScreen({navigation}) {
             }}
           />
         )}
+        <CodeReaderForEachDay
+          isVisible={getTicketIdType && !dayCodes}
+          onClose={() => setGetTicketIdType(undefined)}
+          daysInDate={user?.days}
+          type={getTicketIdType}
+          onReadCodes={handleReadCodes}
+        />
       </View>
     </>
   );
 }
+function padTo2Digits(num) {
+  return num.toString().padStart(2, '0');
+}
+
+function formatDate(dateToFormat) {
+  const date = new Date(dateToFormat);
+  return [
+    padTo2Digits(date.getDate()),
+    padTo2Digits(date.getMonth() + 1),
+    date.getFullYear(),
+  ].join('/');
+}
+const CodeReaderForEachDay = ({
+  isVisible,
+  onClose,
+  daysInDate = [],
+  type,
+  onReadCodes,
+}) => {
+  const [readCodes, setReadCodes] = useState([]);
+  const [readDayCode, setReadDayCode] = useState();
+
+  const setAlertMessage = useAlert();
+  const handleQRCodeRead = code => {
+    // TODO: Validar se os codigos do dias sao diferentes
+    const isValid =
+      readCodes.filter(
+        (readCode, index) => readCode[daysInDate[index]] === code,
+      ).length === 0;
+    if (!isValid) {
+      setReadDayCode(undefined);
+      return setAlertMessage('Código inválido: Esse código já foi lido.');
+    }
+
+    readCodes.push({[readDayCode]: code});
+    setReadDayCode(undefined);
+  };
+
+  const handleClose = () => {
+    setReadCodes([]);
+    onClose();
+  };
+
+  const handleReadCodes = () => {
+    onReadCodes(readCodes);
+  };
+  const selectReadDayCode = day => setReadDayCode(day);
+  const unselectReadDayCode = day => setReadDayCode(undefined);
+
+  const hasReadThePreviousDay = indexOfDaysInDate =>
+    readCodes.length === indexOfDaysInDate;
+  return (
+    <Modal
+      isVisible={isVisible}
+      backdropOpacity={0.1}
+      style={{alignItems: 'center'}}>
+      {readDayCode ? (
+        <QrCodeReader onRead={handleQRCodeRead} onClose={unselectReadDayCode} />
+      ) : (
+        <View
+          style={{
+            backgroundColor: 'white',
+            borderRadius: 10,
+            padding: 20,
+            height: 'auto',
+            width: 500,
+          }}>
+          <Text h4 h4Style={{marginBottom: 10, textAlign: 'center'}}>
+            Leia o {type === 'readQRcode' ? 'QRcode' : 'código de barras'} de
+            cada dia
+          </Text>
+          <View style={{padding: 16, alignItems: 'flex-start'}}>
+            {daysInDate.map((day, index) => (
+              <Button
+                key={day}
+                containerStyle={{
+                  width: '100%',
+                  marginBottom: 10,
+                }}
+                type="outline"
+                size="lg"
+                onPress={() => selectReadDayCode(day)}
+                disabled={!hasReadThePreviousDay(index)}>
+                Dia {formatDate(day)}
+                {readCodes[index] ? (
+                  <Badge value={readCodes[index][day]} status="success" />
+                ) : (
+                  <Icon
+                    size={32}
+                    style={{marginLeft: 20}}
+                    color={
+                      !hasReadThePreviousDay(index)
+                        ? THEME.cor.grey
+                        : THEME.cor.primary
+                    }
+                    type="materialicons"
+                    name="qr-code-scanner"
+                  />
+                )}
+              </Button>
+            ))}
+          </View>
+          <View
+            style={{
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+            <Button
+              title="Voltar"
+              size="lg"
+              type="clear"
+              onPress={handleClose}
+            />
+            <Button
+              type="solid"
+              size="lg"
+              containerStyle={{marginLeft: 16}}
+              title="Pronto"
+              onPress={handleReadCodes}
+            />
+          </View>
+        </View>
+      )}
+    </Modal>
+  );
+};
 
 const INPUT_VALUE_TYPE = {
   email: 'email',
   cpf: 'cpf',
 };
-
 const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -292,6 +442,7 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
       setLoading(false);
     }
   };
+
   return (
     <Modal
       isVisible={isVisible}
