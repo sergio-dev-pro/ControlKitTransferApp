@@ -8,6 +8,7 @@ import {AuthContext} from '../context/AuthContext';
 import KitsDrawerScreen from '../drawerScreens/KitsDrawerScreen';
 import EventSelectionDrawerScreen from '../drawerScreens/EventSelectionDrawerScreen';
 import ManualRegisterScreen from '../drawerScreens/ManualRegisterScreen';
+import ItinerariesScreen from '../drawerScreens/ItinerariesScreen';
 // import CustomDrawer from '../components/CustomDrawer';
 
 const Drawer = createDrawerNavigator();
@@ -21,7 +22,7 @@ function Navigators() {
     <>
       {userToken && selectedEventId ? (
         <Drawer.Navigator
-          initialRouteName="Cadastro manual"
+          initialRouteName="Itinerários"
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {
@@ -36,6 +37,7 @@ function Navigators() {
             name="Cadastro manual"
             component={ManualRegisterScreen}
           />
+          <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
           {!hasOnlyOneEvent && (
             <Drawer.Screen
               name="Mudar evento"
