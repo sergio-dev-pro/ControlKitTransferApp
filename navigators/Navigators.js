@@ -9,20 +9,18 @@ import KitsDrawerScreen from '../drawerScreens/KitsDrawerScreen';
 import EventSelectionDrawerScreen from '../drawerScreens/EventSelectionDrawerScreen';
 import ManualRegisterScreen from '../drawerScreens/ManualRegisterScreen';
 import ItinerariesScreen from '../drawerScreens/ItinerariesScreen';
-// import CustomDrawer from '../components/CustomDrawer';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
 function Navigators() {
   const {userToken, selectedEventId, events} = React.useContext(AuthContext);
-  console.log('userToken', userToken, 'selectedEventId', selectedEventId);
   const hasOnlyOneEvent = events && events.length === 1;
   return (
     <>
       {userToken && selectedEventId ? (
         <Drawer.Navigator
-          initialRouteName="Itinerários"
+          initialRouteName="Cadastro manual"
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {

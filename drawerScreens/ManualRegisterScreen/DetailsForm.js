@@ -50,9 +50,9 @@ const DetailsForm = ({formConfig}) => {
           label="Gênero"
           placeholder="Gênero"
           items={[
-            {label: 'Masculino', value: 'Masculino'},
-            {label: 'Feminino', value: 'Feminino'},
-            {label: 'Outro', value: 'Outro'},
+            {key: 'Masculino', value: 'Masculino'},
+            {key: 'Feminino', value: 'Feminino'},
+            {key: 'Outro', value: 'Outro'},
           ]}
           value={genre}
           setValue={value => {

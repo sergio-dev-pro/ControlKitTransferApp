@@ -42,7 +42,7 @@ export default function SelectModal({
             label={label}
             containerStyle={{width: '93%'}}
             disabled
-            value={value ? value : 'Selecione'}
+            value={value ? items.filter(item => item.key == value)[0].value : 'Selecione'}
           />
           <Icon
             name="select1"
@@ -72,7 +72,7 @@ export default function SelectModal({
             maxHeight: '80%',
           }}>
           <FlatList
-            data={items.map(item => ({key: item.value}))}
+            data={items}
             renderItem={({item}) => (
               <TouchableOpacity onPress={() => selectItem(item.key)}>
                 <Text
@@ -81,10 +81,10 @@ export default function SelectModal({
                     fontSize: 20,
                     paddingVertical: 16,
                     backgroundColor:
-                      item.key === value ? 'rgba(240, 240, 240, 0.3)' : '',
+                      item.value === value ? 'rgba(240, 240, 240, 0.3)' : '',
                     textAlign: 'center',
                   }}>
-                  {item.key}
+                  {item.value}
                 </Text>
               </TouchableOpacity>
             )}

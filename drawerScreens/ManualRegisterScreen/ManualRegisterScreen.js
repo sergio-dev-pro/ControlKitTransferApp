@@ -152,8 +152,7 @@ function ManualRegisterScreen({navigation}) {
     }
   };
 
-  // console.log('@@@ user', user);
-  // console.log('@@@ dayCodes', dayCodes);
+  console.log('@@@ user', user);
 
   return (
     <>

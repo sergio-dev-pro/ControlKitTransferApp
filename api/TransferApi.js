@@ -4,7 +4,7 @@ import BASE_URL from '../constants/api';
 export const getItineraries = async (eventId, authorization) => {
   try {
     var response = await axios({
-      url: BASE_URL + 'api/transfers/' + eventId + '/itineraries',
+      url: BASE_URL + '/api/transfers/' + eventId + '/itineraries',
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -29,7 +29,7 @@ export const registerItineraryAccess = async (
   try {
     var payload = {code: code, itineraryId: itineraryId};
     var response = await axios({
-      url: BASE_URL + 'api/transfers/accesses',
+      url: BASE_URL + '/api/transfers/accesses',
       method: 'POST',
       data: payload,
       headers: {

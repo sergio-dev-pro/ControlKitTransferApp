@@ -1,5 +1,5 @@
 import {Modal, StyleSheet, View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
@@ -8,20 +8,45 @@ import THEME from '../style/theme';
 import SelectModal from '../components/SelectModal';
 import {useAlert} from '../context/AlertContext';
 import QrCodeReader from '../components/QrCodeReader';
+import {getItineraries, registerItineraryAccess} from '../api/TransferApi';
+import {AuthContext} from '../context/AuthContext';
 
 export default function ItinerariesScreen({navigation}) {
   const [loading, setLoading] = useState();
   const [selectedItinerarie, setSelectedItinerarie] = useState();
   const [countEntryByReadingCode, setCountEntryByReadingCode] = useState(false);
-  const [itineraries, setItineraries] = useState([
-    {key: 1, value: 'Barra para Ondina'},
-    {key: 2, value: 'Ondina para Barra'},
-  ]);
+  const [itineraries, setItineraries] = useState([]);
+  const {selectedEventId, userToken} = useContext(AuthContext);
+
+  useEffect(() => {
+    getItineraries(selectedEventId, userToken).then(data => {
+      if (data) {
+        setItineraries(
+          data.map(intinerary => ({
+            key: intinerary.id,
+            value: intinerary.originDestiny,
+          })),
+        );
+      }
+    });
+  }, []);
 
   const setAlertMessage = useAlert();
 
   const handleQRCodeRead = code => {
-    setAlertMessage(`${code}: Usuário encontrado pelo código.`);
+    registerItineraryAccess(userToken, code, selectedItinerarie).then(
+      wasSaved => {
+        console.log('code', code);
+        console.log('selectedItinerarie', selectedItinerarie);
+        console.log('wasSaved', wasSaved);
+        setCountEntryByReadingCode(false);
+        if (wasSaved) {
+          alert(
+            'Usuário encontrado! Registro de acesso realizado com sucesso.',
+          );
+        }
+      },
+    );
   };
 
   return (

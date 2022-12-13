@@ -24,12 +24,12 @@ const AccessoriesForm = ({formConfig}) => {
           }
           placeholder="Tamanho da camisa"
           items={[
-            {label: 'P', value: 'P'},
-            {label: 'M', value: 'M'},
-            {label: 'G', value: 'G'},
-            {label: 'GG', value: 'GG'},
-            {label: 'EG1', value: 'EG1'},
-            {label: 'EG2', value: 'EG2'},
+            {key: 'P', value: 'P'},
+            {key: 'M', value: 'M'},
+            {key: 'G', value: 'G'},
+            {key: 'GG', value: 'GG'},
+            {key: 'EG1', value: 'EG1'},
+            {key: 'EG2', value: 'EG2'},
           ]}
         />
       )}
@@ -45,9 +45,9 @@ const AccessoriesForm = ({formConfig}) => {
             })
           }
           items={[
-            {label: 'P', value: 'P'},
-            {label: 'M', value: 'M'},
-            {label: 'G', value: 'G'},
+            {key: 'P', value: 'P'},
+            {key: 'M', value: 'M'},
+            {key: 'G', value: 'G'},
           ]}
         />
       )}
@@ -60,20 +60,20 @@ const AccessoriesForm = ({formConfig}) => {
           }
           placeholder="Tamanho do calçado"
           items={[
-            {label: '33', value: '33'},
-            {label: '34', value: '34'},
-            {label: '35', value: '35'},
-            {label: '36', value: '36'},
-            {label: '37', value: '37'},
-            {label: '38', value: '38'},
-            {label: '39', value: '39'},
-            {label: '40', value: '40'},
-            {label: '41', value: '41'},
-            {label: '42', value: '42'},
-            {label: '43', value: '43'},
-            {label: '44', value: '44'},
-            {label: '45', value: '45'},
-            {label: '46', value: '46'},
+            {key: '33', value: '33'},
+            {key: '34', value: '34'},
+            {key: '35', value: '35'},
+            {key: '36', value: '36'},
+            {key: '37', value: '37'},
+            {key: '38', value: '38'},
+            {key: '39', value: '39'},
+            {key: '40', value: '40'},
+            {key: '41', value: '41'},
+            {key: '42', value: '42'},
+            {key: '43', value: '43'},
+            {key: '44', value: '44'},
+            {key: '45', value: '45'},
+            {key: '46', value: '46'},
           ]}
         />
       )}

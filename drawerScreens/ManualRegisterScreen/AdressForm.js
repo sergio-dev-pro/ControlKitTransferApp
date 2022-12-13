@@ -77,7 +77,7 @@ function AddressForm() {
           }
           label="Estado"
           placeholder="o estado"
-          items={states.map(state => ({label: state, value: state}))}
+          items={states.map(state => ({key: state, value: state}))}
         />
 
         <Input
