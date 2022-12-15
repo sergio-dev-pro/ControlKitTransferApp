@@ -27,3 +27,16 @@ export const useRegisterState = () => {
   const context = useContext(RegisterStateContext);
   return context;
 };
+
+export const initialGuestUserRegisterState = {
+  name: '',
+  cpf: '',
+  email: '',
+  ...initialState,
+};
+export const GuestUserRegisterContext = createContext();
+
+export const useGuestUserRegisterState = () => {
+  const context = useContext(GuestUserRegisterContext);
+  return context;
+};

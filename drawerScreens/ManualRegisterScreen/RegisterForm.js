@@ -118,6 +118,7 @@ const RegisterForm = React.memo(({requiredForms, onRegistered}) => {
         type: 'image/jpeg',
         name: 'userImage.jpg',
       });
+      console.log('@@@@ formData', formData);
       setIsLoading(true);
       var response = await saveUserPhoto(formData);
       setIsLoading(false);
@@ -202,6 +203,7 @@ const RegisterForm = React.memo(({requiredForms, onRegistered}) => {
     if (validation[currentFormId] && !validation[currentFormId]()) return null;
     next();
   };
+
   return (
     <RegisterStateContext.Provider
       value={{
