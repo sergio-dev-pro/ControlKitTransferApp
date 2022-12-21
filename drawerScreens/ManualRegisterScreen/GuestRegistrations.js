@@ -1,72 +1,82 @@
-import {Badge, Button, Card, Input, Text} from '@rneui/themed';
-import React, {useEffect, useReducer, useState} from 'react';
+import {Badge, Button, Card, CheckBox, Input, Text} from '@rneui/themed';
+import React, {useEffect, useState} from 'react';
 import {ScrollView, View} from 'react-native';
 import {useMaskedInputProps} from 'react-native-mask-input';
+import Loading from '../../components/Loading';
+import {formatDate} from '../../helpers/format';
 import {cpfValidation, isValidEmail} from '../../helpers/validation';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
-import {
-  GuestUserRegisterContext,
-  initialGuestUserRegisterState,
-} from './registerContext';
 import RegisterForm from './RegisterForm';
 
-function GuestRegistrations({inviteDays = [], requiredForms}) {
+function GuestRegistrations({
+  inviteDays = [],
+  requiredForms,
+  onGuestRegistrations,
+}) {
   const [guestRegistrations, setGuestRegistrations] = useState([]);
   const [daysToRegisterGuests, setDaysToRegisterGuests] = useState(inviteDays);
 
-  const availableInvitationDays = daysToRegisterGuests.reduce(
-    (accumulator, currentDay) => {
-      if (!accumulator) return [currentDay];
+  const availableInvitationDays = daysToRegisterGuests.length
+    ? daysToRegisterGuests.length === 1
+      ? daysToRegisterGuests
+      : daysToRegisterGuests.reduce((accumulator, currentDay) => {
+          const isInFirstInteraction = typeof accumulator === 'string';
+          if (!isInFirstInteraction && !accumulator.includes(currentDay)) {
+            return [...accumulator, currentDay];
+          }
+          return isInFirstInteraction ? [accumulator] : accumulator;
+        })
+    : null;
 
-      if (!accumulator.includes(currentDay))
-        return [...accumulator, currentDay];
-    },
-  );
   const handleGuestRegister = data => {
-    const invalidateRegisteredGuestDays = guestDays => {
-      setDaysToRegisterGuests(prevState => {
-        let avaliableDays = prevState;
-        guestDays.forEach(day => {
-          const indexToRemove = avaliableDays.indexOf(day);
-          avaliableDays = avaliableDays.filter(
-            (day, index) => index !== indexToRemove,
-          );
-        });
-        return avaliableDays;
-      });
-    };
-    invalidateRegisteredGuestDays(data.guestDays);
-    return alert('Bateu');
-    setGuestRegistrations(prevState => [...prevState, data.register]);
+    let avaliableDays = daysToRegisterGuests;
+
+    data.guestDays.forEach(day => {
+      const indexToRemove = avaliableDays.indexOf(day);
+      avaliableDays = avaliableDays.filter(
+        (day, index) => index !== indexToRemove,
+      );
+    });
+    setDaysToRegisterGuests(avaliableDays);
+
+    if (!avaliableDays.length)
+      return onGuestRegistrations([...guestRegistrations, data.registerData]);
+
+    setDaysToRegisterGuests(avaliableDays);
+    setGuestRegistrations(prevState => [...prevState, data.registerData]);
   };
+
+  if (!availableInvitationDays) return <Loading />;
   console.log('@@@ daysToRegisterGuests', daysToRegisterGuests);
   console.log('@@@ availableInvitationDays', availableInvitationDays);
   return (
-    <Card containerStyle={{borderRadius: 10}}>
-      {guestRegistrations.length > 0 && (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Text h5 style={{paddingLeft: 4}}>
-            Cadastrados:
-          </Text>
-          <Badge value={guestRegistrations.length} status="success" />
-        </View>
-      )}
-      <Card.Title style={{marginBottom: 10}}>Cadastro de convidados</Card.Title>
+    <ScrollView>
+      <Card containerStyle={{borderRadius: 10, height: '100%'}}>
+        <Card.Title style={{marginBottom: 10}}>
+          Cadastro de convidados
+        </Card.Title>
+        {guestRegistrations.length > 0 && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Text h5 style={{paddingLeft: 4}}>
+              Cadastrados:
+            </Text>
+            <Badge value={guestRegistrations.length} status="success" />
+          </View>
+        )}
 
-      <Card.Divider />
-      <ScrollView>
+        <Card.Divider />
         <GuestRegistration
           requiredForms={requiredForms}
           onGuestRegistrationCompleted={handleGuestRegister}
           availableInvitationDays={availableInvitationDays}
         />
-      </ScrollView>
-    </Card>
+      </Card>
+    </ScrollView>
   );
 }
 
@@ -130,6 +140,7 @@ const GuestRegistration = ({
     />
   ) : !registerData ? (
     <RegisterForm
+      guestInfos={userData}
       requiredForms={requiredForms}
       onRegistered={setRegisterData}
     />
@@ -276,7 +287,10 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
 
   const handleComplete = () => {
     if (!validCPF(cpf) || !validEmail(email) || !validName(name)) return;
-    onUserFormCompleted({user, guestDays});
+    onUserFormCompleted({
+      user: {email: user.email, document: user.cpf, name: user.name},
+      guestDays,
+    });
   };
   return (
     <View style={{marginTop: 10}}>
@@ -311,8 +325,46 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
         {...maskedCPFInputProps}
         errorMessage={!CPFValidation.isValid ? CPFValidation.errorMsg : ''}
       />
+
+      {availableDays.length > 1 && (
+        <View style={{paddingHorizontal: 10}}>
+          <Text style={{fontSize: 17}}>
+            Selecione os dias de evento do convidado:
+          </Text>
+          <View
+            style={{
+              width: '100%',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              marginBottom: 20,
+              marginTop: 10,
+            }}>
+            {availableDays.map(availableDay => (
+              <CheckBox
+                key={availableDay}
+                containerStyle={{padding: 4, margin: 0, marginRight: 0}}
+                center
+                title={formatDate(availableDay)}
+                checked={guestDays.includes(availableDay)}
+                onPress={() => {
+                  const checked = guestDays.includes(availableDay);
+                  const removeDay = () =>
+                    setGuestDays(prevState =>
+                      prevState.length === 1
+                        ? prevState
+                        : prevState.filter(day => day !== availableDay),
+                    );
+                  checked
+                    ? removeDay()
+                    : setGuestDays(prevState => [...prevState, availableDay]);
+                }}
+              />
+            ))}
+          </View>
+        </View>
+      )}
       <Button style={{marginTop: 25}} onPress={handleComplete}>
-        Pronto
+        Avançar
       </Button>
     </View>
   );

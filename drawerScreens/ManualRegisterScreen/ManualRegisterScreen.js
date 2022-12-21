@@ -1,15 +1,6 @@
-import {Badge, Button, Card, Divider, Icon, Input, Text} from '@rneui/themed';
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
+import {Badge, Button, Divider, Input, Text} from '@rneui/themed';
+import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {View} from 'react-native';
-import {getEventRequiredFields} from '../../api/EventApi';
 import Header from '../../components/Header';
 import Loading from '../../components/Loading';
 import {useAlert} from '../../context/AlertContext';
@@ -21,15 +12,10 @@ import {
   getUserByCpf,
   getUserByEmail,
 } from '../../api/UserApi';
-import {useNavigation} from '@react-navigation/native';
-import Modal, {ReactNativeModal} from 'react-native-modal';
+import Modal from 'react-native-modal';
 import THEME from '../../style/theme';
 import {useIsFocused} from '@react-navigation/native';
-import DetailsForm from './DetailsForm';
 import RegisterForm from './RegisterForm';
-import QrCodeReader from '../../components/QrCodeReader';
-import axios from 'axios';
-import BASE_URL from '../../constants/api';
 import GuestRegistrations from './GuestRegistrations';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
 
@@ -89,12 +75,14 @@ function ManualRegisterScreen({navigation}) {
   // const [requiredForms, setRequiredForms] = useState();
   // TODO: setado temporariamente
   // {
-  //   days: ['2022-11-12T00:00:00', '2030-08-25T00:00:00'],
-  //   id: 'sergio@spr.com',
+  //   days: ['2022-11-12T00:00:00'],
+  //   id: 'Sergio@spr.com',
   //   inviteDays: [
   //     '2030-08-25T00:00:00',
   //     '2030-08-25T00:00:00',
   //     '2030-08-25T00:00:00',
+  //     '2030-08-26T00:00:00',
+  //     '2030-08-26T00:00:00',
   //   ],
   //   isActive: false,
   //   token: 'ZiU3aYBWAg1LPl+061DrVA==',
@@ -113,6 +101,10 @@ function ManualRegisterScreen({navigation}) {
   const [dayCodes, setDayCodes] = useState();
   const ref = useRef();
   const setAlertMessage = useAlert();
+
+  // TODO: setado tru temporariamente
+  // [{"address": {"city": "Jsnsn", "complement": "ZnznnzNN", "neighborhood": "Shhsh", "number": "49944949", "state": "CE", "street": "Jsjsjjsj", "zipcode": "99779-977"}, "birthDate": "", "dayCodes": {"2030-08-25T00:00:00": "12125"}, "document": "646.749.794-99", "email": "Jsjsshsh@hotmail.com", "genre": "Feminino", "invalidFields": [], "measurements": {"blacelet": "P", "shirt": "M", "shoe": "37"}, "name": "Jxjs", "phone": "(64) 64644-6464", "token": "gv7vLgwvZYLEH4CP2QPdDQ=="}]
+  const [guestRegistereds, setGuestRegistereds] = useState();
 
   useEffect(() => {
     // O ref.current e utilizado para verificar se
@@ -144,6 +136,7 @@ function ManualRegisterScreen({navigation}) {
       ...registerData,
       token: user.token,
       dayCodes,
+      guests: guestRegistereds,
     };
     try {
       setLoading(true);
@@ -154,6 +147,7 @@ function ManualRegisterScreen({navigation}) {
         setRegisterData();
         setGetTicketIdType();
         setDayCodes();
+        setGuestRegistereds();
       };
       clearStates();
       navigation.navigate('Kits');
@@ -168,11 +162,15 @@ function ManualRegisterScreen({navigation}) {
     }
   };
 
-  const isCompletedUserRegistration = registerData && dayCodes;
-  const isGuestUserRegistrationCompleted = false;
+  const isCompletedUserRegistration = !!registerData && !!dayCodes;
+  const isGuestUserRegistrationCompleted = !!guestRegistereds;
   const isShowingGuestRegister =
-    isCompletedUserRegistration && !isGuestUserRegistrationCompleted;
-  console.log('@@@ user', user);
+    user?.inviteDays?.length &&
+    isCompletedUserRegistration &&
+    !isGuestUserRegistrationCompleted;
+  const hasCompleteRegistration =
+    isCompletedUserRegistration && isGuestUserRegistrationCompleted;
+
   return (
     <>
       <View style={{...GStyles.view}}>
@@ -191,7 +189,6 @@ function ManualRegisterScreen({navigation}) {
           style={[
             GStyles.container,
             isShowingGuestRegister ? {maxWidth: 500} : {},
-            {marginBottom: 180},
           ]}>
           {user && (
             <>
@@ -244,12 +241,12 @@ function ManualRegisterScreen({navigation}) {
           )}
           {isShowingGuestRegister && (
             <GuestRegistrations
-              inviteDays={user.inviteDays}
+              inviteDays={user?.inviteDays}
               requiredForms={requiredForms}
-              onRegistered={setRegisterData}
+              onGuestRegistrations={setGuestRegistereds}
             />
           )}
-          {/* {dayCodes && (
+          {hasCompleteRegistration && (
             <Button
               type="solid"
               size="lg"
@@ -257,7 +254,7 @@ function ManualRegisterScreen({navigation}) {
               onPress={completeRegister}>
               Finalizar cadastro
             </Button>
-          )} */}
+          )}
         </View>
         {!user && (
           <SearchUserModal

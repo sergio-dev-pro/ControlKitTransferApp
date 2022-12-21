@@ -1,26 +1,16 @@
 import {Button, Text} from '@rneui/themed';
-import React, {
-  createContext,
-  useContext,
-  useMemo,
-  useReducer,
-  useState,
-} from 'react';
+import React, {useContext, useMemo, useReducer, useState} from 'react';
 import {ScrollView, View} from 'react-native';
 import {useAlert} from '../../context/AlertContext';
 import {validateDate} from '../../helpers/validation';
 import AccessoriesForm from './AccessoriesForm';
 import AddressForm from './AdressForm';
 import DetailsForm from './DetailsForm';
-import {
-  initialState,
-  RegisterStateContext,
-  RegisterStateProvider,
-} from './registerContext';
+import {initialState, RegisterStateContext} from './registerContext';
 import {useMultistepForm} from './useMultistepForm';
 import TakePictureScreen from './TakePictureScreen';
 import {AuthContext} from '../../context/AuthContext';
-import {saveUserPhoto} from '../../api/UserApi';
+import {guestPreRegister, saveUserPhoto} from '../../api/UserApi';
 import Loading from '../../components/Loading';
 
 const registerReducer = (state, action) => {
@@ -104,7 +94,7 @@ const FORMS = {
   photo: props => <TakePictureScreen />,
 };
 
-const RegisterForm = React.memo(({requiredForms, onRegistered}) => {
+const RegisterForm = React.memo(({requiredForms, onRegistered, guestInfos}) => {
   const [registerState, dispatch] = useReducer(registerReducer, initialState);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -125,6 +115,28 @@ const RegisterForm = React.memo(({requiredForms, onRegistered}) => {
       if (response) {
         setAlertMessage('Foto salva com sucesso!');
         onRegistered(registerState);
+      } else {
+        setAlertMessage('Erro ao enviar imagem, tente novamente.');
+      }
+    }
+  };
+
+  const preGuestRegistration = async picturePath => {
+    if (picturePath) {
+      const formData = new FormData();
+      formData.append('token', authContext.token);
+      formData.append('guest', JSON.stringify(guestInfos));
+      formData.append('file', {
+        uri: picturePath,
+        type: 'image/jpeg',
+        name: 'userImage.jpg',
+      });
+      setIsLoading(true);
+      var guestRegisterToken = await guestPreRegister(formData);
+      setIsLoading(false);
+      if (guestRegisterToken) {
+        setAlertMessage('Foto salva com sucesso!');
+        onRegistered({token: guestRegisterToken, ...registerState});
       } else {
         setAlertMessage('Erro ao enviar imagem, tente novamente');
       }
@@ -204,6 +216,7 @@ const RegisterForm = React.memo(({requiredForms, onRegistered}) => {
     next();
   };
 
+  const isGuestRegister = !!guestInfos;
   return (
     <RegisterStateContext.Provider
       value={{
@@ -212,7 +225,7 @@ const RegisterForm = React.memo(({requiredForms, onRegistered}) => {
         cancelPhoto: () => {
           back();
         },
-        savePhoto,
+        savePhoto: isGuestRegister ? preGuestRegistration : savePhoto,
       }}>
       <ScrollView
         style={{

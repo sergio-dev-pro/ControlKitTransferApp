@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useReducer} from 'react';
+import React, {createContext, useContext} from 'react';
 
 export const initialState = {
   phone: '',

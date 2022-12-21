@@ -36,6 +36,8 @@ export function AuthProvider({children}) {
         const events = JSON.parse(decodedToken.Events);
         setAuthState({
           userToken: token,
+          // // TODO: setado temporariamente para testar, excluir linha a baixo.
+          // token: 'ZiU3aYBWAg1LPl+061DrVA==',
           isAuthenticated: true,
           selectedEventId: parseInt(event?.id),
           requiredFieldsForUserRegistration:

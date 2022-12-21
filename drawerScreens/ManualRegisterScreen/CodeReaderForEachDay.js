@@ -4,20 +4,9 @@ import {View} from 'react-native';
 import Modal from 'react-native-modal';
 import QrCodeReader from '../../components/QrCodeReader';
 import {useAlert} from '../../context/AlertContext';
+import {formatDate} from '../../helpers/format';
 import THEME from '../../style/theme';
 
-function padTo2Digits(num) {
-  return num.toString().padStart(2, '0');
-}
-
-function formatDate(dateToFormat) {
-  const date = new Date(dateToFormat);
-  return [
-    padTo2Digits(date.getDate()),
-    padTo2Digits(date.getMonth() + 1),
-    date.getFullYear(),
-  ].join('/');
-}
 const CodeReaderForEachDay = ({
   isVisible,
   onClose,

@@ -49,6 +49,26 @@ export const saveUserPhoto = async formData => {
   }
 };
 
+export const guestPreRegister = async formData => {
+  try {
+    var response = await axios({
+      url: BASE_URL + '/api/files/guest/self', 
+      method: 'POST',
+      data: formData,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response?.data;
+  } catch (error) {
+    console.log('error', error);
+    console.log('error error.response.data', error.response.data);
+    alert(error.response.data.errors);
+    return null;
+  }
+};
+
 export const completeManualRegister = async (data, userToken) =>
   axios({
     url: BASE_URL + '/api/users/manual',
