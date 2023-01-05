@@ -22,7 +22,7 @@ function Navigators() {
     <>
       {userToken && selectedEventId ? (
         <Drawer.Navigator
-          initialRouteName="Novo ingresso"
+          initialRouteName="Kits"
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {

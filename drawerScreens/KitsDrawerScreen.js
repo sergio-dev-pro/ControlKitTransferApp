@@ -7,8 +7,11 @@ import QrCodeReader from '../components/QrCodeReader';
 import BASE_URL from '../constants/api';
 import {useAlert} from '../context/AlertContext';
 import {AuthContext} from '../context/AuthContext';
+import {getDeviceId} from 'react-native-device-info';
 import GStyles from '../style/global';
 
+let deviceId = getDeviceId();
+console.log(`deviceId`, deviceId);
 function KitsDrawerScreen({navigation}) {
   const authContext = useContext(AuthContext);
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
@@ -41,6 +44,7 @@ function KitsDrawerScreen({navigation}) {
       setLoading(false);
     }
   };
+
   return (
     <View style={{...GStyles.view}}>
       <Header openDrawer={() => navigation.openDrawer()} />
