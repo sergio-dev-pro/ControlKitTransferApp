@@ -7,13 +7,65 @@ import {useAlert} from './AlertContext';
 import {getEventRequiredFields} from '../api/EventApi';
 export const AuthContext = createContext();
 
+const getRequiredForms = requiredFields => {
+  const {
+    addressIsRequired,
+    birthDateIsRequired,
+    genreIsRequired,
+    blaceletSizeIsRequired,
+    footSizeIsRequired,
+    shirtSizeIsRequired,
+    photoIsRequired,
+  } = requiredFields;
+  let requiredForms = [
+    {
+      id: 'details',
+      name: 'Detalhes',
+      validation: () => {
+        console.log('validing form');
+      },
+      formConfig: {birthDateIsRequired, genreIsRequired},
+    },
+  ];
+  const hasSizesForm =
+    shirtSizeIsRequired || footSizeIsRequired || blaceletSizeIsRequired;
+  if (hasSizesForm)
+    requiredForms.push({
+      id: 'accessories',
+      name: 'Acessórios',
+      validation: () => {
+        console.log('validing form');
+      },
+      formConfig: {
+        blaceletSizeIsRequired,
+        footSizeIsRequired,
+        shirtSizeIsRequired,
+      },
+    });
+  if (addressIsRequired)
+    requiredForms.push({
+      id: 'address',
+      name: 'Endereço',
+      validation: () => {
+        console.log('validing form');
+      },
+    });
+  if (photoIsRequired)
+    requiredForms.push({
+      id: 'photo',
+      name: 'Fotografia',
+    });
+
+  return requiredForms;
+};
+
 const initialState = {
   error: null,
   userToken: null,
   selectedEventId: null,
   isAuthenticated: false,
   events: null,
-  requiredFieldsForUserRegistration: null,
+  requiredForms: null,
 };
 
 export function AuthProvider({children}) {
@@ -33,15 +85,16 @@ export function AuthProvider({children}) {
         const eventInJsonFormat = await AsyncStorage.getItem('event');
         const event = JSON.parse(eventInJsonFormat);
         var decodedToken = jwt_decode(token);
+        console.log('event', event);
         const events = JSON.parse(decodedToken.Events);
         setAuthState({
           userToken: token,
+          canCreateTicket: decodedToken.CanCreateTicket,
           // // TODO: setado temporariamente para testar, excluir linha a baixo.
           // token: 'ZiU3aYBWAg1LPl+061DrVA==',
           isAuthenticated: true,
           selectedEventId: parseInt(event?.id),
-          requiredFieldsForUserRegistration:
-            event?.requiredFieldsForUserRegistration,
+          requiredForms: event?.requiredForms,
           events,
         });
       }
@@ -59,14 +112,14 @@ export function AuthProvider({children}) {
         'event',
         JSON.stringify({
           id: id.toString(),
-          requiredFieldsForUserRegistration,
+          requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
         }),
       );
       setIsSearchingEventSettings(false);
       setAuthState(prevState => ({
         ...prevState,
         selectedEventId: id,
-        requiredFieldsForUserRegistration,
+        requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
       }));
     } catch (e) {
       console.error(e);
@@ -108,6 +161,7 @@ export function AuthProvider({children}) {
         isAuthenticated: true,
         events,
         selectedEventId,
+        canCreateTicket: decodedToken.CanCreateTicket,
       };
       setAuthState(prevState => ({
         ...prevState,
@@ -130,6 +184,7 @@ export function AuthProvider({children}) {
       console.error(e);
     }
   };
+
   const resetInitialState = () => {
     setAuthState(initialState);
   };

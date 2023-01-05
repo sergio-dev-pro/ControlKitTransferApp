@@ -1,6 +1,6 @@
 import {Button, Text} from '@rneui/themed';
 import React, {useContext, useMemo, useReducer, useState} from 'react';
-import {ScrollView, View} from 'react-native';
+import {Modal, ScrollView, View} from 'react-native';
 import {useAlert} from '../../context/AlertContext';
 import {validateDate} from '../../helpers/validation';
 import AccessoriesForm from './AccessoriesForm';
@@ -10,7 +10,11 @@ import {initialState, RegisterStateContext} from './registerContext';
 import {useMultistepForm} from './useMultistepForm';
 import TakePictureScreen from './TakePictureScreen';
 import {AuthContext} from '../../context/AuthContext';
-import {guestPreRegister, saveUserPhoto} from '../../api/UserApi';
+import {
+  guestPreRegister,
+  newUserPreRegister,
+  saveUserPhoto,
+} from '../../api/UserApi';
 import Loading from '../../components/Loading';
 
 const registerReducer = (state, action) => {
@@ -94,168 +98,223 @@ const FORMS = {
   photo: props => <TakePictureScreen />,
 };
 
-const RegisterForm = React.memo(({requiredForms, onRegistered, guestInfos}) => {
-  const [registerState, dispatch] = useReducer(registerReducer, initialState);
-  const [isLoading, setIsLoading] = useState(false);
+const RegisterForm = React.memo(
+  ({requiredForms, onRegistered, guestInfos, newUserData}) => {
+    const [registerState, dispatch] = useReducer(registerReducer, initialState);
+    const [isLoading, setIsLoading] = useState(false);
+    const steps = useMemo(
+      () =>
+        requiredForms.map(({id, formConfig}) => {
+          return FORMS[id]({
+            formConfig,
+          });
+        }),
+      [requiredForms],
+    );
+    const setAlertMessage = useAlert();
 
-  const authContext = useContext(AuthContext);
-  const savePhoto = async picturePath => {
-    if (picturePath) {
-      const formData = new FormData();
-      formData.append('token', authContext.token);
-      formData.append('file', {
-        uri: picturePath,
-        type: 'image/jpeg',
-        name: 'userImage.jpg',
-      });
-      console.log('@@@@ formData', formData);
-      setIsLoading(true);
-      var response = await saveUserPhoto(formData);
-      setIsLoading(false);
-      if (response) {
-        setAlertMessage('Foto salva com sucesso!');
-        onRegistered(registerState);
-      } else {
-        setAlertMessage('Erro ao enviar imagem, tente novamente.');
-      }
-    }
-  };
+    const authContext = useContext(AuthContext);
 
-  const preGuestRegistration = async picturePath => {
-    if (picturePath) {
-      const formData = new FormData();
-      formData.append('token', authContext.token);
-      formData.append('guest', JSON.stringify(guestInfos));
-      formData.append('file', {
-        uri: picturePath,
-        type: 'image/jpeg',
-        name: 'userImage.jpg',
-      });
-      setIsLoading(true);
-      var guestRegisterToken = await guestPreRegister(formData);
-      setIsLoading(false);
-      if (guestRegisterToken) {
-        setAlertMessage('Foto salva com sucesso!');
-        onRegistered({token: guestRegisterToken, ...registerState});
-      } else {
-        setAlertMessage('Erro ao enviar imagem, tente novamente');
-      }
-    }
-  };
-
-  const {phone, birthDate, genre, measurements, address} = registerState;
-  const steps = useMemo(
-    () =>
-      requiredForms.map(({id, formConfig}) => {
-        return FORMS[id]({
-          formConfig,
+    const preGuestRegistration = async picturePath => {
+      if (picturePath) {
+        const formData = new FormData();
+        formData.append('token', authContext.token);
+        formData.append('guest', JSON.stringify(guestInfos));
+        formData.append('file', {
+          uri: picturePath,
+          type: 'image/jpeg',
+          name: 'userImage.jpg',
         });
-      }),
-    [requiredForms],
-  );
-  const setAlertMessage = useAlert();
-  const {step, next, back, currentStepIndex} = useMultistepForm(steps);
+        setIsLoading(true);
+        var guestRegisterToken = await guestPreRegister(formData);
+        setIsLoading(false);
+        if (guestRegisterToken) {
+          setAlertMessage('Foto salva com sucesso!');
+          onRegistered({token: guestRegisterToken, ...registerState});
+        } else {
+          setAlertMessage('Erro ao enviar imagem, tente novamente');
+        }
+      }
+    };
 
-  const {formConfig, id: currentFormId} = requiredForms[currentStepIndex];
-  const emptyFields = 'Todos os campos devem ser preenchidos.';
-  const validation = {
-    details: () => {
-      if (!phone) {
-        setAlertMessage(emptyFields);
-        return false;
+    const preNewUserRegistration = async picturePath => {
+      if (picturePath) {
+        console.log('preNewUserRegistration');
+        const formData = new FormData();
+        formData.append('eventId', authContext.selectedEventId);
+        formData.append('guest', JSON.stringify(newUserData));
+        formData.append('file', {
+          uri: picturePath,
+          type: 'image/jpeg',
+          name: 'userImage.jpg',
+        });
+        console.log('FORM_DATA', formData, 'guest', newUserData);
+        setIsLoading(true);
+        try {
+          var {data: newUserToken} = await newUserPreRegister(
+            formData,
+            authContext.userToken,
+          );
+          setAlertMessage('Foto salva com sucesso!');
+          onRegistered({token: newUserToken, ...registerState});
+        } catch (error) {
+          console.log('error', error);
+          console.log('error error.response.data', error.response.data);
+          setAlertMessage(error.response.data.errors);
+        }
+        setIsLoading(false);
       }
-      const isValidPhone = phone.length === 15;
-      if (!isValidPhone) {
-        setAlertMessage('Campo de telefone inválido.');
-        return false;
-        // return setInvalidField('phone');
+    };
+
+    const savePhoto = async picturePath => {
+      console.log('savePhoto');
+      const isGuestRegister = !!guestInfos;
+      const isNewUserRegister = !!newUserData;
+      if (isGuestRegister) return preGuestRegistration(picturePath);
+      else if (isNewUserRegister) return preNewUserRegistration(picturePath);
+      console.log('savePhoto');
+
+      if (picturePath) {
+        const formData = new FormData();
+        formData.append('token', authContext.token);
+        formData.append('file', {
+          uri: picturePath,
+          type: 'image/jpeg',
+          name: 'userImage.jpg',
+        });
+        console.log('@@@@ formData', formData);
+        setIsLoading(true);
+        var response = await saveUserPhoto(formData);
+        setIsLoading(false);
+        if (response) {
+          setAlertMessage('Foto salva com sucesso!');
+          onRegistered(registerState);
+        } else {
+          setAlertMessage('Erro ao enviar imagem, tente novamente.');
+        }
       }
-      if (formConfig?.birthDateIsRequired) {
-        if (!birthDate) {
+    };
+
+    const {phone, birthDate, genre, measurements, address} = registerState;
+
+    const {step, next, back, currentStepIndex} = useMultistepForm(steps);
+
+    const {formConfig, id: currentFormId} = requiredForms[currentStepIndex];
+    const emptyFields = 'Todos os campos devem ser preenchidos.';
+    const validation = {
+      details: () => {
+        if (!phone) {
           setAlertMessage(emptyFields);
           return false;
         }
-        if (!validateDate(birthDate)) {
-          setAlertMessage('Campo de data de nascimento inválido.');
+        const isValidPhone = phone.length === 15;
+        if (!isValidPhone) {
+          setAlertMessage('Campo de telefone inválido.');
           return false;
+          // return setInvalidField('phone');
         }
-      }
-      if (formConfig?.genreIsRequired) {
-        if (!genre) {
+        if (formConfig?.birthDateIsRequired) {
+          if (!birthDate) {
+            setAlertMessage(emptyFields);
+            return false;
+          }
+          if (!validateDate(birthDate)) {
+            setAlertMessage('Campo de data de nascimento inválido.');
+            return false;
+          }
+        }
+        if (formConfig?.genreIsRequired) {
+          if (!genre) {
+            setAlertMessage(emptyFields);
+            return false;
+          }
+        }
+        return true;
+      },
+      accessories: () => {
+        const {
+          blaceletSizeIsRequired,
+          footSizeIsRequired,
+          shirtSizeIsRequired,
+        } = requiredForms[currentStepIndex].formConfig;
+
+        const {shirt, blacelet, shoe} = measurements;
+        if (shirtSizeIsRequired && !shirt) {
           setAlertMessage(emptyFields);
           return false;
         }
-      }
-      return true;
-    },
-    accessories: () => {
-      const {shirt, blacelet, shoe} = measurements;
-      if (!shirt || !blacelet || !shoe) {
-        setAlertMessage(emptyFields);
-        return false;
-      }
-      return true;
-    },
-    address: () => {
-      const fieldKeys = Object.keys(address);
-      let isValid = true;
-      fieldKeys.every(field => {
-        if (!address[field]) {
-          isValid = false;
+        if (blaceletSizeIsRequired && !blacelet) {
+          setAlertMessage(emptyFields);
+          return false;
+        }
+        if (footSizeIsRequired && !shoe) {
+          setAlertMessage(emptyFields);
           return false;
         }
         return true;
-      });
-      !isValid && setAlertMessage('Todos os campos devem ser preenchidos.');
-      return isValid;
-    },
-  };
+      },
+      address: () => {
+        const fieldKeys = Object.keys(address);
+        let isValid = true;
+        fieldKeys.every(field => {
+          if (!address[field]) {
+            isValid = false;
+            return false;
+          }
+          return true;
+        });
+        !isValid && setAlertMessage('Todos os campos devem ser preenchidos.');
+        return isValid;
+      },
+    };
 
-  const handleNext = () => {
-    if (validation[currentFormId] && !validation[currentFormId]()) return null;
-    next();
-  };
+    const handleNext = () => {
+      if (validation[currentFormId] && !validation[currentFormId]())
+        return null;
+      next();
+    };
 
-  const isGuestRegister = !!guestInfos;
-  return (
-    <RegisterStateContext.Provider
-      value={{
-        ...registerState,
-        dispatch,
-        cancelPhoto: () => {
-          back();
-        },
-        savePhoto: isGuestRegister ? preGuestRegistration : savePhoto,
-      }}>
-      <ScrollView
-        style={{
-          height: 'auto',
-          marginTop: 16,
-          // TODO: COLOQUEI ESSA MARGEM PARA TESTAR NO MOBILE A Cam
-          marginBottom: 200,
-          borderRadius: 20,
+    return (
+      <RegisterStateContext.Provider
+        value={{
+          ...registerState,
+          dispatch,
+          cancelPhoto: () => {
+            back();
+          },
+          savePhoto,
+          isSavingPhoto: isLoading,
         }}>
-        {step}
-        <View
+        <ScrollView
           style={{
-            width: '100%',
-            justifyContent:
-              currentStepIndex === 0 ? 'flex-end' : 'space-between',
-            flexDirection: 'row',
+            height: 'auto',
+            marginTop: 16,
+            // TODO: COLOQUEI ESSA MARGEM PARA TESTAR NO MOBILE A Cam
+            marginBottom: 200,
+            borderRadius: 20,
           }}>
-          {currentStepIndex !== 0 && (
-            <Button type="clear" size="lg" onPress={back}>
-              Voltar
+          {step}
+          <View
+            style={{
+              width: '100%',
+              justifyContent:
+                currentStepIndex === 0 ? 'flex-end' : 'space-between',
+              flexDirection: 'row',
+            }}>
+            {currentStepIndex !== 0 && (
+              <Button type="clear" size="lg" onPress={back}>
+                Voltar
+              </Button>
+            )}
+            <Button type="solid" size="lg" onPress={handleNext}>
+              Próximo
             </Button>
-          )}
-          <Button type="solid" size="lg" onPress={handleNext}>
-            Próximo
-          </Button>
-        </View>
+          </View>
+        </ScrollView>
         <Loading isActive={isLoading} />
-      </ScrollView>
-    </RegisterStateContext.Provider>
-  );
-});
+      </RegisterStateContext.Provider>
+    );
+  },
+);
 
 export default RegisterForm;

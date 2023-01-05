@@ -9,18 +9,20 @@ import KitsDrawerScreen from '../drawerScreens/KitsDrawerScreen';
 import EventSelectionDrawerScreen from '../drawerScreens/EventSelectionDrawerScreen';
 import ManualRegisterScreen from '../drawerScreens/ManualRegisterScreen';
 import ItinerariesScreen from '../drawerScreens/ItinerariesScreen';
+import NewTicket from '../drawerScreens/NewTicket';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
 function Navigators() {
-  const {userToken, selectedEventId, events} = React.useContext(AuthContext);
+  const {userToken, selectedEventId, events, canCreateTicket} =
+    React.useContext(AuthContext);
   const hasOnlyOneEvent = events && events.length === 1;
   return (
     <>
       {userToken && selectedEventId ? (
         <Drawer.Navigator
-          initialRouteName="Cadastro manual"
+          initialRouteName="Novo ingresso"
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {
@@ -41,6 +43,9 @@ function Navigators() {
               name="Mudar evento"
               component={EventSelectionDrawerScreen}
             />
+          )}
+          {canCreateTicket && (
+            <Drawer.Screen name="Novo ingresso" component={NewTicket} />
           )}
         </Drawer.Navigator>
       ) : (

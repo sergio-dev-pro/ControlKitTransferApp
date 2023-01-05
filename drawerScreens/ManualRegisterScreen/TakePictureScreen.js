@@ -38,7 +38,7 @@ export default function TakePictureScreen() {
   const [isTakingPhoto, setIsTakingPhoto] = useState(false);
   const [isInitializedCamera, setIsInitializedCamera] = useState(false);
   const camera = useRef(null);
-  const {cancelPhoto, savePhoto} = useRegisterState();
+  const {cancelPhoto, savePhoto, isSavingPhoto} = useRegisterState();
   const setAlertMessage = useAlert();
 
   const devices = useCameraDevices();
@@ -168,6 +168,7 @@ export default function TakePictureScreen() {
               </Button>
               <Button
                 type="solid"
+                loading={isSavingPhoto}
                 onPress={() => savePhoto(picturePath)}
                 style={[styles.camButton, {width: '40%'}]}>
                 Salvar

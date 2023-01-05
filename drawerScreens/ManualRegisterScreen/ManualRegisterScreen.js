@@ -19,58 +19,6 @@ import RegisterForm from './RegisterForm';
 import GuestRegistrations from './GuestRegistrations';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
 
-const getRequiredForms = requiredFields => {
-  const {
-    addressIsRequired,
-    birthDateIsRequired,
-    genreIsRequired,
-    blaceletSizeIsRequired,
-    footSizeIsRequired,
-    shirtSizeIsRequired,
-    photoIsRequired,
-  } = requiredFields;
-  let requiredForms = [
-    {
-      id: 'details',
-      name: 'Detalhes',
-      validation: () => {
-        console.log('validing form');
-      },
-      formConfig: {birthDateIsRequired, genreIsRequired},
-    },
-  ];
-  const hasSizesForm =
-    shirtSizeIsRequired || footSizeIsRequired || blaceletSizeIsRequired;
-  if (hasSizesForm)
-    requiredForms.push({
-      id: 'accessories',
-      name: 'Acessórios',
-      validation: () => {
-        console.log('validing form');
-      },
-      formConfig: {
-        blaceletSizeIsRequired,
-        footSizeIsRequired,
-        shirtSizeIsRequired,
-      },
-    });
-  if (addressIsRequired)
-    requiredForms.push({
-      id: 'address',
-      name: 'Endereço',
-      validation: () => {
-        console.log('validing form');
-      },
-    });
-  if (photoIsRequired)
-    requiredForms.push({
-      id: 'photo',
-      name: 'Fotografia',
-    });
-
-  return requiredForms;
-};
-
 function ManualRegisterScreen({navigation}) {
   // const [requiredForms, setRequiredForms] = useState();
   // TODO: setado temporariamente
@@ -90,8 +38,7 @@ function ManualRegisterScreen({navigation}) {
   const [user, setUser] = useState();
   // TODO: setado tru temporariamente
   const [registerData, setRegisterData] = useState();
-  const {requiredFieldsForUserRegistration, setUserToken, userToken} =
-    useContext(AuthContext);
+  const {requiredForms, setUserToken, userToken} = useContext(AuthContext);
   const isFocused = useIsFocused();
   const [isVisible, setIsVisible] = useState(true);
   // TODO: setado tru temporariamente
@@ -111,11 +58,6 @@ function ManualRegisterScreen({navigation}) {
     //  o componente ja foi renderizado pela primeira vez.
     ref.current ? isFocused && setIsVisible(true) : (ref.current = true);
   }, [isFocused]);
-
-  const requiredForms = useMemo(
-    () => getRequiredForms(requiredFieldsForUserRegistration),
-    [requiredFieldsForUserRegistration],
-  );
 
   const handleUserFound = userFounded => {
     setIsVisible(false);
@@ -229,13 +171,6 @@ function ManualRegisterScreen({navigation}) {
                   setGetTicketIdType('readQRcode');
                 }}>
                 Ler QRcode
-              </Button>
-              <Button
-                containerStyle={{marginBottom: 10}}
-                onPress={() => {
-                  setGetTicketIdType('PDF');
-                }}>
-                PDF
               </Button>
             </View>
           )}
