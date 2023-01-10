@@ -5,6 +5,7 @@ import axios from 'axios';
 import BASE_URL from '../constants/api';
 import {useAlert} from './AlertContext';
 import {getEventRequiredFields} from '../api/EventApi';
+
 export const AuthContext = createContext();
 
 const getRequiredForms = requiredFields => {
@@ -85,7 +86,6 @@ export function AuthProvider({children}) {
         const eventInJsonFormat = await AsyncStorage.getItem('event');
         const event = JSON.parse(eventInJsonFormat);
         var decodedToken = jwt_decode(token);
-        console.log('event', event);
         const events = JSON.parse(decodedToken.Events);
         setAuthState({
           userToken: token,
