@@ -90,9 +90,10 @@ export const completeManualRegister = async (data, userToken) =>
       Authorization: 'Bearer ' + userToken,
     },
   });
+  
 export const completeTicketRegister = async (data, userToken) => {
   console.log(BASE_URL + '/api/users/new');
-  axios({
+  return axios({
     url: BASE_URL + '/api/users/new',
     method: 'POST',
     data: data,

@@ -19,7 +19,7 @@ const CodeReaderForEachDay = ({
 
   const setAlertMessage = useAlert();
   const handleQRCodeRead = code => {
-    // TODO: Validar se os codigos do dias sao diferentes
+    // TODO: Validar se os codigos dos dias sao diferentes
     const isValid =
       readCodes.filter(
         (readCode, index) => readCode[daysInDate[index]] === code,

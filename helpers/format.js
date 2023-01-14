@@ -19,6 +19,11 @@ export const formatPhone = (phoneNumber = '') => {
   return phoneNumberFormated;
 };
 
+// Format date from dd/mm/aaaa to aaaa-mm-dd
+export function formatDateAaaaMmDd(date) {
+  return date.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$3-$2-$1');
+}
+
 export const formatBirthDate = (date = '') => {
   if (!date.length) return null;
 

@@ -11,6 +11,7 @@ import RegisterForm from './ManualRegisterScreen/RegisterForm';
 import {completeTicketRegister} from '../api/UserApi';
 import CodeReaderForEachDay from './ManualRegisterScreen/CodeReaderForEachDay';
 import {useAlert} from '../context/AlertContext';
+import {formatDateAaaaMmDd} from '../helpers/format';
 
 const NewTicket = ({navigation}) => {
   // TODO: setado tru temporariamente
@@ -50,22 +51,29 @@ const NewTicket = ({navigation}) => {
     setSelectedDays(data.eventDays);
   };
 
+  const clearStates = () => {
+    setUserData(undefined);
+    setRegisterData(undefined);
+    setDayCodes(undefined);
+    setReadyCode(undefined);
+    setSelectedDays(undefined);
+  };
+
   const completeRegister = async () => {
     try {
-      const data = {...registerData, dayCodes, generatePdf: false};
-      console.log(data);
-      const res = await completeTicketRegister(data, authContext.userToken);
-      console.log(res);
-      const clearState = () => {
-        setUserData(undefined);
-        setRegisterData(undefined);
-        setDayCodes(undefined);
+      const data = {
+        ...registerData,
+        birthDate: formatDateAaaaMmDd(registerData.birthDate),
+        dayCodes,
+        generatePdf: false,
       };
-      clearState();
+      const res = await completeTicketRegister(data, authContext.userToken);
+      clearStates();
       setAlertMessage('Ingresso cadastrado com sucesso!');
+      console.log('Ingresso cadastrado com sucesso!');
     } catch (error) {
       console.error(error);
-      console.log(error);
+      console.log('error error.response.data', error.response.data);
       setAlertMessage('Erro ao cadastrar ingresso!');
     }
   };
@@ -79,7 +87,6 @@ const NewTicket = ({navigation}) => {
     setReadyCode(undefined);
   };
 
-  console.log('### userData', userData, selectedDays);
   const canFinishRegistration = !!userData && !!registerData && !!dayCodes;
   return (
     <View style={{...GStyles.view}}>
@@ -122,16 +129,34 @@ const NewTicket = ({navigation}) => {
               }}>
               Ler QRcode
             </Button>
+            <Button
+              containerStyle={{marginBottom: 10}}
+              type="outline"
+              onPress={() => {
+                setRegisterData(undefined);
+              }}>
+              Cancelar
+            </Button>
           </View>
         )}
         {canFinishRegistration && (
-          <Button
-            type="solid"
-            size="lg"
-            containerStyle={{marginTop: 20}}
-            onPress={completeRegister}>
-            Finalizar cadastro
-          </Button>
+          <>
+            <Button
+              type="solid"
+              size="lg"
+              containerStyle={{marginTop: 20}}
+              onPress={completeRegister}>
+              Finalizar cadastro
+            </Button>
+            <Button
+              containerStyle={{marginTop: 10}}
+              type="outline"
+              onPress={() => {
+                clearStates();
+              }}>
+              Cancelar
+            </Button>
+          </>
         )}
         <CodeReaderForEachDay
           isVisible={readyCode}

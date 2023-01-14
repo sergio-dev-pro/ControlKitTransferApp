@@ -18,6 +18,7 @@ import {useIsFocused} from '@react-navigation/native';
 import RegisterForm from './RegisterForm';
 import GuestRegistrations from './GuestRegistrations';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
+import {formatDateAaaaMmDd} from '../../helpers/format';
 
 function ManualRegisterScreen({navigation}) {
   // const [requiredForms, setRequiredForms] = useState();
@@ -35,16 +36,42 @@ function ManualRegisterScreen({navigation}) {
   //   isActive: false,
   //   token: 'ZiU3aYBWAg1LPl+061DrVA==',
   // }
+  // TODO: setado temporariamente
+  // {
+  //   days: ['2023-02-13T00:00:00'],
+  //   id: 'sergio@spr.com',
+  //   inviteDays: ['2030-08-26T00:00:00'],
+  //   isActive: false,
+  //   token: 'ZiU3aYBWAg1LPl+061DrVA==',
+  // }
   const [user, setUser] = useState();
-  // TODO: setado tru temporariamente
+  // TODO: setado temporariamente
+  // {
+  //   address: {
+  //     city: '',
+  //     complement: '',
+  //     neighborhood: '',
+  //     number: '',
+  //     state: '',
+  //     street: '',
+  //     zipcode: '',
+  //   },
+  //   birthDate: '20/01/2000',
+  //   genre: 'Masculino',
+  //   invalidFields: [],
+  //   measurements: {blacelet: null, shirt: 'M', shoe: null},
+  //   phone: '(71) 92888-1099',
+  // }
   const [registerData, setRegisterData] = useState();
   const {requiredForms, setUserToken, userToken} = useContext(AuthContext);
   const isFocused = useIsFocused();
   const [isVisible, setIsVisible] = useState(true);
   // TODO: setado tru temporariamente
+  // 'readQRcode'
   const [getTicketIdType, setGetTicketIdType] = useState();
   const [loading, setLoading] = useState(false);
   // TODO: setado tru temporariamente
+  // {'2023-02-13T00:00:00': '13124234'}
   const [dayCodes, setDayCodes] = useState();
   const ref = useRef();
   const setAlertMessage = useAlert();
@@ -76,6 +103,7 @@ function ManualRegisterScreen({navigation}) {
   const completeRegister = async () => {
     const payload = {
       ...registerData,
+      birthDate: formatDateAaaaMmDd(registerData.birthDate),
       token: user.token,
       dayCodes,
       guests: guestRegistereds,
@@ -95,13 +123,21 @@ function ManualRegisterScreen({navigation}) {
       navigation.navigate('Kits');
       setAlertMessage(`Usuário ${user.id} cadastrado com sucesso!`);
     } catch (error) {
-      console.log('error', error);
+      console.error(error);
       console.log('error error.response.data', error.response.data);
       setAlertMessage(error.response.data.errors);
       return null;
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearStates = () => {
+    setUser(undefined);
+    setRegisterData(undefined);
+    setGetTicketIdType(undefined);
+    setDayCodes(undefined);
+    setGuestRegistereds(undefined);
   };
 
   const isCompletedUserRegistration = !!registerData && !!dayCodes;
@@ -172,6 +208,14 @@ function ManualRegisterScreen({navigation}) {
                 }}>
                 Ler QRcode
               </Button>
+              <Button
+                containerStyle={{marginBottom: 10}}
+                type="outline"
+                onPress={() => {
+                  setRegisterData(undefined);
+                }}>
+                Cancelar
+              </Button>
             </View>
           )}
           {isShowingGuestRegister && (
@@ -182,13 +226,23 @@ function ManualRegisterScreen({navigation}) {
             />
           )}
           {hasCompleteRegistration && (
-            <Button
-              type="solid"
-              size="lg"
-              containerStyle={{marginTop: 20}}
-              onPress={completeRegister}>
-              Finalizar cadastro
-            </Button>
+            <>
+              <Button
+                type="solid"
+                size="lg"
+                containerStyle={{marginTop: 20}}
+                onPress={completeRegister}>
+                Finalizar cadastro
+              </Button>
+              <Button
+                containerStyle={{marginTop: 10}}
+                type="outline"
+                onPress={() => {
+                  clearStates();
+                }}>
+                Cancelar
+              </Button>
+            </>
           )}
         </View>
         {!user && (
@@ -219,7 +273,9 @@ const INPUT_VALUE_TYPE = {
 };
 const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
   const [loading, setLoading] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  // TODO: Setado temporariamente
+  // 'sergio@spr.com'
+  const [inputValue, setInputValue] = useState();
   const [invalidInputValue, setInvalidInputValue] = useState();
   const setAlertMessage = useAlert();
   const authContext = useContext(AuthContext);

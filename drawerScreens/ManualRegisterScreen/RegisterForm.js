@@ -16,6 +16,7 @@ import {
   saveUserPhoto,
 } from '../../api/UserApi';
 import Loading from '../../components/Loading';
+import { formatDateAaaaMmDd} from '../../helpers/format';
 
 const registerReducer = (state, action) => {
   switch (action.type) {
@@ -148,7 +149,6 @@ const RegisterForm = React.memo(
           type: 'image/jpeg',
           name: 'userImage.jpg',
         });
-        console.log('FORM_DATA', formData, 'guest', newUserData);
         setIsLoading(true);
         try {
           var {data: newUserToken} = await newUserPreRegister(
@@ -218,7 +218,16 @@ const RegisterForm = React.memo(
             setAlertMessage(emptyFields);
             return false;
           }
-          if (!validateDate(birthDate)) {
+          function isValidBirthdate(date) {
+            var birthdate = new Date(date);
+            var currentDate = new Date();
+            if (birthdate > currentDate) return false;
+            return !isNaN(birthdate.getTime());
+          }
+          if (
+            !validateDate(birthDate) ||
+            !isValidBirthdate(formatDateAaaaMmDd(birthDate))
+          ) {
             setAlertMessage('Campo de data de nascimento inválido.');
             return false;
           }

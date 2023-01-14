@@ -1,22 +1,39 @@
 import {Badge, Button, Card, CheckBox, Input, Text} from '@rneui/themed';
 import React, {useEffect, useState} from 'react';
 import {ScrollView, View} from 'react-native';
-import {useMaskedInputProps} from 'react-native-mask-input';
 import Loading from '../../components/Loading';
-import {formatDate} from '../../helpers/format';
-import {cpfValidation, isValidEmail} from '../../helpers/validation';
+import {formatDateAaaaMmDd} from '../../helpers/format';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
 import RegisterForm from './RegisterForm';
 import UserForm from './UserForm';
 
 function GuestRegistrations({
+  // TODO: Setado temporariamente valor correto === []
+  // inviteDays = ['2030-08-26T00:00:00', '2030-08-26T00:00:00'],
   inviteDays = [],
+  // TODO: Setado temporariamente
+  // requiredForms = [
+  //   {
+  //     formConfig: {birthDateIsRequired: true, genreIsRequired: true},
+  //     id: 'details',
+  //     name: 'Detalhes',
+  //   },
+  //   {
+  //     formConfig: {
+  //       blaceletSizeIsRequired: false,
+  //       footSizeIsRequired: false,
+  //       shirtSizeIsRequired: true,
+  //     },
+  //     id: 'accessories',
+  //     name: 'Acessórios',
+  //   },
+  //   {id: 'photo', name: 'Fotografia'},
+  // ],
   requiredForms,
   onGuestRegistrations,
 }) {
   const [guestRegistrations, setGuestRegistrations] = useState([]);
   const [daysToRegisterGuests, setDaysToRegisterGuests] = useState(inviteDays);
-
   const availableInvitationDays = daysToRegisterGuests.length
     ? daysToRegisterGuests.length === 1
       ? daysToRegisterGuests
@@ -48,8 +65,6 @@ function GuestRegistrations({
   };
 
   if (!availableInvitationDays) return <Loading />;
-  console.log('@@@ daysToRegisterGuests', daysToRegisterGuests);
-  console.log('@@@ availableInvitationDays', availableInvitationDays);
   return (
     <ScrollView>
       <Card containerStyle={{borderRadius: 10, height: '100%'}}>
@@ -103,6 +118,7 @@ const GuestRegistration = ({
         registerData: {
           ...userData,
           ...registerData,
+          birthDate: formatDateAaaaMmDd(registerData.birthDate),
           dayCodes,
         },
         guestDays: days,
@@ -120,7 +136,7 @@ const GuestRegistration = ({
 
   const handleUserFormCompleted = data => {
     setUserData(data.user);
-    setDays(data.guestDays);
+    setDays(data.eventDays);
   };
 
   const handleReadCodes = readCodes => {
@@ -163,6 +179,15 @@ const GuestRegistration = ({
           setGetTicketIdType('readQRcode');
         }}>
         Ler QRcode
+      </Button>
+      <Button
+        containerStyle={{marginBottom: 10}}
+        type="outline"
+        onPress={() => {
+          setRegisterData(undefined);
+          setUserData(undefined);
+        }}>
+        Cancelar
       </Button>
     </View>
   ) : (
