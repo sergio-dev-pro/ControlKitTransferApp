@@ -16,7 +16,7 @@ import {
   saveUserPhoto,
 } from '../../api/UserApi';
 import Loading from '../../components/Loading';
-import { formatDateAaaaMmDd} from '../../helpers/format';
+import {formatDateAaaaMmDd} from '../../helpers/format';
 
 const registerReducer = (state, action) => {
   switch (action.type) {
@@ -126,6 +126,7 @@ const RegisterForm = React.memo(
           type: 'image/jpeg',
           name: 'userImage.jpg',
         });
+        console.log('preGuestRegistration', formData);
         setIsLoading(true);
         var guestRegisterToken = await guestPreRegister(formData);
         setIsLoading(false);

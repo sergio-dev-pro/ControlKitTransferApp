@@ -108,6 +108,7 @@ function ManualRegisterScreen({navigation}) {
       dayCodes,
       guests: guestRegistereds,
     };
+    console.log('Payload @@@@@@', payload);
     try {
       setLoading(true);
       await completeManualRegister(payload, userToken);
