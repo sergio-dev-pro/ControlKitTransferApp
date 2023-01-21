@@ -145,7 +145,9 @@ export default function ItinerariesScreen({navigation}) {
         await realmApi.registerItinerary(code, selectedItinerarie);
       }
     } catch (error) {
-      console.error(error);
+      console.log('error', error);
+      console.log('error error.response.data', error.response.data);
+      setAlertMessage(error.response.data.errors);
     } finally {
       setLoading(false);
     }

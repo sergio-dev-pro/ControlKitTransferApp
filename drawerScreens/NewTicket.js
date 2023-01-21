@@ -62,13 +62,14 @@ const NewTicket = ({navigation}) => {
 
   const completeRegister = async () => {
     try {
+      setLoading(true)
       const data = {
         ...registerData,
         birthDate: formatDateAaaaMmDd(registerData.birthDate),
         dayCodes,
         generatePdf: false,
       };
-      const res = await completeTicketRegister(data, authContext.userToken);
+      await completeTicketRegister(data, authContext.userToken);
       clearStates();
       setAlertMessage('Ingresso cadastrado com sucesso!');
       console.log('Ingresso cadastrado com sucesso!');
@@ -76,6 +77,8 @@ const NewTicket = ({navigation}) => {
       console.error(error);
       console.log('error error.response.data', error.response.data);
       setAlertMessage('Erro ao cadastrar ingresso!');
+    } finally {
+      setLoading(false)
     }
   };
 

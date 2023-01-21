@@ -25,24 +25,14 @@ export const registerItineraryAccess = async (
   authorization,
   code,
   itineraryId,
-) => {
-  try {
-    var payload = {code: code, itineraryId: itineraryId};
-    var response = await axios({
-      url: BASE_URL + '/api/transfers/accesses',
-      method: 'POST',
-      data: payload,
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + authorization,
-      },
-    });
-    return true;
-  } catch (error) {
-    console.log('error', error);
-    console.log('error error.response.data', error.response.data);
-    alert(error.response.data.errors);
-    return null;
-  }
-};
+) =>
+  await axios({
+    url: BASE_URL + '/api/transfers/accesses',
+    method: 'POST',
+    data: {code: code, itineraryId: itineraryId},
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + authorization,
+    },
+  });
