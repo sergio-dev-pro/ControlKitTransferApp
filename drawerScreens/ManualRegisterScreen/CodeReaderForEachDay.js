@@ -1,5 +1,5 @@
 import {Badge, Button, Icon, Text} from '@rneui/themed';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {View} from 'react-native';
 import Modal from 'react-native-modal';
 import QrCodeReader from '../../components/QrCodeReader';
@@ -16,8 +16,8 @@ const CodeReaderForEachDay = ({
 }) => {
   const [readCodes, setReadCodes] = useState([]);
   const [readDayCode, setReadDayCode] = useState();
-
   const setAlertMessage = useAlert();
+
   const handleQRCodeRead = code => {
     // TODO: Validar se os codigos dos dias sao diferentes
     const isValid =
@@ -33,13 +33,21 @@ const CodeReaderForEachDay = ({
     setReadDayCode(undefined);
   };
 
+  
   const handleClose = () => {
     setReadCodes([]);
     onClose();
+    clearState();
   };
 
   const handleReadCodes = () => {
     onReadCodes(readCodes);
+    clearState();
+  };
+
+  const clearState = () => {
+    setReadCodes([]);
+    setReadDayCode(undefined);
   };
   const selectReadDayCode = day => setReadDayCode(day);
   const unselectReadDayCode = day => setReadDayCode(undefined);

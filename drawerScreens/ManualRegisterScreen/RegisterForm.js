@@ -17,6 +17,7 @@ import {
 } from '../../api/UserApi';
 import Loading from '../../components/Loading';
 import {formatDateAaaaMmDd} from '../../helpers/format';
+import {Badge} from '@rneui/base';
 
 const registerReducer = (state, action) => {
   switch (action.type) {
@@ -100,7 +101,7 @@ const FORMS = {
 };
 
 const RegisterForm = React.memo(
-  ({requiredForms, onRegistered, guestInfos, newUserData}) => {
+  ({requiredForms, onRegistered, guestInfos, newUserData, onCancel}) => {
     const [registerState, dispatch] = useReducer(registerReducer, initialState);
     const [isLoading, setIsLoading] = useState(false);
     const steps = useMemo(
@@ -208,7 +209,7 @@ const RegisterForm = React.memo(
           setAlertMessage(emptyFields);
           return false;
         }
-        const isValidPhone = phone.length === 15;
+        const isValidPhone = phone.length >= 11;
         if (!isValidPhone) {
           setAlertMessage('Campo de telefone inválido.');
           return false;
@@ -307,13 +308,21 @@ const RegisterForm = React.memo(
           <View
             style={{
               width: '100%',
-              justifyContent:
-                currentStepIndex === 0 ? 'flex-end' : 'space-between',
+              justifyContent: onCancel
+                ? 'space-between'
+                : currentStepIndex === 0
+                ? 'flex-end'
+                : 'space-between',
               flexDirection: 'row',
             }}>
             {currentStepIndex !== 0 && (
               <Button type="clear" size="lg" onPress={back}>
                 Voltar
+              </Button>
+            )}
+            {onCancel && currentStepIndex === 0 && (
+              <Button type="clear" size="lg" onPress={onCancel}>
+                Cancelar
               </Button>
             )}
             <Button type="solid" size="lg" onPress={handleNext}>

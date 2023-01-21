@@ -1,7 +1,7 @@
 import React, {createContext, useContext} from 'react';
 
 export const initialState = {
-  phone: '',
+  phone: '+55',
   birthDate: '',
   genre: null,
   measurements: {

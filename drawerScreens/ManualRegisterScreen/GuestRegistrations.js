@@ -31,6 +31,7 @@ function GuestRegistrations({
   // ],
   requiredForms,
   onGuestRegistrations,
+  onReturn,
 }) {
   const [guestRegistrations, setGuestRegistrations] = useState([]);
   const [daysToRegisterGuests, setDaysToRegisterGuests] = useState(inviteDays);
@@ -66,12 +67,11 @@ function GuestRegistrations({
 
   if (!availableInvitationDays) return <Loading />;
   return (
-    <ScrollView>
-      <Card containerStyle={{borderRadius: 10, height: '100%'}}>
-        <Card.Title style={{marginBottom: 10}}>
-          Cadastro de convidados
-        </Card.Title>
-        {guestRegistrations.length > 0 && (
+    <Card containerStyle={{borderRadius: 10}}>
+      <Card.Title style={{marginBottom: 10}}>
+        Preencha os dados do convidado
+      </Card.Title>
+      {/* {guestRegistrations.length > 0 && (
           <View
             style={{
               flexDirection: 'row',
@@ -81,18 +81,20 @@ function GuestRegistrations({
             <Text h5 style={{paddingLeft: 4}}>
               Cadastrados:
             </Text>
-            <Badge value={guestRegistrations.length} status="success" />
+            {guestRegistrations.map(guest => (
+              <Badge key={guest.name} value={guest.name} status="success" />
+            ))}
           </View>
-        )}
+        )} */}
 
-        <Card.Divider />
-        <GuestRegistration
-          requiredForms={requiredForms}
-          onGuestRegistrationCompleted={handleGuestRegister}
-          availableInvitationDays={availableInvitationDays}
-        />
-      </Card>
-    </ScrollView>
+      <Card.Divider />
+      <GuestRegistration
+        requiredForms={requiredForms}
+        onGuestRegistrationCompleted={handleGuestRegister}
+        availableInvitationDays={availableInvitationDays}
+        onReturn={onReturn}
+      />
+    </Card>
   );
 }
 
@@ -100,6 +102,7 @@ const GuestRegistration = ({
   availableInvitationDays,
   requiredForms,
   onGuestRegistrationCompleted,
+  onReturn,
 }) => {
   // TODO: setado tru temporariamente
   const [registerData, setRegisterData] = useState();
@@ -152,6 +155,7 @@ const GuestRegistration = ({
   const isUserDataCompleted = !!userData;
   return !isUserDataCompleted ? (
     <UserForm
+      onReturn={onReturn}
       onUserFormCompleted={handleUserFormCompleted}
       availableDays={availableInvitationDays}
     />
@@ -160,6 +164,7 @@ const GuestRegistration = ({
       guestInfos={userData}
       requiredForms={requiredForms}
       onRegistered={setRegisterData}
+      onCancel={() => setUserData(undefined)}
     />
   ) : !getTicketIdType ? (
     <View>

@@ -1,5 +1,5 @@
 import {View} from 'react-native';
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {Input, Text} from '@rneui/themed';
 import {formatBirthDate, formatPhone} from '../../helpers/format';
 import {validateDate} from '../../helpers/validation';
@@ -11,15 +11,18 @@ const DetailsForm = ({formConfig}) => {
   const [isBirthDateValid, setIsBirthDateValid] = useState(true);
   return (
     <View>
-      <Text h4 style={{marginBottom: 20}}>Detalhes</Text>
+      <Text h4 style={{marginBottom: 20}}>
+        Detalhes
+      </Text>
       <Input
         label="Telefone"
         placeholder="(99) 99999-9999"
         value={phone}
         onChangeText={text => {
+          if (text === '') return null;
           dispatch({
             type: 'SET_PHONE',
-            payload: {phone: formatPhone(text)},
+            payload: {phone: text.replace(/[(-)--- a-zA-Z ,.]/g, '')},
           });
         }}
         keyboardType="numeric"

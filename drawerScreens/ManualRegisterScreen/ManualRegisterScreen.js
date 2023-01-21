@@ -68,7 +68,7 @@ function ManualRegisterScreen({navigation}) {
   const [isVisible, setIsVisible] = useState(true);
   // TODO: setado tru temporariamente
   // 'readQRcode'
-  const [getTicketIdType, setGetTicketIdType] = useState();
+  const [codeReaderType, setCodeReaderType] = useState();
   const [loading, setLoading] = useState(false);
   // TODO: setado tru temporariamente
   // {'2023-02-13T00:00:00': '13124234'}
@@ -79,6 +79,8 @@ function ManualRegisterScreen({navigation}) {
   // TODO: setado tru temporariamente
   // [{"address": {"city": "Jsnsn", "complement": "ZnznnzNN", "neighborhood": "Shhsh", "number": "49944949", "state": "CE", "street": "Jsjsjjsj", "zipcode": "99779-977"}, "birthDate": "", "dayCodes": {"2030-08-25T00:00:00": "12125"}, "document": "646.749.794-99", "email": "Jsjsshsh@hotmail.com", "genre": "Feminino", "invalidFields": [], "measurements": {"blacelet": "P", "shirt": "M", "shoe": "37"}, "name": "Jxjs", "phone": "(64) 64644-6464", "token": "gv7vLgwvZYLEH4CP2QPdDQ=="}]
   const [guestRegistereds, setGuestRegistereds] = useState();
+
+  const [showQRcodeReader, setShowQRcodeReader] = useState(false);
 
   useEffect(() => {
     // O ref.current e utilizado para verificar se
@@ -93,11 +95,13 @@ function ManualRegisterScreen({navigation}) {
   };
 
   const handleReadCodes = readCodes => {
+    console.log('@@@@@@@@@@@@@@ handleReadCodes', readCodes);
     let codes = {};
     readCodes.forEach(code => {
       codes = {...codes, ...code};
     });
     setDayCodes(codes);
+    setShowQRcodeReader(false);
   };
 
   const completeRegister = async () => {
@@ -108,7 +112,7 @@ function ManualRegisterScreen({navigation}) {
       dayCodes,
       guests: guestRegistereds,
     };
-    console.log('Payload @@@@@@', payload);
+    console.log('Payload @@@@@@', JSON.stringify(payload));
     try {
       setLoading(true);
       await completeManualRegister(payload, userToken);
@@ -116,7 +120,7 @@ function ManualRegisterScreen({navigation}) {
       const clearStates = () => {
         setUser();
         setRegisterData();
-        setGetTicketIdType();
+        setCodeReaderType();
         setDayCodes();
         setGuestRegistereds();
       };
@@ -136,7 +140,7 @@ function ManualRegisterScreen({navigation}) {
   const clearStates = () => {
     setUser(undefined);
     setRegisterData(undefined);
-    setGetTicketIdType(undefined);
+    setCodeReaderType(undefined);
     setDayCodes(undefined);
     setGuestRegistereds(undefined);
   };
@@ -150,6 +154,12 @@ function ManualRegisterScreen({navigation}) {
   const hasCompleteRegistration =
     isCompletedUserRegistration && isGuestUserRegistrationCompleted;
 
+  console.log(
+    user?.inviteDays?.length,
+    isCompletedUserRegistration,
+    isGuestUserRegistrationCompleted,
+  );
+  console.log(registerData, dayCodes);
   return (
     <>
       <View style={{...GStyles.view}}>
@@ -178,7 +188,9 @@ function ManualRegisterScreen({navigation}) {
                   justifyContent: 'center',
                 }}>
                 <Text h5 style={{paddingLeft: 4}}>
-                  {'Usuário encontrado: '}
+                  {!isShowingGuestRegister
+                    ? 'Cadastrando usuário:'
+                    : 'Convidados de:'}
                 </Text>
                 <Badge value={user.id} status="success" />
               </View>
@@ -188,9 +200,13 @@ function ManualRegisterScreen({navigation}) {
             <RegisterForm
               requiredForms={requiredForms}
               onRegistered={setRegisterData}
+              onCancel={() => {
+                setUser(undefined);
+                setIsVisible(true);
+              }}
             />
           )}
-          {user && registerData && !getTicketIdType && (
+          {user && registerData && !codeReaderType && (
             <View>
               <Text h4 h4Style={{marginVertical: 20}}>
                 Dar baixa no sistema
@@ -198,14 +214,16 @@ function ManualRegisterScreen({navigation}) {
               <Button
                 containerStyle={{marginBottom: 10}}
                 onPress={() => {
-                  setGetTicketIdType('readBarCode');
+                  setCodeReaderType('readBarCode');
+                  setShowQRcodeReader(true);
                 }}>
                 Ler código de barras
               </Button>
               <Button
                 containerStyle={{marginBottom: 10}}
                 onPress={() => {
-                  setGetTicketIdType('readQRcode');
+                  setCodeReaderType('readQRcode');
+                  setShowQRcodeReader(true);
                 }}>
                 Ler QRcode
               </Button>
@@ -224,6 +242,10 @@ function ManualRegisterScreen({navigation}) {
               inviteDays={user?.inviteDays}
               requiredForms={requiredForms}
               onGuestRegistrations={setGuestRegistereds}
+              onReturn={() => {
+                setShowQRcodeReader(true);
+                setDayCodes(undefined);
+              }}
             />
           )}
           {hasCompleteRegistration && (
@@ -257,10 +279,13 @@ function ManualRegisterScreen({navigation}) {
           />
         )}
         <CodeReaderForEachDay
-          isVisible={getTicketIdType && !dayCodes}
-          onClose={() => setGetTicketIdType(undefined)}
+          isVisible={showQRcodeReader}
+          onClose={() => {
+            setShowQRcodeReader(false);
+            setCodeReaderType(undefined);
+          }}
           daysInDate={user?.days}
-          type={getTicketIdType}
+          type={codeReaderType}
           onReadCodes={handleReadCodes}
         />
       </View>

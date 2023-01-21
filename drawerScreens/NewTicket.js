@@ -47,6 +47,7 @@ const NewTicket = ({navigation}) => {
   }, []);
 
   const handleUserFormCompleted = data => {
+    console.log(`@@@@@ data`, data);
     setUserData(data.user);
     setSelectedDays(data.eventDays);
   };
@@ -79,15 +80,16 @@ const NewTicket = ({navigation}) => {
   };
 
   const handleReadCodes = readCodes => {
+    setReadyCode(undefined);
     let codes = {};
     readCodes.forEach(code => {
       codes = {...codes, ...code};
     });
     setDayCodes(codes);
-    setReadyCode(undefined);
   };
 
   const canFinishRegistration = !!userData && !!registerData && !!dayCodes;
+  console.log(`@@@@ `, userData);
   return (
     <View style={{...GStyles.view}}>
       <Header openDrawer={() => navigation.openDrawer()} />
@@ -106,6 +108,7 @@ const NewTicket = ({navigation}) => {
                 requiredForms={authContext.requiredForms}
                 newUserData={userData}
                 onRegistered={setRegisterData}
+                onCancel={() => setUserData(undefined)}
               />
             )}
           </>
@@ -159,7 +162,7 @@ const NewTicket = ({navigation}) => {
           </>
         )}
         <CodeReaderForEachDay
-          isVisible={readyCode}
+          isVisible={!!readyCode}
           onClose={() => setReadyCode(undefined)}
           daysInDate={selectedDays}
           type={readyCode}

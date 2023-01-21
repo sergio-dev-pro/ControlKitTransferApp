@@ -3,6 +3,7 @@ import {useState} from 'react';
 import {View} from 'react-native';
 import {useMaskedInputProps} from 'react-native-mask-input';
 import Button from '../../components/Button';
+import SelectModal from '../../components/SelectModal';
 import {formatDate} from '../../helpers/format';
 import {cpfValidation, isValidEmail} from '../../helpers/validation';
 
@@ -14,10 +15,10 @@ const inputErrorMsgs = {
   },
 };
 
-const UserForm = ({onUserFormCompleted, availableDays}) => {
+const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
   const [user, setUser] = useState({
     name: '',
-    cpf: '',
+    cpf: '', // usado para amazenar cpf ou passport
     email: '',
   });
   const [emailValidation, setEmailValidation] = useState({
@@ -33,6 +34,11 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
     errorMsg: '',
   });
   const [eventDays, setEventDays] = useState(availableDays);
+  const [documentType, setDocumentType] = useState('cpf');
+  const [passportValidation, setPassportValidation] = useState({
+    isValid: true,
+    errorMsg: '',
+  });
 
   const {name, cpf, email} = user;
 
@@ -76,6 +82,7 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
     !emailValidation.isValid && valid();
     return true;
   };
+
   const validCPF = currentCPF => {
     const isValid = cpfValidation(currentCPF);
     const invalidCPF = () => {
@@ -92,6 +99,7 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
     !CPFValidation.isValid && valid();
     return true;
   };
+
   const validName = name => {
     const isName = name.length >= 3;
     !isName
@@ -103,6 +111,27 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
 
     return isName;
   };
+  const validPassport = (passport = cpf) => {
+    if (passport.length === 0) {
+      setPassportValidation({
+        isValid: false,
+        errorMsg: 'campo obrigatório.',
+      });
+      return false;
+    }
+    if (passport.length < 4) {
+      setPassportValidation({
+        isValid: false,
+        errorMsg: 'campo deve ter no mínimo 4 caracteres.',
+      });
+      return false;
+    }
+
+    setPassportValidation({
+      isValid: true,
+    });
+    return true;
+  };
 
   const handleEmailChange = emailChanged => {
     !emailValidation.isValid && validEmail(emailChanged);
@@ -110,7 +139,8 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
   };
 
   const handleComplete = () => {
-    if (!validCPF(cpf) || !validEmail(email) || !validName(name)) return;
+    const validDocument = documentType === 'cpf' ? validCPF : validPassport
+    if (!validDocument(cpf) || !validEmail(email) || !validName(name)) return;
     onUserFormCompleted({
       user: {email: user.email, document: user.cpf, name: user.name},
       eventDays,
@@ -140,16 +170,42 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
         placeholder="Digite o email"
         errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
       />
-      <Input
-        label="CPF"
-        onBlur={() => {
-          validCPF(cpf);
+
+      <SelectModal
+        label={'Tipo do documento'}
+        items={[
+          {key: 'cpf', value: 'CPF'},
+          {key: 'passport', value: 'Passaporte'},
+        ]}
+        setValue={value => {
+          setDocumentType(value);
+          setUser(prev => ({...prev, cpf: ''}));
         }}
-        keyboardType="numeric"
-        // placeholder="999.999.999-99"
-        {...maskedCPFInputProps}
-        errorMessage={!CPFValidation.isValid ? CPFValidation.errorMsg : ''}
+        value={documentType}
       />
+
+      {documentType === 'cpf' ? (
+        <Input
+          label="CPF"
+          onBlur={() => {
+            validCPF(cpf);
+          }}
+          keyboardType="numeric"
+          // placeholder="999.999.999-99"
+          {...maskedCPFInputProps}
+          errorMessage={!CPFValidation.isValid ? CPFValidation.errorMsg : ''}
+        />
+      ) : (
+        <Input
+          label="Passaporte"
+          value={cpf}
+          onChangeText={text => setUser(prev => ({...prev, cpf: text}))}
+          onBlur={validPassport}
+          errorMessage={
+            !passportValidation.isValid ? passportValidation.errorMsg : ''
+          }
+        />
+      )}
 
       <View style={{paddingHorizontal: 10}}>
         <Text style={{fontSize: 17}}>Dias de evento:</Text>
@@ -185,12 +241,26 @@ const UserForm = ({onUserFormCompleted, availableDays}) => {
         </View>
       </View>
 
-      <Button
-        containerStyle={{width: '100%'}}
-        style={{marginTop: 25}}
-        onPress={handleComplete}>
-        Avançar
-      </Button>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginTop: 25,
+        }}>
+        {!!onReturn && (
+          <Button
+            type="outline"
+            onPress={onReturn}
+            containerStyle={{paddingRight: 16}}>
+            Voltar
+          </Button>
+        )}
+        <Button
+          containerStyle={!!onReturn ? {} : {width: '100%'}}
+          onPress={handleComplete}>
+          Avançar
+        </Button>
+      </View>
     </View>
   );
 };
