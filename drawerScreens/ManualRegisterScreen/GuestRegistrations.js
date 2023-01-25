@@ -169,21 +169,21 @@ const GuestRegistration = ({
   ) : !getTicketIdType ? (
     <View>
       <Text h4 h4Style={{marginVertical: 20}}>
-        Dar baixa no sistema
+        Leia o código do ingresso
       </Text>
       <Button
         containerStyle={{marginBottom: 10}}
         onPress={() => {
           setGetTicketIdType('readBarCode');
         }}>
-        Ler código de barras
+        Código de barras
       </Button>
       <Button
         containerStyle={{marginBottom: 10}}
         onPress={() => {
           setGetTicketIdType('readQRcode');
         }}>
-        Ler QRcode
+        QRcode
       </Button>
       <Button
         containerStyle={{marginBottom: 10}}

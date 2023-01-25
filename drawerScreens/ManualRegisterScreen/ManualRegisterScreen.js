@@ -209,7 +209,7 @@ function ManualRegisterScreen({navigation}) {
           {user && registerData && !codeReaderType && (
             <View>
               <Text h4 h4Style={{marginVertical: 20}}>
-                Dar baixa no sistema
+                Leia o código do ingresso
               </Text>
               <Button
                 containerStyle={{marginBottom: 10}}
@@ -217,7 +217,7 @@ function ManualRegisterScreen({navigation}) {
                   setCodeReaderType('readBarCode');
                   setShowQRcodeReader(true);
                 }}>
-                Ler código de barras
+                Código de barras
               </Button>
               <Button
                 containerStyle={{marginBottom: 10}}
@@ -225,7 +225,7 @@ function ManualRegisterScreen({navigation}) {
                   setCodeReaderType('readQRcode');
                   setShowQRcodeReader(true);
                 }}>
-                Ler QRcode
+                QRcode
               </Button>
               <Button
                 containerStyle={{marginBottom: 10}}

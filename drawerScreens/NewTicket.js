@@ -123,21 +123,21 @@ const NewTicket = ({navigation}) => {
         {!!userData && !!registerData && !dayCodes && (
           <View>
             <Text h4 h4Style={{marginVertical: 20}}>
-              Dar baixa no sistema
+              Leia o código do ingresso
             </Text>
             <Button
               containerStyle={{marginBottom: 10}}
               onPress={() => {
                 setReadyCode('readBarCode');
               }}>
-              Ler código de barras
+              Código de barras
             </Button>
             <Button
               containerStyle={{marginBottom: 10}}
               onPress={() => {
                 setReadyCode('readQRcode');
               }}>
-              Ler QRcode
+              QRcode
             </Button>
             <Button
               containerStyle={{marginBottom: 10}}
