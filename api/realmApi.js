@@ -78,6 +78,7 @@ export const sendLocallySavedPendingRegisteredTickets = async token => {
       await api.registerTicket(ticket.ticketCode, token);
     } catch (error) {
       console.error(error);
+      return null;
     }
     realm.write(() => {
       ticket.needToSendDelivery = false;
@@ -111,7 +112,6 @@ export const registerItineraryOffline = async (ticketCode, itineraryId) => {
   if (itineraryIds.length === 2)
     throw new Error('O ingresso já foi registrado.');
 
-  
   realm.write(() => {
     ticket.itineraryIds =
       itineraryIds.length === 0
@@ -130,17 +130,24 @@ export const sendLocallySavedPendingRegisteredItineraries = async token => {
 
   for (const ticket of pendingTickets) {
     const {ticketCode} = ticket;
-    ticket.itineraryIds.forEach(async id => {
+    let itinerariesSuccessfullySent = true;
+
+    for (const id of [...ticket.itineraryIds]) {
       try {
         await registerItineraryAccess(token, ticketCode, id);
+        realm.write(() => {
+          ticket.itineraryIds = ticket.itineraryIds.filter(ID => ID !== id);
+        });
       } catch (error) {
         console.error(error);
+        itinerariesSuccessfullySent = false;
       }
-    });
-    realm.write(() => {
-      ticket.needToSendTransfer = false;
-      ticket.itineraryIds = [];
-    });
+    }
+
+    if (itinerariesSuccessfullySent)
+      realm.write(() => {
+        ticket.needToSendTransfer = false;
+      });
   }
 };
 

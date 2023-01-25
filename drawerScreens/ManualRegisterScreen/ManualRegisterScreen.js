@@ -296,6 +296,7 @@ function ManualRegisterScreen({navigation}) {
 const INPUT_VALUE_TYPE = {
   email: 'email',
   cpf: 'cpf',
+  passport: 'passport',
 };
 const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
   const [loading, setLoading] = useState(false);
@@ -317,20 +318,20 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
 
     const isValid = isValidEmail(inputValue);
     const isValidCPF = cpfValidation(inputValue);
+    const isValidPassport = inputValue.length >= 4;
 
-    const isInputValueValid = isValid || isValidCPF;
+    const isInputValueValid = isValid || isValidCPF || isValidPassport;
     if (!isInputValueValid) {
       return !invalidInputValue
-        ? setInvalidInputValue('E-mail ou CPF inválido.')
+        ? setInvalidInputValue('E-mail ou documento inválido.')
         : null;
     }
 
     invalidInputValue && setInvalidInputValue(null);
 
-    const successValidatedType = isValid
-      ? INPUT_VALUE_TYPE.email
-      : INPUT_VALUE_TYPE.cpf;
-    return successValidatedType;
+    if (isValid) return INPUT_VALUE_TYPE.email;
+    if (isValidCPF) return INPUT_VALUE_TYPE.cpf;
+    if (isValidPassport) return INPUT_VALUE_TYPE.passport;
   };
 
   const handleSearch = async () => {
@@ -349,8 +350,8 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
         return setAlertMessage(
           `${
             validatedInputValueType === INPUT_VALUE_TYPE.email
-              ? 'e-mail não encontrado.'
-              : 'CPF não encontrado.'
+              ? 'E-mail não encontrado.'
+              : 'Documento não encontrado.'
           }`,
         );
       console.error(error);
@@ -379,7 +380,7 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
         <Input
           ref={ref}
           value={inputValue}
-          placeholder="Digite o e-mail ou CPF"
+          placeholder="Busque por e-mail ou CPF ou passaporte"
           onChangeText={value => setInputValue(value.trim().replace(/\s/g, ''))}
           errorMessage={invalidInputValue}
         />

@@ -24,7 +24,7 @@ export default function ItinerariesScreen({navigation}) {
   const {selectedEventId, userToken} = useContext(AuthContext);
   const {isConnected, isLoadingConnectionStatus} = useNetinfo();
   const [syncronizingTicket, setSyncronizingTicket] = useState(false);
-  console.log('isConected', isConnected);
+
   const syncTickets = async () => {
     try {
       const getTickets = async () => {
@@ -50,6 +50,13 @@ export default function ItinerariesScreen({navigation}) {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    setInterval(() => {
+      console.log('itinerarios sincroonizando a cada 30 seg...');
+      syncTickets();
+    }, 30000);
+  }, []);
 
   useEffect(() => {
     const getItinerariesList = async () => {
@@ -120,7 +127,7 @@ export default function ItinerariesScreen({navigation}) {
         setLoading(true);
         await realmApi.registerItineraryOffline(code, selectedItinerarie);
         setAlertMessage(
-          'Ingresso encontrado! Registro de entrega de kit realizado.',
+          'Ingresso encontrado, registro de intinerário realizado.',
         );
       } catch (error) {
         console.error(error);

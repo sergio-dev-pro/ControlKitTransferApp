@@ -40,9 +40,14 @@ const NewTicket = ({navigation}) => {
 
   useEffect(() => {
     (async () => {
-      const {data: days} = await getEventDays(authContext.selectedEventId);
-      setDays(days);
-      setLoading(false);
+      try {
+        const {data: days} = await getEventDays(authContext.selectedEventId);
+        setDays(days);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -62,7 +67,7 @@ const NewTicket = ({navigation}) => {
 
   const completeRegister = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const data = {
         ...registerData,
         birthDate: formatDateAaaaMmDd(registerData.birthDate),
@@ -78,7 +83,7 @@ const NewTicket = ({navigation}) => {
       console.log('error error.response.data', error.response.data);
       setAlertMessage('Erro ao cadastrar ingresso!');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -92,7 +97,6 @@ const NewTicket = ({navigation}) => {
   };
 
   const canFinishRegistration = !!userData && !!registerData && !!dayCodes;
-  console.log(`@@@@ `, userData);
   return (
     <View style={{...GStyles.view}}>
       <Header openDrawer={() => navigation.openDrawer()} />

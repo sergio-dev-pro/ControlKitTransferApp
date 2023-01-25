@@ -48,6 +48,14 @@ function KitsDrawerScreen({navigation}) {
     }
   };
 
+  useEffect(() => {
+    setInterval(() => {
+      7;
+      console.log('Kits sincroonizando a cada 30 seg...');
+      syncTickets();
+    }, 30000);
+  }, []);
+
   const isFirstSyncRef = useRef(false);
   useEffect(() => {
     if (isConnected !== null) {
@@ -72,9 +80,7 @@ function KitsDrawerScreen({navigation}) {
       try {
         setLoading(false);
         await realmApi.registerTicketOffline(code);
-        setAlertMessage(
-          'Ingresso encontrado! Registro de entrega de kit realizado.',
-        );
+        setAlertMessage('Registro de entrega de kit realizado.');
       } catch (error) {
         console.error(error);
         setAlertMessage(error.message);
@@ -97,7 +103,6 @@ function KitsDrawerScreen({navigation}) {
       setLoading(false);
     }
   };
-
   return (
     <View style={{...GStyles.view}}>
       <Header openDrawer={() => navigation.openDrawer()} />

@@ -210,7 +210,13 @@ android {
             include (*reactNativeArchitectures())
         }
     }
-    signingConfigs {
+        signingConfigs {
+        release {
+            storeFile file('your_key_name.keystore')
+            storePassword '123456'
+            keyAlias 'your_key_alias'
+            keyPassword '123456'
+        }
         debug {
             storeFile file('debug.keystore')
             storePassword 'android'
