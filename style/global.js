@@ -11,6 +11,7 @@ const GStyles = StyleSheet.create({
     width: '100%',
     padding: 20,
     maxWidth: 450,
+    flex:1
   },
   maxWidth: {maxWidth: 450},
 });

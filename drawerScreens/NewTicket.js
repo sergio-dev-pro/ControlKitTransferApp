@@ -2,7 +2,7 @@ import {View} from 'react-native';
 import React, {useContext, useEffect, useLayoutEffect, useState} from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
-import {Button, Text} from '@rneui/themed';
+import {Button, Divider, Text} from '@rneui/themed';
 import UserForm from './ManualRegisterScreen/UserForm';
 import {getEventDays} from '../api/EventApi';
 import {AuthContext} from '../context/AuthContext';
@@ -12,6 +12,8 @@ import {completeTicketRegister} from '../api/UserApi';
 import CodeReaderForEachDay from './ManualRegisterScreen/CodeReaderForEachDay';
 import {useAlert} from '../context/AlertContext';
 import {formatDateAaaaMmDd} from '../helpers/format';
+import {ScrollView} from 'react-native-gesture-handler';
+import THEME from '../style/theme';
 
 const NewTicket = ({navigation}) => {
   // TODO: setado tru temporariamente
@@ -99,9 +101,18 @@ const NewTicket = ({navigation}) => {
   const canFinishRegistration = !!userData && !!registerData && !!dayCodes;
   return (
     <View style={{...GStyles.view}}>
-      <Header openDrawer={() => navigation.openDrawer()} />
+      <Header
+        style={{marginBottom: 0}}
+        openDrawer={() => navigation.openDrawer()}
+      />
+      <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
+        <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
+          Novo ingresso
+        </Text>
+        <Divider />
+      </View>
       <View style={GStyles.container}>
-        <Text h3>Novo ingresso</Text>
+        {/* <Text h3>Novo ingresso</Text> */}
         {days.length > 0 && (
           <>
             {!userData && (

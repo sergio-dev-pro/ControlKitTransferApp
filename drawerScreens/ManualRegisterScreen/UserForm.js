@@ -1,6 +1,7 @@
 import {CheckBox, Input, Text} from '@rneui/themed';
 import {useState} from 'react';
 import {View} from 'react-native';
+import {ScrollView} from 'react-native-gesture-handler';
 import {useMaskedInputProps} from 'react-native-mask-input';
 import Button from '../../components/Button';
 import SelectModal from '../../components/SelectModal';
@@ -139,7 +140,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
   };
 
   const handleComplete = () => {
-    const validDocument = documentType === 'cpf' ? validCPF : validPassport
+    const validDocument = documentType === 'cpf' ? validCPF : validPassport;
     if (!validDocument(cpf) || !validEmail(email) || !validName(name)) return;
     onUserFormCompleted({
       user: {email: user.email, document: user.cpf, name: user.name},
@@ -148,7 +149,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
   };
 
   return (
-    <View style={{marginTop: 10}}>
+    <ScrollView style={{flex: 1, height: '100%'}}>
       <Input
         label="Nome"
         value={name}
@@ -214,13 +215,20 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
             width: '100%',
             flexDirection: 'row',
             flexWrap: 'wrap',
-            marginBottom: 20,
+            marginBottom: 16,
             marginTop: 10,
           }}>
           {availableDays.map(availableDay => (
             <CheckBox
               key={availableDay}
-              containerStyle={{padding: 4, margin: 0, marginRight: 0}}
+              containerStyle={{
+                paddingHorizontal: 0,
+                paddingVertical: 4,
+                margin: 0,
+                marginRight: 0,
+                marginLeft: 0,
+              }}
+              textStyle={{paddingLeft: 3}}
               center
               title={formatDate(availableDay)}
               checked={eventDays.includes(availableDay)}
@@ -245,7 +253,6 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
-          marginTop: 25,
         }}>
         {!!onReturn && (
           <Button
@@ -261,7 +268,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
           Avançar
         </Button>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

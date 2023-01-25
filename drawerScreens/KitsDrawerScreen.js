@@ -1,4 +1,4 @@
-import {Button, Text} from '@rneui/themed';
+import {Button, Divider, Text} from '@rneui/themed';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {View} from 'react-native';
 import Header from '../components/Header';
@@ -10,6 +10,7 @@ import GStyles from '../style/global';
 import {fetchTickets, registerTicket} from '../api/TicketApi';
 import * as realmApi from '../api/realmApi';
 import useNetinfo from './hooks/useNetinfo';
+import THEME from '../style/theme';
 
 function KitsDrawerScreen({navigation}) {
   const authContext = useContext(AuthContext);
@@ -105,13 +106,24 @@ function KitsDrawerScreen({navigation}) {
   };
   return (
     <View style={{...GStyles.view}}>
-      <Header openDrawer={() => navigation.openDrawer()} />
-      <View style={GStyles.container}>
-        <Text h3 h3Style={{marginBottom: 10}}>
+      <Header
+        style={{marginBottom: 0}}
+        openDrawer={() => navigation.openDrawer()}
+      />
+      <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
+        <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
           {!syncronizingTicket
             ? 'Entrega de kits'
             : 'Aguarde: sincronizando ingressos.'}
         </Text>
+        <Divider />
+      </View>
+      <View style={GStyles.container}>
+        {/* <Text h3 h3Style={{marginBottom: 10}}>
+          {!syncronizingTicket
+            ? 'Entrega de kits'
+            : 'Aguarde: sincronizando ingressos.'}
+        </Text> */}
         <Button
           loading={loading || syncronizingTicket}
           onPress={() => {

@@ -1,12 +1,13 @@
 import {Text} from '@rneui/themed';
 import React, {useContext} from 'react';
 import GStyles from '../style/global';
-import {ListItem} from '@rneui/base';
+import {Divider, ListItem} from '@rneui/base';
 import {FlatList, View} from 'react-native';
 import Button from '../components/Button';
 import {AuthContext} from '../context/AuthContext';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
+import THEME from '../style/theme';
 
 function EventSelectionDrawerScreen({navigation}) {
   const {
@@ -23,9 +24,17 @@ function EventSelectionDrawerScreen({navigation}) {
   return (
     <>
       <View style={{...GStyles.view}}>
-        <Header openDrawer={() => navigation.openDrawer()} />
+        <Header
+          style={{marginBottom: 0}}
+          openDrawer={() => navigation.openDrawer()}
+        />
+        <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
+          <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
+            Eventos
+          </Text>
+          <Divider />
+        </View>
         <View style={GStyles.container}>
-          <Text h3>Eventos</Text>
           <FlatList
             data={events}
             renderItem={({item}) => (
