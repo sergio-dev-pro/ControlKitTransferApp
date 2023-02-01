@@ -1,6 +1,8 @@
+import {Divider} from '@rneui/base';
 import {Badge, Button, Card, CheckBox, Input, Text} from '@rneui/themed';
 import React, {useEffect, useState} from 'react';
 import {ScrollView, View} from 'react-native';
+import {FlatList} from 'react-native-gesture-handler';
 import Loading from '../../components/Loading';
 import {formatDateAaaaMmDd} from '../../helpers/format';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
@@ -65,10 +67,30 @@ function GuestRegistrations({
     setGuestRegistrations(prevState => [...prevState, data.registerData]);
   };
 
+  console.log('GuestRegistrations props', requiredForms, inviteDays);
+  const withS = guestRegistrations.length > 1 && 's';
   if (!availableInvitationDays) return <Loading />;
   return (
     <Card containerStyle={{borderRadius: 10}}>
-      <Card.Title style={{marginBottom: 10}}>
+      {guestRegistrations.length > 0 && (
+        <>
+          <Card.Title style={{marginBottom: 0, flexGrow: 0, height: 20}}>
+            {guestRegistrations.length} convidado{withS} cadastrado
+            {withS}
+          </Card.Title>
+          <FlatList
+            data={guestRegistrations}
+            horizontal
+            renderItem={({item}) => {
+              return (
+                <Badge key={item.name} value={item.name} status="success" />
+              );
+            }}
+          />
+          <Card.Divider style={{flexGrow: 0, height: 4}} />
+        </>
+      )}
+      <Card.Title style={{marginBottom: 10, flexGrow: 0, height: 20}}>
         Preencha os dados do convidado
       </Card.Title>
       {/* {guestRegistrations.length > 0 && (
@@ -86,14 +108,17 @@ function GuestRegistrations({
             ))}
           </View>
         )} */}
+      <Card.Divider style={{flexGrow: 0, height: 4}} />
 
-      <Card.Divider />
-      <GuestRegistration
-        requiredForms={requiredForms}
-        onGuestRegistrationCompleted={handleGuestRegister}
-        availableInvitationDays={availableInvitationDays}
-        onReturn={onReturn}
-      />
+      <ScrollView style={{flexGrow: 1, height: '100%'}}>
+        <GuestRegistration
+          requiredForms={requiredForms}
+          onGuestRegistrationCompleted={handleGuestRegister}
+          availableInvitationDays={availableInvitationDays}
+          onReturn={onReturn}
+        />
+      </ScrollView>
+      {/* <Divider style={{flexGrow: 1, height: 4, marginTop: 8}} /> */}
     </Card>
   );
 }

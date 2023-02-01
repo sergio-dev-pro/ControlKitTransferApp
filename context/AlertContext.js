@@ -9,14 +9,25 @@ export const useAlert = () => {
 
 export const AlertProvider = ({children}) => {
   const [message, setMessage] = useState('');
+  const [color, setColor] = useState('');
   return (
-    <AlertContext.Provider value={{setMessage}}>
+    <AlertContext.Provider
+      value={{
+        setMessage: (message, color = null) => {
+          setMessage(message);
+          color && setColor(color);
+        },
+      }}>
       {children}
 
       <Alert
+        textColor={color}
         message={message}
         isVisible={message.length > 0}
-        onOk={() => setMessage('')}
+        onOk={() => {
+          setMessage('');
+          setColor('');
+        }}
       />
     </AlertContext.Provider>
   );

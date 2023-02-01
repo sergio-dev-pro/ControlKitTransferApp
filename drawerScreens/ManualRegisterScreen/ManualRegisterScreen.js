@@ -155,9 +155,7 @@ function ManualRegisterScreen({navigation}) {
     isCompletedUserRegistration && isGuestUserRegistrationCompleted;
 
   console.log(
-    user?.inviteDays?.length,
-    isCompletedUserRegistration,
-    isGuestUserRegistrationCompleted,
+   user
   );
   console.log(registerData, dayCodes);
   return (

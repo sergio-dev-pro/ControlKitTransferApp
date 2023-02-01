@@ -64,6 +64,8 @@ export const registerTicketOffline = async ticketCode => {
     ticket.kitDelivered = true;
     ticket.needToSendDelivery = true;
   });
+
+  return ticket;
 };
 
 export const sendLocallySavedPendingRegisteredTickets = async token => {

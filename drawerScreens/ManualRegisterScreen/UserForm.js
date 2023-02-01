@@ -147,9 +147,9 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
       eventDays,
     });
   };
-
+ console.log('UserForm')
   return (
-    <ScrollView style={{flex: 1, height: '100%'}}>
+    <View>
       <Input
         label="Nome"
         value={name}
@@ -268,7 +268,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
           Avançar
         </Button>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
