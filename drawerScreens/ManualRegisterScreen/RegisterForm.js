@@ -185,14 +185,20 @@ const RegisterForm = React.memo(
           name: 'userImage.jpg',
         });
         console.log('@@@@ formData', formData);
-        setIsLoading(true);
-        var response = await saveUserPhoto(formData);
-        setIsLoading(false);
-        if (response) {
-          setAlertMessage('Foto salva com sucesso!');
-          onRegistered(registerState);
-        } else {
+        try {
+          setIsLoading(true);
+          var response = await saveUserPhoto(formData);
+          if (response) {
+            setAlertMessage('Foto salva com sucesso!');
+            onRegistered(registerState);
+          } else {
+            setAlertMessage('Erro ao enviar imagem, tente novamente.');
+          }
+        } catch (error) {
+          console.error(error);
           setAlertMessage('Erro ao enviar imagem, tente novamente.');
+        } finally {
+          setIsLoading(false);
         }
       }
     };

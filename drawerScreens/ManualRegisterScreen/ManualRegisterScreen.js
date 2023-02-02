@@ -143,6 +143,7 @@ function ManualRegisterScreen({navigation}) {
     setCodeReaderType(undefined);
     setDayCodes(undefined);
     setGuestRegistereds(undefined);
+    setIsVisible(true);
   };
 
   const isCompletedUserRegistration = !!registerData && !!dayCodes;
@@ -154,9 +155,7 @@ function ManualRegisterScreen({navigation}) {
   const hasCompleteRegistration =
     isCompletedUserRegistration && isGuestUserRegistrationCompleted;
 
-  console.log(
-   user
-  );
+  console.log(user);
   console.log(registerData, dayCodes);
   return (
     <>

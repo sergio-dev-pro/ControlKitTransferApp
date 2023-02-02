@@ -74,7 +74,7 @@ function GuestRegistrations({
     <Card containerStyle={{borderRadius: 10}}>
       {guestRegistrations.length > 0 && (
         <>
-          <Card.Title style={{marginBottom: 0, flexGrow: 0, height: 20}}>
+          <Card.Title style={{marginBottom: 8, flexGrow: 0, height: 20}}>
             {guestRegistrations.length} convidado{withS} cadastrado
             {withS}
           </Card.Title>
@@ -87,7 +87,7 @@ function GuestRegistrations({
               );
             }}
           />
-          <Card.Divider style={{flexGrow: 0, height: 4}} />
+          <Card.Divider style={{flexGrow: 0, height: 4, marginBottom: 8}} />
         </>
       )}
       <Card.Title style={{marginBottom: 10, flexGrow: 0, height: 20}}>
