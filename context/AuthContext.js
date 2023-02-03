@@ -152,10 +152,19 @@ export function AuthProvider({children}) {
       var decodedToken = jwt_decode(token);
       const events = JSON.parse(decodedToken.Events);
       // Se tiver apenas um evento, nao precisa ir para tela de selecao.
-      const selectedEventId =
-        events.length === 1 ? events[0].id.toString() : null;
-      selectedEventId &&
-        (await AsyncStorage.setItem('eventId', selectedEventId));
+      const selectedEventId = events.length === 1 ? events[0].id : null;
+      if (selectedEventId) {
+        const {data: requiredFieldsForUserRegistration} =
+          await getEventRequiredFields(selectedEventId);
+
+        await AsyncStorage.setItem(
+          'event',
+          JSON.stringify({
+            id: selectedEventId.toString(),
+            requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
+          }),
+        );
+      }
       let authStateChanges = {
         userToken: token,
         isAuthenticated: true,
@@ -178,7 +187,7 @@ export function AuthProvider({children}) {
 
   const logout = async () => {
     try {
-      await AsyncStorage.multiRemove(['userToken', 'eventId']);
+      await AsyncStorage.multiRemove(['userToken', 'event']);
       setAuthState(initialState);
     } catch (e) {
       console.error(e);

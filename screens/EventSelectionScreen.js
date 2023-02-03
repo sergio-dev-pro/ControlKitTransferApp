@@ -15,6 +15,18 @@ function EventSelectionScreen() {
     setSelectedEventId(eventId);
   };
 
+  if (events && events.length === 1) {
+    setSelectedEventId(events[0].id);
+    return (
+      <View style={GStyles.view}>
+        <AuthHeader />
+        <View style={GStyles.container}>
+          <Loading isActive />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <>
       <View style={GStyles.view}>
