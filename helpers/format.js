@@ -67,18 +67,10 @@ function padTo2Digits(num) {
 }
 
 export function formatDate(dateToFormat) {
-  const dateSplited = dateToFormat.split('-');
-  const date = new Date(
-    dateSplited[0],
-    dateSplited[1] - 1,
-    dateSplited[2],
-    0,
-    0,
-    0,
-  );
+  const date = new Date(dateToFormat);
   return [
     padTo2Digits(date.getDate()),
-    padTo2Digits(date.getMonth()),
+    padTo2Digits(date.getMonth() + 1),
     date.getFullYear(),
   ].join('/');
 }
