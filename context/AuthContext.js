@@ -81,24 +81,23 @@ export function AuthProvider({children}) {
   }, []);
 
   const getUserToken = async () => {
-    await AsyncStorage.getItem('userToken').then(async token => {
-      if (token) {
-        const eventInJsonFormat = await AsyncStorage.getItem('event');
-        const event = JSON.parse(eventInJsonFormat);
-        var decodedToken = jwt_decode(token);
-        const events = JSON.parse(decodedToken.Events);
-        setAuthState({
-          userToken: token,
-          canCreateTicket: decodedToken.CanCreateTicket,
-          // // TODO: setado temporariamente para testar, excluir linha a baixo.
-          // token: 'ZiU3aYBWAg1LPl+061DrVA==',
-          isAuthenticated: true,
-          selectedEventId: parseInt(event?.id),
-          requiredForms: event?.requiredForms,
-          events,
-        });
-      }
-    });
+    const token = await AsyncStorage.getItem('userToken');
+    if (token) {
+      const eventInJsonFormat = await AsyncStorage.getItem('event');
+      const event = JSON.parse(eventInJsonFormat);
+      var decodedToken = jwt_decode(token);
+      const events = JSON.parse(decodedToken.Events);
+      setAuthState({
+        userToken: token,
+        canCreateTicket: decodedToken.CanCreateTicket,
+        // // TODO: setado temporariamente para testar, excluir linha a baixo.
+        // token: 'ZiU3aYBWAg1LPl+061DrVA==',
+        isAuthenticated: true,
+        selectedEventId: parseInt(event?.id),
+        requiredForms: event?.requiredForms,
+        events,
+      });
+    }
     setIsAuthenticating(false);
   };
 
@@ -150,6 +149,7 @@ export function AuthProvider({children}) {
       await AsyncStorage.setItem('userToken', token);
       // decode token to get events.
       var decodedToken = jwt_decode(token);
+      console.log('decodedToken='+ JSON.stringify(decodedToken));
       const events = JSON.parse(decodedToken.Events);
       // Se tiver apenas um evento, nao precisa ir para tela de selecao.
       const selectedEventId = events.length === 1 ? events[0].id : null;

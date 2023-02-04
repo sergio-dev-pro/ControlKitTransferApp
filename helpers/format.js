@@ -68,8 +68,9 @@ function padTo2Digits(num) {
 
 export function formatDate(dateToFormat) {
   const date = new Date(dateToFormat);
+  console.log('@@@@@testDate '+date + ' | ' + date.getDate())
   return [
-    padTo2Digits(date.getDate()),
+    padTo2Digits(date.getDate() + 1),
     padTo2Digits(date.getMonth() + 1),
     date.getFullYear(),
   ].join('/');

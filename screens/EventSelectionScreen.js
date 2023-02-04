@@ -11,6 +11,7 @@ import GStyles from '../style/global';
 function EventSelectionScreen() {
   const {setSelectedEventId, events, isSearchingEventSettings} =
     useContext(AuthContext);
+    console.log(JSON.stringify(events))
   const handleEventSelection = async eventId => {
     setSelectedEventId(eventId);
   };

@@ -9,27 +9,12 @@ import {
 } from 'react-native';
 import {Camera, useCameraDevices} from 'react-native-vision-camera';
 
-import FaceDetection, {
-  FaceDetectorContourMode,
-  FaceDetectorLandmarkMode,
-} from 'react-native-face-detection';
 import Loading from '../../components/Loading';
 import {useRegisterState} from './registerContext';
 import {Button, Icon} from '@rneui/themed';
 import ReactNativeModal from 'react-native-modal';
 import THEME from '../../style/theme';
 import {useAlert} from '../../context/AlertContext';
-
-async function processFaces(imagePath) {
-  const options = {
-    landmarkMode: FaceDetectorLandmarkMode.ALL,
-    contourMode: FaceDetectorContourMode.ALL,
-  };
-
-  const faces = await FaceDetection.processImage(imagePath, options);
-  console.log('face results is: ' + JSON.stringify(faces));
-  return faces.length;
-}
 
 export default function TakePictureScreen() {
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState('');
@@ -94,7 +79,7 @@ export default function TakePictureScreen() {
       return true;
     }
     console.log('Path saved image=' + path);
-    const numberFacesDetected = await processFaces(path);
+    const numberFacesDetected = 1;//todo: change api to check
     if (numberFacesDetected === 0) {
       setAlertMessage(
         'Foto inválida: seu rosto não foi detectado, tente novamente.',

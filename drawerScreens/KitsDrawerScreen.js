@@ -114,6 +114,7 @@ function KitsDrawerScreen({navigation}) {
       setTicketFound(ticket);
     } catch (error) {
       console.error(error);
+      //alert(JSON.stringify(error));
       setAlertMessage('Ingresso não econtrado.', '#dc143c');
       return null;
     } finally {
@@ -255,6 +256,20 @@ function KitsDrawerScreen({navigation}) {
                   } else {
                     return 'Formato inválido';
                   }
+                })()}
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginBottom: 8,
+              }}>
+              <Text h4>Nome</Text>
+              <Text h4>
+                {(() => {
+                  const {name} = ticketFound;
+                  return name;
                 })()}
               </Text>
             </View>
