@@ -166,6 +166,7 @@ function KitsDrawerScreen({navigation}) {
   };
 
   // console.log(realmApi.getAllTickets());
+  // console.log(`@@@ ticketFound`, ticketFound, ticketCode);
   // console.log(
   //   '@@@signature',
   //   signature,
@@ -235,29 +236,31 @@ function KitsDrawerScreen({navigation}) {
                 })()}
               </Text>
             </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                marginBottom: 8,
-              }}>
-              <Text h4>Documento</Text>
-              <Text h4>
-                {(() => {
-                  const {document} = ticketFound;
-                  if (document.length === 11) {
-                    return document.replace(
-                      /(\d{3})(\d{3})(\d{3})(\d{2})/,
-                      '$1.$2.$3-$4',
-                    );
-                  } else if (document.length === 9) {
-                    return document;
-                  } else {
-                    return 'Formato inválido';
-                  }
-                })()}
-              </Text>
-            </View>
+            {ticketFound?.document && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  marginBottom: 8,
+                }}>
+                <Text h4>Documento</Text>
+                <Text h4>
+                  {(() => {
+                    const {document} = ticketFound;
+                    if (document.length === 11) {
+                      return document.replace(
+                        /(\d{3})(\d{3})(\d{3})(\d{2})/,
+                        '$1.$2.$3-$4',
+                      );
+                    } else if (document.length === 9) {
+                      return document;
+                    } else {
+                      return 'Formato inválido';
+                    }
+                  })()}
+                </Text>
+              </View>
+            )}
             <View
               style={{
                 flexDirection: 'row',
