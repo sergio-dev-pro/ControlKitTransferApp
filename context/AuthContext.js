@@ -154,16 +154,20 @@ export function AuthProvider({children}) {
       // Se tiver apenas um evento, nao precisa ir para tela de selecao.
       const selectedEventId = events.length === 1 ? events[0].id : null;
       if (selectedEventId) {
-        const {data: requiredFieldsForUserRegistration} =
-          await getEventRequiredFields(selectedEventId);
+        try {
+          const {data: requiredFieldsForUserRegistration} =
+            await getEventRequiredFields(selectedEventId);
+            await AsyncStorage.setItem(
+              'event',
+              JSON.stringify({
+                id: selectedEventId.toString(),
+                requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
+              }),
+            );
+        } catch (error) {
+          console.error(error);
+        }
 
-        await AsyncStorage.setItem(
-          'event',
-          JSON.stringify({
-            id: selectedEventId.toString(),
-            requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
-          }),
-        );
       }
       let authStateChanges = {
         userToken: token,

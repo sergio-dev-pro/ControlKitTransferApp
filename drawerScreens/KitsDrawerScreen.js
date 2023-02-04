@@ -66,7 +66,6 @@ function KitsDrawerScreen({navigation}) {
 
   useEffect(() => {
     setInterval(() => {
-      7;
       console.log('Kits sincroonizando a cada 30 seg...');
       syncTickets();
     }, 30000);
@@ -114,12 +113,13 @@ function KitsDrawerScreen({navigation}) {
       setTicketFound(ticket);
     } catch (error) {
       console.error(error);
-      setAlertMessage('Ingresso não econtrado.', '#dc143c');
+      setAlertMessage('Ingresso não encontrado.', '#dc143c');
       return null;
     } finally {
       setLoading(false);
     }
   };
+
   const cancel = () => {
     setSignature(undefined);
     setName('');
