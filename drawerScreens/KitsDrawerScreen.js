@@ -258,6 +258,20 @@ function KitsDrawerScreen({navigation}) {
                 })()}
               </Text>
             </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginBottom: 8,
+              }}>
+              <Text h4>Nome</Text>
+              <Text h4>
+                {(() => {
+                  const {name} = ticketFound;
+                  return name;
+                })()}
+              </Text>
+            </View>
             {ticketFound.kitDelivered ? (
               <Button type="outline" onPress={() => setTicketFound(undefined)}>
                 Voltar

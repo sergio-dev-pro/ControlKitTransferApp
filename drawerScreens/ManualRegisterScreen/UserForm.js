@@ -22,6 +22,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
     cpf: '', // usado para amazenar cpf ou passport
     email: '',
   });
+  console.log('availableDays= '+ JSON.stringify(availableDays));
   const [emailValidation, setEmailValidation] = useState({
     isValid: true,
     errorMsg: '',

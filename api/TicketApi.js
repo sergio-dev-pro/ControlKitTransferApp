@@ -19,6 +19,6 @@ export const registerTicket = async (code, token) =>
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
-      Authorization: 'Bearer ' + token,
+      'Authorization': 'Bearer ' + token
     },
   });

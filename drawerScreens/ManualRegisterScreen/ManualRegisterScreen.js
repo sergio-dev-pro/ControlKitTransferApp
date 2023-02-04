@@ -344,13 +344,21 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
       onUserFound({...user, id: inputValue});
     } catch (error) {
       if (error.response.data.errors)
-        return setAlertMessage(
-          `${
-            validatedInputValueType === INPUT_VALUE_TYPE.email
-              ? 'E-mail não encontrado.'
-              : 'Documento não encontrado.'
-          }`,
-        );
+      {
+        alert(error.response.data.errors);
+        return;
+      }
+        // return setAlertMessage(
+        //   `${
+        //     validatedInputValueType === INPUT_VALUE_TYPE.email
+        //       ? 'E-mail não encontrado.'
+        //       : 'Documento não encontrado.'
+        //   }`,
+        // );
+        var errorMessage = validatedInputValueType === INPUT_VALUE_TYPE.email
+        ? 'E-mail não encontrado.'
+        : 'Documento não encontrado.';
+        alert(errorMessage);
       console.error(error);
     } finally {
       setLoading(false);

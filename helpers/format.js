@@ -78,7 +78,7 @@ export function formatDate(dateToFormat) {
   );
   return [
     padTo2Digits(date.getDate()),
-    padTo2Digits(date.getMonth() + 1),
+    padTo2Digits(date.getMonth()),
     date.getFullYear(),
   ].join('/');
 }
