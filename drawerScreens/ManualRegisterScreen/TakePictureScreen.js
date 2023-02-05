@@ -15,6 +15,7 @@ import {Button, Icon} from '@rneui/themed';
 import ReactNativeModal from 'react-native-modal';
 import THEME from '../../style/theme';
 import {useAlert} from '../../context/AlertContext';
+import {detectFace} from '../../api/FaceApi'
 
 export default function TakePictureScreen() {
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState('');
@@ -74,23 +75,19 @@ export default function TakePictureScreen() {
 
   const pictureValidation = async path => {
     if (Platform.OS == 'android') path = 'file://' + path;
-    else {
-      //todo: check how to work in ios face detectors
-      return true;
-    }
-    console.log('Path saved image=' + path);
-    const numberFacesDetected = 1;//todo: change api to check
-    if (numberFacesDetected === 0) {
-      setAlertMessage(
-        'Foto inválida: seu rosto não foi detectado, tente novamente.',
-      );
-      return false;
-    } else if (numberFacesDetected > 1) {
-      setAlertMessage(
-        'Foto inválida: mais de um rosto detectado, tente novamente.',
-      );
+
+    const formData = new FormData();
+    formData.append('file', {
+      uri: path,
+      type: 'image/jpeg',
+      name: 'userImage.jpg',
+    });
+    const facesDetected = await detectFace(formData);
+    if (facesDetected != 1) {
+      alert('Sem rosto detectado, tire a foto novamente por favor.');
       return false;
     }
+
     return true;
   };
 
