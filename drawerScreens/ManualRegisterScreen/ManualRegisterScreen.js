@@ -126,11 +126,11 @@ function ManualRegisterScreen({navigation}) {
       };
       clearStates();
       navigation.navigate('Kits');
-      setAlertMessage(`Usuário ${user.id} cadastrado com sucesso!`);
+      alert(`Usuário ${user.id} cadastrado com sucesso!`);
     } catch (error) {
       console.error(error);
       console.log('error error.response.data', error.response.data);
-      setAlertMessage(error.response.data.errors);
+      alert(error.response.data.errors);
       return null;
     } finally {
       setLoading(false);
@@ -347,7 +347,7 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
       console.error(error);
       if (error.response.data.errors) {
         console.error(error.response.data.errors);
-        setAlertMessage('Erro ao procurar usuário');
+        alert('Erro ao procurar usuário');
         return;
       }
       // return setAlertMessage(
@@ -361,7 +361,7 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
         validatedInputValueType === INPUT_VALUE_TYPE.email
           ? 'E-mail não encontrado.'
           : 'Documento não encontrado.';
-      setAlertMessage(errorMessage);
+          alert(errorMessage);
       console.error(error);
     } finally {
       setLoading(false);

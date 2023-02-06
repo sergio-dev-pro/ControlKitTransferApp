@@ -83,12 +83,12 @@ const NewTicket = ({navigation}) => {
       );
       await completeTicketRegister(data, authContext.userToken);
       clearStates();
-      setAlertMessage('Ingresso cadastrado com sucesso!');
+      alert('Ingresso cadastrado com sucesso!');
       console.log('Ingresso cadastrado com sucesso!');
     } catch (error) {
       console.error(error);
       console.error('error error.response.data', error.response.data);
-      setAlertMessage('Erro ao cadastrar ingresso!');
+      alert('Erro ao cadastrar ingresso!');
     } finally {
       setLoading(false);
     }

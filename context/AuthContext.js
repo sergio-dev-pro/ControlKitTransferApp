@@ -165,7 +165,7 @@ export function AuthProvider({children}) {
         isAuthenticated: true,
         events,
         selectedEventId,
-        canCreateTicket: decodedToken.CanCreateTicket,
+        canCreateTicket: decodedToken.CanCreateTicket === 'True',
       };
       if (requiredForms) {
         authStateChanges.requiredForms = requiredForms;
