@@ -4,7 +4,7 @@ import React, {useEffect, useState} from 'react';
 import {ScrollView, View} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 import Loading from '../../components/Loading';
-import {formatDateAaaaMmDd} from '../../helpers/format';
+import {formatDateAaaaMmDd, sortDates} from '../../helpers/format';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
 import RegisterForm from './RegisterForm';
 import UserForm from './UserForm';
@@ -41,15 +41,15 @@ function GuestRegistrations({
     ? daysToRegisterGuests.length === 1
       ? daysToRegisterGuests
       : daysToRegisterGuests.reduce((accumulator, currentDay) => {
-          const isInFirstInteraction = typeof accumulator === 'string';
-          if (!isInFirstInteraction && !accumulator.includes(currentDay)) {
-            return [...accumulator, currentDay];
-          }
-          return isInFirstInteraction ? [accumulator] : accumulator;
-        })
+          if (accumulator.length === 0) return [currentDay];
+          if (accumulator.includes(currentDay)) return accumulator;
+          return [...accumulator, currentDay];
+        }, [])
     : null;
 
   console.log(
+    '&&& inviteDays',
+    inviteDays,
     '&&& daysToRegisterGuests',
     daysToRegisterGuests,
     'availableInvitationDays',
@@ -65,7 +65,6 @@ function GuestRegistrations({
       );
     });
     // setDaysToRegisterGuests(avaliableDays);
-
     if (!avaliableDays.length)
       return onGuestRegistrations([...guestRegistrations, data.registerData]);
 
@@ -99,21 +98,7 @@ function GuestRegistrations({
       <Card.Title style={{marginBottom: 10, flexGrow: 0, height: 20}}>
         Preencha os dados do convidado
       </Card.Title>
-      {/* {guestRegistrations.length > 0 && (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Text h5 style={{paddingLeft: 4}}>
-              Cadastrados:
-            </Text>
-            {guestRegistrations.map(guest => (
-              <Badge key={guest.name} value={guest.name} status="success" />
-            ))}
-          </View>
-        )} */}
+
       <Card.Divider style={{flexGrow: 0, height: 4}} />
 
       <ScrollView style={{flexGrow: 1, height: '100%'}}>
@@ -124,7 +109,6 @@ function GuestRegistrations({
           onReturn={onReturn}
         />
       </ScrollView>
-      {/* <Divider style={{flexGrow: 1, height: 4, marginTop: 8}} /> */}
     </Card>
   );
 }
@@ -230,7 +214,7 @@ const GuestRegistration = ({
     <CodeReaderForEachDay
       isVisible={getTicketIdType && !dayCodes}
       onClose={() => setGetTicketIdType(undefined)}
-      daysInDate={days}
+      daysInDate={sortDates(days)}
       type={getTicketIdType}
       onReadCodes={handleReadCodes}
     />

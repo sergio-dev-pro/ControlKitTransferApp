@@ -33,7 +33,6 @@ const CodeReaderForEachDay = ({
     setReadDayCode(undefined);
   };
 
-  
   const handleClose = () => {
     setReadCodes([]);
     onClose();
@@ -54,6 +53,7 @@ const CodeReaderForEachDay = ({
 
   const hasReadThePreviousDay = indexOfDaysInDate =>
     readCodes.length === indexOfDaysInDate;
+  console.log('@@@ daysInDate', daysInDate, 'readCodes', readCodes);
   return (
     <Modal
       isVisible={isVisible}

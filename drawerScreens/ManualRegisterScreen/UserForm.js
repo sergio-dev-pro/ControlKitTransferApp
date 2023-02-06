@@ -5,7 +5,7 @@ import {ScrollView} from 'react-native-gesture-handler';
 import {useMaskedInputProps} from 'react-native-mask-input';
 import Button from '../../components/Button';
 import SelectModal from '../../components/SelectModal';
-import {formatDate} from '../../helpers/format';
+import {formatDate, sortDates} from '../../helpers/format';
 import {cpfValidation, isValidEmail} from '../../helpers/validation';
 
 const inputErrorMsgs = {
@@ -22,7 +22,6 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
     cpf: '', // usado para amazenar cpf ou passport
     email: '',
   });
-  console.log('availableDays= '+ JSON.stringify(availableDays));
   const [emailValidation, setEmailValidation] = useState({
     isValid: true,
     errorMsg: '',
@@ -148,7 +147,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
       eventDays,
     });
   };
- console.log('UserForm')
+  console.log('UserForm');
   return (
     <View>
       <Input
@@ -219,7 +218,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
             marginBottom: 16,
             marginTop: 10,
           }}>
-          {availableDays.map(availableDay => (
+          {sortDates(availableDays).map(availableDay => (
             <CheckBox
               key={availableDay}
               containerStyle={{

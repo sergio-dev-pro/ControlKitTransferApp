@@ -74,3 +74,8 @@ export function formatDate(dateToFormat) {
     date.getFullYear(),
   ].join('/');
 }
+
+export function sortDates(dates) {
+  if (!!!dates) throw 'error dates param of sortDates';
+  return dates.sort((a, b) => new Date(a) - new Date(b));
+}
