@@ -29,7 +29,8 @@ const CodeReaderForEachDay = ({
       return setAlertMessage('Código inválido: Esse código já foi lido.');
     }
 
-    readCodes.push({[readDayCode]: code});
+    setReadCodes(prevState => [...prevState, {[readDayCode]: code}]);
+    // readCodes.push({[readDayCode]: code});
     setReadDayCode(undefined);
   };
 
@@ -68,7 +69,7 @@ const CodeReaderForEachDay = ({
             borderRadius: 10,
             padding: 20,
             height: 'auto',
-            width: 500,
+            width: '95%',
           }}>
           <Text h4 h4Style={{marginBottom: 10, textAlign: 'center'}}>
             Leia o {type === 'readQRcode' ? 'QRcode' : 'código de barras'} de

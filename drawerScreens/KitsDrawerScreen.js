@@ -165,7 +165,7 @@ function KitsDrawerScreen({navigation}) {
     }
   };
 
-  // console.log(realmApi.getAllTickets());
+  console.log(realmApi.getAllTickets());
   // console.log(`@@@ ticketFound`, ticketFound, ticketCode);
   // console.log(
   //   '@@@signature',

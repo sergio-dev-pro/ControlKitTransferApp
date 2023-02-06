@@ -344,8 +344,10 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
 
       onUserFound({...user, id: inputValue});
     } catch (error) {
+      console.error(error);
       if (error.response.data.errors) {
-        alert(error.response.data.errors);
+        console.error(error.response.data.errors);
+        setAlertMessage('Erro ao procurar usuário');
         return;
       }
       // return setAlertMessage(
@@ -359,7 +361,7 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
         validatedInputValueType === INPUT_VALUE_TYPE.email
           ? 'E-mail não encontrado.'
           : 'Documento não encontrado.';
-      alert(errorMessage);
+      setAlertMessage(errorMessage);
       console.error(error);
     } finally {
       setLoading(false);
@@ -378,7 +380,7 @@ const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
           borderRadius: 10,
           padding: 20,
           height: 'auto',
-          width: 500,
+          width: `95%`,
         }}>
         <Text h4 h4Style={{marginBottom: 10}}>
           Busque o usuário que deseja cadastrar

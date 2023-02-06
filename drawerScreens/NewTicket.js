@@ -76,13 +76,18 @@ const NewTicket = ({navigation}) => {
         dayCodes,
         generatePdf: false,
       };
+      console.log(
+        'NewTicket completeRegister',
+        JSON.stringify(data),
+        authContext.userToken,
+      );
       await completeTicketRegister(data, authContext.userToken);
       clearStates();
       setAlertMessage('Ingresso cadastrado com sucesso!');
       console.log('Ingresso cadastrado com sucesso!');
     } catch (error) {
       console.error(error);
-      console.log('error error.response.data', error.response.data);
+      console.error('error error.response.data', error.response.data);
       setAlertMessage('Erro ao cadastrar ingresso!');
     } finally {
       setLoading(false);
@@ -111,7 +116,7 @@ const NewTicket = ({navigation}) => {
         </Text>
         <Divider />
       </View>
-      <View style={GStyles.container}>
+      <ScrollView style={GStyles.container}>
         {/* <Text h3>Novo ingresso</Text> */}
         {days.length > 0 && (
           <>
@@ -186,7 +191,7 @@ const NewTicket = ({navigation}) => {
           type={readyCode}
           onReadCodes={handleReadCodes}
         />
-      </View>
+      </ScrollView>
       <Loading isActive={loading} />
     </View>
   );

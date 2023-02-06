@@ -15,7 +15,7 @@ import {Button, Icon} from '@rneui/themed';
 import ReactNativeModal from 'react-native-modal';
 import THEME from '../../style/theme';
 import {useAlert} from '../../context/AlertContext';
-import {detectFace} from '../../api/FaceApi'
+import {detectFace} from '../../api/FaceApi';
 
 export default function TakePictureScreen() {
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState('');
@@ -84,7 +84,7 @@ export default function TakePictureScreen() {
     });
     const facesDetected = await detectFace(formData);
     if (facesDetected != 1) {
-      alert('Sem rosto detectado, tire a foto novamente por favor.');
+      setAlertMessage('Sem rosto detectado, tire a foto novamente por favor.');
       return false;
     }
 
