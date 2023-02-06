@@ -156,6 +156,7 @@ function ManualRegisterScreen({navigation}) {
     isCompletedUserRegistration && isGuestUserRegistrationCompleted;
 
   console.log(user);
+  console.log('@@@ guestRegistereds', guestRegistereds);
   console.log(registerData, dayCodes);
   return (
     <>

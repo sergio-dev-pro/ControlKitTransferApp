@@ -49,6 +49,12 @@ function GuestRegistrations({
         })
     : null;
 
+  console.log(
+    '&&& daysToRegisterGuests',
+    daysToRegisterGuests,
+    'availableInvitationDays',
+    availableInvitationDays,
+  );
   const handleGuestRegister = data => {
     let avaliableDays = daysToRegisterGuests;
 
@@ -58,7 +64,7 @@ function GuestRegistrations({
         (day, index) => index !== indexToRemove,
       );
     });
-    setDaysToRegisterGuests(avaliableDays);
+    // setDaysToRegisterGuests(avaliableDays);
 
     if (!avaliableDays.length)
       return onGuestRegistrations([...guestRegistrations, data.registerData]);
