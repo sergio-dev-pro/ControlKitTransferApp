@@ -258,12 +258,12 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
           <Button
             type="outline"
             onPress={onReturn}
-            containerStyle={{paddingRight: 16}}>
+            containerStyle={{paddingRight: 16, width: '50%'}}>
             Voltar
           </Button>
         )}
         <Button
-          containerStyle={!!onReturn ? {} : {width: '100%'}}
+          containerStyle={!!onReturn ? {width: '50%'} : {width: '100%'}}
           onPress={handleComplete}>
           Avançar
         </Button>

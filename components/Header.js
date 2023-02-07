@@ -2,6 +2,8 @@ import {Dialog, Header as HeaderRNE, Text} from '@rneui/themed';
 import React, {useContext, useState} from 'react';
 import THEME from '../style/theme';
 import {AuthContext} from '../context/AuthContext';
+import { IS_MOBILE } from '../constants/layout';
+
 /* @props openDawer
  */
 function Header({openDrawer, style = {}}) {
@@ -29,9 +31,15 @@ function Header({openDrawer, style = {}}) {
           style,
         ]}
         centerComponent={
-          <Text h3 style={{color: THEME.cor.primary}}>
-            Controle Kit/Transfer
-          </Text>
+          IS_MOBILE ? (
+            <Text h4 style={{color: THEME.cor.primary}}>
+              Controle Kit/Transfer
+            </Text>
+          ) : (
+            <Text h3 style={{color: THEME.cor.primary}}>
+              Controle Kit/Transfer
+            </Text>
+          )
         }
         leftComponent={{
           icon: 'menu',

@@ -10,27 +10,57 @@ import THEME from '../../style/theme';
 const CodeReaderForEachDay = ({
   isVisible,
   onClose,
+  // daysInDate espera ['yyyy-mm-dd', 'yyyy-mm-dd']
   daysInDate = [],
   type,
   onReadCodes,
 }) => {
+  // readCodes espera [{'yyyy-mm-dd': 'code'}]
   const [readCodes, setReadCodes] = useState([]);
   const [readDayCode, setReadDayCode] = useState();
   const setAlertMessage = useAlert();
 
   const handleQRCodeRead = code => {
-    // TODO: Validar se os codigos dos dias sao diferentes
-    const isValid =
-      readCodes.filter(
-        (readCode, index) => readCode[daysInDate[index]] === code,
-      ).length === 0;
-    if (!isValid) {
+    const daysWithCodeReads = readCodes;
+    const dayCodeRead = readDayCode;
+
+    const validate = () =>
+      daysWithCodeReads.some(readCode => {
+        for (const key in readCode) {
+          if (readCode[key] === code) return true;
+        }
+        return false;
+      });
+    // Validation: O codigo deve ser diferente dos codigos
+    // dos que ja foram lidos.
+    const hasAnyDayWithThisCode = daysWithCodeReads.length ? validate() : false;
+    if (hasAnyDayWithThisCode) {
       setReadDayCode(undefined);
+
       return setAlertMessage('Código inválido: Esse código já foi lido.');
     }
 
-    setReadCodes(prevState => [...prevState, {[readDayCode]: code}]);
-    // readCodes.push({[readDayCode]: code});
+    // Verifica se o codigo para o dia ja foi lido.
+    const mustOverwrite = !!daysWithCodeReads.find(day => day[dayCodeRead]);
+
+    let daysWithCodeReadsUpdated = daysWithCodeReads;
+    const overwriteCodeByDay = day => {
+      daysWithCodeReadsUpdated = daysWithCodeReads.map(dayWithCodeRead => {
+        if (dayWithCodeRead[day]) {
+          return {[day]: code};
+        }
+        return dayWithCodeRead;
+      });
+    };
+    // Deve sobreescrever, subistituir pelo codigo lido.
+    mustOverwrite
+      ? overwriteCodeByDay(dayCodeRead)
+      : (daysWithCodeReadsUpdated = [
+          ...daysWithCodeReads,
+          {[readDayCode]: code},
+        ]);
+
+    setReadCodes(daysWithCodeReadsUpdated);
     setReadDayCode(undefined);
   };
 
@@ -53,7 +83,7 @@ const CodeReaderForEachDay = ({
   const unselectReadDayCode = day => setReadDayCode(undefined);
 
   const hasReadThePreviousDay = indexOfDaysInDate =>
-    readCodes.length === indexOfDaysInDate;
+    readCodes.length >= indexOfDaysInDate;
   console.log('@@@ daysInDate', daysInDate, 'readCodes', readCodes);
   return (
     <Modal
