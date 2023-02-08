@@ -10,6 +10,7 @@ import EventSelectionDrawerScreen from '../drawerScreens/EventSelectionDrawerScr
 import ManualRegisterScreen from '../drawerScreens/ManualRegisterScreen';
 import ItinerariesScreen from '../drawerScreens/ItinerariesScreen';
 import NewTicket from '../drawerScreens/NewTicket';
+import PhotoReregisterDrawerScreen from '../drawerScreens/PhotoReregisterDrawerScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -38,6 +39,7 @@ function Navigators() {
             component={ManualRegisterScreen}
           />
           <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
+          <Drawer.Screen name="Recadastrar foto" component={PhotoReregisterDrawerScreen} />
           {!hasOnlyOneEvent && (
             <Drawer.Screen
               name="Mudar evento"

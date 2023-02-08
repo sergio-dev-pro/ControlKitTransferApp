@@ -1,6 +1,6 @@
 import {Badge, Button, Divider, Input, Text} from '@rneui/themed';
 import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
-import {View} from 'react-native';
+import {ScrollView, View} from 'react-native';
 import Header from '../../components/Header';
 import Loading from '../../components/Loading';
 import {useAlert} from '../../context/AlertContext';
@@ -19,6 +19,7 @@ import RegisterForm from './RegisterForm';
 import GuestRegistrations from './GuestRegistrations';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
 import {formatDateAaaaMmDd} from '../../helpers/format';
+import SearchUserModal from '../../components/SearchUserModal';
 
 function ManualRegisterScreen({navigation}) {
   // const [requiredForms, setRequiredForms] = useState();
@@ -74,7 +75,6 @@ function ManualRegisterScreen({navigation}) {
   // {'2023-02-13T00:00:00': '13124234'}
   const [dayCodes, setDayCodes] = useState();
   const ref = useRef();
-  const setAlertMessage = useAlert();
 
   // TODO: setado tru temporariamente
   // [{"address": {"city": "Jsnsn", "complement": "ZnznnzNN", "neighborhood": "Shhsh", "number": "49944949", "state": "CE", "street": "Jsjsjjsj", "zipcode": "99779-977"}, "birthDate": "", "dayCodes": {"2030-08-25T00:00:00": "12125"}, "document": "646.749.794-99", "email": "Jsjsshsh@hotmail.com", "genre": "Feminino", "invalidFields": [], "measurements": {"blacelet": "P", "shirt": "M", "shoe": "37"}, "name": "Jxjs", "phone": "(64) 64644-6464", "token": "gv7vLgwvZYLEH4CP2QPdDQ=="}]
@@ -89,6 +89,7 @@ function ManualRegisterScreen({navigation}) {
   }, [isFocused]);
 
   const handleUserFound = userFounded => {
+    if (userFounded.isActive) return alert('Usuário já registrado.');
     setIsVisible(false);
     setUser(userFounded);
     setUserToken(userFounded.token);
@@ -172,9 +173,10 @@ function ManualRegisterScreen({navigation}) {
           </Text>
           <Divider />
         </View>
-        <View
+        <ScrollView
           style={[
             GStyles.container,
+            {height: '100%'},
             isShowingGuestRegister ? {maxWidth: 500} : {},
           ]}>
           {user && (
@@ -265,7 +267,7 @@ function ManualRegisterScreen({navigation}) {
               </Button>
             </>
           )}
-        </View>
+        </ScrollView>
         {!user && (
           <SearchUserModal
             onUserFound={handleUserFound}
@@ -290,129 +292,5 @@ function ManualRegisterScreen({navigation}) {
     </>
   );
 }
-
-const INPUT_VALUE_TYPE = {
-  email: 'email',
-  cpf: 'cpf',
-  passport: 'passport',
-};
-const SearchUserModal = ({onUserFound, isVisible, onClose}) => {
-  const [loading, setLoading] = useState(false);
-  // TODO: Setado temporariamente
-  // 'sergio@spr.com'
-  const [inputValue, setInputValue] = useState();
-  const [invalidInputValue, setInvalidInputValue] = useState();
-  const setAlertMessage = useAlert();
-  const authContext = useContext(AuthContext);
-  const ref = useRef();
-  const isFocused = useIsFocused();
-  useEffect(() => {
-    isFocused && ref.current && ref.current.focus();
-  }, [isFocused]);
-
-  const validateInputValue = () => {
-    if (!inputValue)
-      return invalidInputValue ? setInvalidInputValue(null) : null;
-
-    const isValid = isValidEmail(inputValue);
-    const isValidCPF = cpfValidation(inputValue);
-    const isValidPassport = inputValue.length >= 4;
-
-    const isInputValueValid = isValid || isValidCPF || isValidPassport;
-    if (!isInputValueValid) {
-      return !invalidInputValue
-        ? setInvalidInputValue('E-mail ou documento inválido.')
-        : null;
-    }
-
-    invalidInputValue && setInvalidInputValue(null);
-
-    if (isValid) return INPUT_VALUE_TYPE.email;
-    if (isValidCPF) return INPUT_VALUE_TYPE.cpf;
-    if (isValidPassport) return INPUT_VALUE_TYPE.passport;
-  };
-
-  const handleSearch = async () => {
-    const validatedInputValueType = validateInputValue();
-    if (!validatedInputValueType) return;
-    try {
-      setLoading(true);
-      const {data: user} =
-        validatedInputValueType === INPUT_VALUE_TYPE.email
-          ? await getUserByEmail(inputValue, authContext.selectedEventId)
-          : await getUserByCpf(inputValue, authContext.selectedEventId);
-
-      onUserFound({...user, id: inputValue});
-    } catch (error) {
-      console.error(error);
-      if (error.response.data.errors) {
-        console.error(error.response.data.errors);
-        alert('Erro ao procurar usuário');
-        return;
-      }
-      // return setAlertMessage(
-      //   `${
-      //     validatedInputValueType === INPUT_VALUE_TYPE.email
-      //       ? 'E-mail não encontrado.'
-      //       : 'Documento não encontrado.'
-      //   }`,
-      // );
-      var errorMessage =
-        validatedInputValueType === INPUT_VALUE_TYPE.email
-          ? 'E-mail não encontrado.'
-          : 'Documento não encontrado.';
-          alert(errorMessage);
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal
-      isVisible={isVisible}
-      backdropOpacity={0.1}
-      style={{alignItems: 'center'}}
-      onBackdropPress={onClose}>
-      <View
-        style={{
-          backgroundColor: 'white',
-          borderRadius: 10,
-          padding: 20,
-          height: 'auto',
-          width: `95%`,
-        }}>
-        <Text h4 h4Style={{marginBottom: 10}}>
-          Busque o usuário que deseja cadastrar
-        </Text>
-        <Input
-          ref={ref}
-          value={inputValue}
-          placeholder="Busque por e-mail ou CPF ou passaporte"
-          onChangeText={value => setInputValue(value.trim().replace(/\s/g, ''))}
-          errorMessage={invalidInputValue}
-        />
-        <View
-          style={{
-            width: '100%',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}>
-          <Button title="Voltar" size="lg" type="clear" onPress={onClose} />
-          <Button
-            type="solid"
-            loading={loading}
-            size="lg"
-            containerStyle={{marginLeft: 16}}
-            title="Buscar"
-            onPress={handleSearch}
-            on
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-};
 
 export default ManualRegisterScreen;
