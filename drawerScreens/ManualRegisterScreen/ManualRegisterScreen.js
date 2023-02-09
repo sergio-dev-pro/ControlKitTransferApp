@@ -150,7 +150,7 @@ function ManualRegisterScreen({navigation}) {
   const isCompletedUserRegistration = !!registerData && !!dayCodes;
   const isGuestUserRegistrationCompleted = !!guestRegistereds;
   const isShowingGuestRegister =
-    user?.inviteDays?.length &&
+    user?.inviteDays?.length > 0 &&
     isCompletedUserRegistration &&
     !isGuestUserRegistrationCompleted;
   const hasCompleteRegistration =
