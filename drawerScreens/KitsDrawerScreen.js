@@ -69,12 +69,12 @@ function KitsDrawerScreen({navigation}) {
     }
   };
 
-  useEffect(() => {
-    setInterval(() => {
-      console.log('Kits sincroonizando a cada 30 seg...');
-      syncTickets();
-    }, 30000);
-  }, []);
+  // useEffect(() => {
+  //   setInterval(() => {
+  //     console.log('Kits sincroonizando a cada 30 seg...');
+  //     syncTickets();
+  //   }, 30000);
+  // }, []);
 
   const isFirstSyncRef = useRef(false);
   useEffect(() => {
