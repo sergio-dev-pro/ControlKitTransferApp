@@ -3,7 +3,7 @@ import BASE_URL from '../constants/api';
 
 export const ticketOwnerDocumentRegistration = (token, formData) =>
   axios({
-    url: BASE_URL + `/api/files/documents`,
+    url: BASE_URL + `/api/files/v2/documents`,
     method: 'POST',
     data: formData,
     headers: {
@@ -14,7 +14,7 @@ export const ticketOwnerDocumentRegistration = (token, formData) =>
   });
 export const ticketOwnerSignatureRegistration = (token, formData) =>
   axios({
-    url: BASE_URL + `/api/files/signatures`,
+    url: BASE_URL + `/api/files/v2/signatures`,
     method: 'POST',
     data: formData,
     headers: {

@@ -5,7 +5,7 @@ function Alert({isVisible, message, onOk, textColor}) {
   return (
     <Dialog isVisible={isVisible} onBackdropPress={onOk}>
       <Dialog.Title
-        titleStyle={{fontSize: 24, color: textColor || ''}}
+        titleStyle={{fontSize: 24, color: textColor || 'black'}}
         title={message}
       />
       <Dialog.Actions>
