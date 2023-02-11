@@ -316,7 +316,7 @@ function KitsDrawerScreen({navigation}) {
                             } else if (document.length === 9) {
                               return document;
                             } else {
-                              return 'Formato inválido';
+                              return document;
                             }
                           })()}
                         </Text>
