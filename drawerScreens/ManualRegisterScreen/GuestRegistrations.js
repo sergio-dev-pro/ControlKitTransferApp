@@ -169,7 +169,7 @@ const GuestRegistration = ({
   const isUserDataCompleted = !!userData;
   return !isUserDataCompleted ? (
     <UserForm
-      onReturn={onReturn}
+      onCancel={onReturn}
       onUserFormCompleted={handleUserFormCompleted}
       availableDays={availableInvitationDays}
     />
