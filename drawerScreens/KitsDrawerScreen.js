@@ -21,6 +21,7 @@ import {FlatList} from 'react-native-gesture-handler';
 
 import {IS_MOBILE} from '../constants/layout';
 import ReactNativeModal from 'react-native-modal';
+import {formatDateForTextDay} from '../helpers/format';
 
 function KitsDrawerScreen({navigation}) {
   const authContext = useContext(AuthContext);
@@ -295,7 +296,10 @@ function KitsDrawerScreen({navigation}) {
                         marginBottom: 8,
                       }}>
                       <Text h4>Dia</Text>
-                      <Text h4>{formatDate(ticketFound?.day)}</Text>
+                      <View>
+                        <Text h4>{formatDate(ticketFound?.day)}</Text>
+                        <Text h4>{formatDateForTextDay(ticketFound?.day)}</Text>
+                      </View>
                     </View>
                     {ticketFound?.document && (
                       <View

@@ -159,9 +159,11 @@ function ManualRegisterScreen({navigation}) {
   console.log(user);
   console.log('@@@ guestRegistereds', guestRegistereds);
   console.log(registerData, dayCodes);
-  console.log("@@@codeReaderType="+ codeReaderType)
-  console.log('isCompletedUserRegistration='+isCompletedUserRegistration)
-  console.log('isGuestUserRegistrationCompleted='+isGuestUserRegistrationCompleted)
+  console.log('@@@codeReaderType=' + codeReaderType);
+  console.log('isCompletedUserRegistration=' + isCompletedUserRegistration);
+  console.log(
+    'isGuestUserRegistrationCompleted=' + isGuestUserRegistrationCompleted,
+  );
   return (
     <>
       <View style={{...GStyles.view}}>
@@ -246,12 +248,14 @@ function ManualRegisterScreen({navigation}) {
               requiredForms={requiredForms}
               onGuestRegistrations={setGuestRegistereds}
               onReturn={() => {
-                setShowQRcodeReader(true);
-                setDayCodes(undefined);
+                clearStates();
+                // setShowQRcodeReader(true);
+                // setDayCodes(undefined);
               }}
             />
           )}
-          {(hasCompleteRegistration || (isCompletedUserRegistration && user?.inviteDays?.length == 0)) && (
+          {(hasCompleteRegistration ||
+            (isCompletedUserRegistration && user?.inviteDays?.length == 0)) && (
             <>
               <Button
                 type="solid"

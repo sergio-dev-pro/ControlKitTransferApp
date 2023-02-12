@@ -150,7 +150,7 @@ export default function TakePictureScreen() {
               </Button>
               <Button
                 type="solid"
-                loading={isSavingPhoto}
+                loading={isSavingPhoto || isTakingPhoto}
                 onPress={() => savePhoto(picturePath)}
                 style={[styles.camButton, {width: '40%'}]}>
                 Salvar

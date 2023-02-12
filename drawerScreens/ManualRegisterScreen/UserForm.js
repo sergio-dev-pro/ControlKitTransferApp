@@ -16,7 +16,7 @@ const inputErrorMsgs = {
   },
 };
 
-const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
+const UserForm = ({onUserFormCompleted, availableDays, onReturn, onCancel}) => {
   const [user, setUser] = useState({
     name: '',
     cpf: '', // usado para amazenar cpf ou passport
@@ -262,8 +262,18 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn}) => {
             Voltar
           </Button>
         )}
+        {!!onCancel && (
+          <Button
+            type="outline"
+            onPress={onCancel}
+            containerStyle={{paddingRight: 16, width: '50%'}}>
+            Voltar ao início
+          </Button>
+        )}
         <Button
-          containerStyle={!!onReturn ? {width: '50%'} : {width: '100%'}}
+          containerStyle={
+            !!onReturn || !!onCancel ? {width: '50%'} : {width: '100%'}
+          }
           onPress={handleComplete}>
           Avançar
         </Button>

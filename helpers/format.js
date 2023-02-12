@@ -75,6 +75,22 @@ export function formatDate(dateToFormat) {
   ].join('/');
 }
 
+export function formatDateForTextDay(dateToFormat) {
+  const days = [
+    'domingo',
+    'segunda-feira',
+    'terça-feira',
+    'quarta-feira',
+    'quinta-feira',
+    'sexta-feira',
+    'sábado',
+  ];
+
+  const date = new Date(dateToFormat);
+  const dayNumber = date.getUTCDay();
+  return days[dayNumber];
+}
+
 export function sortDates(dates) {
   if (!!!dates) throw 'error dates param of sortDates';
   return dates.sort((a, b) => new Date(a) - new Date(b));
