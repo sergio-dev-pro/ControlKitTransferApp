@@ -76,20 +76,20 @@ function KitsDrawerScreen({navigation}) {
   //   }, 30000);
   // }, []);
 
-  const isFirstSyncRef = useRef(false);
-  useEffect(() => {
-    if (isConnected !== null) {
-      isFirstSyncRef.current = true;
-      if (isFirstSyncRef.current) {
-        isConnected &&
-          (async () => {
-            setSyncronizingTicket(true);
-            await syncTickets();
-            setSyncronizingTicket(false);
-          })();
-      } else isConnected && syncTickets();
-    }
-  }, [isConnected]);
+  //const isFirstSyncRef = useRef(false);
+  // useEffect(() => {
+  //   if (isConnected !== null) {
+  //     isFirstSyncRef.current = true;
+  //     if (isFirstSyncRef.current) {
+  //       isConnected &&
+  //         (async () => {
+  //           setSyncronizingTicket(true);
+  //           await syncTickets();
+  //           setSyncronizingTicket(false);
+  //         })();
+  //     } else isConnected && syncTickets();
+  //   }
+  // }, [isConnected]);
 
   const handleQRCodeRead = async ticketCode => {
     // #
@@ -430,7 +430,7 @@ function KitsDrawerScreen({navigation}) {
                 !!documentImg && (
                   <>
                     <Text h4 h4Style={{fontSize: 22, marginBottom: 8}}>
-                      Pegue a assinatura do proprietário do ingresso
+                      Assinatura do proprietário do ingresso
                     </Text>
                     <Button
                       type="outline"
