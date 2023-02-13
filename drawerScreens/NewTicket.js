@@ -116,7 +116,7 @@ const NewTicket = ({navigation}) => {
         </Text>
         <Divider />
       </View>
-      <ScrollView style={GStyles.container}>
+      <ScrollView style={[GStyles.container, {height: '100%'}]}>
         {/* <Text h3>Novo ingresso</Text> */}
         {days.length > 0 && (
           <>

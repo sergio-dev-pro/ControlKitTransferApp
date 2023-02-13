@@ -34,7 +34,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn, onCancel}) => {
     isValid: true,
     errorMsg: '',
   });
-  const [eventDays, setEventDays] = useState(availableDays);
+  const [eventDays, setEventDays] = useState([]);
   const [documentType, setDocumentType] = useState('cpf');
   const [passportValidation, setPassportValidation] = useState({
     isValid: true,
@@ -142,14 +142,16 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn, onCancel}) => {
   const handleComplete = () => {
     const validDocument = documentType === 'cpf' ? validCPF : validPassport;
     if (!validDocument(cpf) || !validEmail(email) || !validName(name)) return;
+    if (eventDays.length === 0)
+      return alert('Selecione o dia do evento do ingresso.');
     onUserFormCompleted({
       user: {email: user.email, document: user.cpf, name: user.name},
       eventDays,
     });
   };
-  console.log('UserForm');
+  console.log('UserForm', 'eventdays', eventDays);
   return (
-    <View>
+    <View style={{flex: 1, marginBottom: 40}}>
       <Input
         label="Nome"
         value={name}
@@ -236,9 +238,7 @@ const UserForm = ({onUserFormCompleted, availableDays, onReturn, onCancel}) => {
                 const checked = eventDays.includes(availableDay);
                 const removeDay = () =>
                   setEventDays(prevState =>
-                    prevState.length === 1
-                      ? prevState
-                      : prevState.filter(day => day !== availableDay),
+                    prevState.filter(day => day !== availableDay),
                   );
                 checked
                   ? removeDay()
