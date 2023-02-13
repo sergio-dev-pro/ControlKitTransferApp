@@ -52,10 +52,14 @@ export default function ItinerariesScreen({navigation}) {
   };
 
   useEffect(() => {
-    setInterval(() => {
+    const intervalId = setInterval(() => {
       console.log('itinerarios sincroonizando a cada 30 seg...');
       syncTickets();
     }, 30000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
