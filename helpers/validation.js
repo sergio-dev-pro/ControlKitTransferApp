@@ -72,3 +72,14 @@ export function cpfValidation(cpf) {
 
   return true;
 }
+
+export const isDateGreaterThanOrEqualToToday = date => {
+  const dateToCheck = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (dateToCheck.getTime() < today.getTime()) {
+    return false;
+  } else {
+    return true;
+  }
+};

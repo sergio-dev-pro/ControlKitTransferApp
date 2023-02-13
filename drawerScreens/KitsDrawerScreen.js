@@ -22,6 +22,7 @@ import {FlatList} from 'react-native-gesture-handler';
 import {IS_MOBILE} from '../constants/layout';
 import ReactNativeModal from 'react-native-modal';
 import {formatDateForTextDay} from '../helpers/format';
+import {isDateGreaterThanOrEqualToToday} from '../helpers/validation';
 
 function KitsDrawerScreen({navigation}) {
   const authContext = useContext(AuthContext);
@@ -127,6 +128,12 @@ function KitsDrawerScreen({navigation}) {
           `O kit de ${ticket.name} para o dia ${formatDate(
             ticket.day,
           )} já foi entregue.`,
+        );
+      if (!isDateGreaterThanOrEqualToToday(ticket.day))
+        return setAlertMessage(
+          `O dia para esse ingresso ${formatDate(
+            ticket.day,
+          )} já passou! Nao é possível contabilizar a entrega para esse dia.`,
         );
       setTicketFounds(prevTicketFounds => [
         ...prevTicketFounds,
