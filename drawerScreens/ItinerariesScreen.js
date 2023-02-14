@@ -153,7 +153,7 @@ export default function ItinerariesScreen({navigation}) {
         setAlertMessage(
           'Usuário encontrado! Registro de acesso realizado com sucesso.',
         );
-        await realmApi.registerItinerary(code, selectedItinerarie);
+        // await realmApi.registerItinerary(code, selectedItinerarie);
       }
     } catch (error) {
       console.log('error', error);
