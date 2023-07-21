@@ -37,11 +37,18 @@ function Navigators() {
           <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
           {/* <Drawer.Screen name="Entrega de pulseiras" component={DeliverBraceletDrawerScreen} /> */}
           <Drawer.Screen
+            name="Entregar pulseira"
+            component={DeliverBraceletDrawerScreen}
+          />
+          <Drawer.Screen
             name="Cadastro manual"
             component={ManualRegisterScreen}
           />
           <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
-          <Drawer.Screen name="Recadastrar foto" component={PhotoReregisterDrawerScreen} />
+          <Drawer.Screen
+            name="Recadastrar foto"
+            component={PhotoReregisterDrawerScreen}
+          />
           {!hasOnlyOneEvent && (
             <Drawer.Screen
               name="Mudar evento"
