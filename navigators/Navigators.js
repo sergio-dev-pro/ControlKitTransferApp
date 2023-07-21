@@ -11,6 +11,7 @@ import ManualRegisterScreen from '../drawerScreens/ManualRegisterScreen';
 import ItinerariesScreen from '../drawerScreens/ItinerariesScreen';
 import NewTicket from '../drawerScreens/NewTicket';
 import PhotoReregisterDrawerScreen from '../drawerScreens/PhotoReregisterDrawerScreen';
+import DeliverBraceletDrawerScreen from '../drawerScreens/DeliverBraceletDrawerScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -34,6 +35,7 @@ function Navigators() {
             },
           }}>
           <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
+          {/* <Drawer.Screen name="Entrega de pulseiras" component={DeliverBraceletDrawerScreen} /> */}
           <Drawer.Screen
             name="Cadastro manual"
             component={ManualRegisterScreen}

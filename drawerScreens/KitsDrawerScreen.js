@@ -129,12 +129,12 @@ function KitsDrawerScreen({navigation}) {
             ticket.day,
           )} já foi entregue.`,
         );
-      if (!isDateGreaterThanOrEqualToToday(ticket.day))
-        return setAlertMessage(
-          `O dia para esse ingresso ${formatDate(
-            ticket.day,
-          )} já passou! Nao é possível contabilizar a entrega para esse dia.`,
-        );
+      // if (!isDateGreaterThanOrEqualToToday(ticket.day))
+      //   return setAlertMessage(
+      //     `O dia para esse ingresso ${formatDate(
+      //       ticket.day,
+      //     )} já passou! Nao é possível contabilizar a entrega para esse dia.`,
+      //   );
       setTicketFounds(prevTicketFounds => [
         ...prevTicketFounds,
         {...ticket, code},
@@ -199,14 +199,14 @@ function KitsDrawerScreen({navigation}) {
       ? {...a, [b.userDocument]: [...a[b.userDocument], b.ticketCode]}
       : {...a, [b.userDocument]: [b.ticketCode]};
   }, {});
-  console.log(
-    'alltickets',
-    JSON.stringify(
-      Object.keys(all)
-        .filter(a => all[a].length > 1)
-        .map(a => all[a]),
-    ),
-  );
+  // console.log(
+  //   'alltickets',
+  //   JSON.stringify(
+  //     Object.keys(all)
+  //       .filter(a => all[a].length > 1)
+  //       .map(a => all[a]),
+  //   ),
+  // );
   // console.log(`@@@ ticketFounds`, ticketFounds, ticketCode);
   console.log('@@@ MOCK', ticketFounds);
   const inputNameErrorMsg =

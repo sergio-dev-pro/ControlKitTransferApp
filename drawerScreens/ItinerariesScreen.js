@@ -51,16 +51,16 @@ export default function ItinerariesScreen({navigation}) {
     }
   };
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      console.log('itinerarios sincroonizando a cada 30 seg...');
-      syncTickets();
-    }, 30000);
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     console.log('itinerarios sincroonizando a cada 30 seg...');
+  //     syncTickets();
+  //   }, 30000);
 
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
+  //   return () => {
+  //     clearInterval(intervalId);
+  //   };
+  // }, []);
 
   useEffect(() => {
     const getItinerariesList = async () => {
@@ -105,19 +105,19 @@ export default function ItinerariesScreen({navigation}) {
     }
   }, [isLoadingConnectionStatus]);
 
-  const isFirstSyncRef = useRef(false);
+  // const isFirstSyncRef = useRef(false);
 
-  useEffect(() => {
-    isFirstSyncRef.current = true;
-    if (isFirstSyncRef.current) {
-      isConnected &&
-        (async () => {
-          setSyncronizingTicket(true);
-          await syncTickets();
-          setSyncronizingTicket(false);
-        })();
-    } else isConnected && syncTickets();
-  }, [isConnected]);
+  // useEffect(() => {
+  //   isFirstSyncRef.current = true;
+  //   if (isFirstSyncRef.current) {
+  //     isConnected &&
+  //       (async () => {
+  //         setSyncronizingTicket(true);
+  //         await syncTickets();
+  //         setSyncronizingTicket(false);
+  //       })();
+  //   } else isConnected && syncTickets();
+  // }, [isConnected]);
 
   const setAlertMessage = useAlert();
 
@@ -126,21 +126,21 @@ export default function ItinerariesScreen({navigation}) {
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
     setCountEntryByReadingCode(false);
-    if (!isConnected) {
-      try {
-        setLoading(true);
-        await realmApi.registerItineraryOffline(code, selectedItinerarie);
-        setAlertMessage(
-          'Ingresso encontrado, registro de intinerário realizado.',
-        );
-      } catch (error) {
-        console.error(error);
-        setAlertMessage(error.message);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
+    // if (!isConnected) {
+    //   try {
+    //     setLoading(true);
+    //     await realmApi.registerItineraryOffline(code, selectedItinerarie);
+    //     setAlertMessage(
+    //       'Ingresso encontrado, registro de intinerário realizado.',
+    //     );
+    //   } catch (error) {
+    //     console.error(error);
+    //     setAlertMessage(error.message);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    //   return;
+    // }
 
     try {
       setLoading(true);

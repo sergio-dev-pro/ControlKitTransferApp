@@ -142,7 +142,7 @@ export const sendLocallySavedPendingRegisteredItineraries = async token => {
         });
       } catch (error) {
         console.error(error);
-        itinerariesSuccessfullySent = false;
+        //itinerariesSuccessfullySent = false;
       }
     }
 

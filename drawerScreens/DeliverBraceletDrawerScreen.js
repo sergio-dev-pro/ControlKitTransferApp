@@ -31,22 +31,29 @@ function DeliverBraceletDrawerScreen({navigation}) {
       );
       if (ticket.kitDelivered)
         return setAlertMessage(
-          `O kit de ${ticket.name} para o dia ${formatDate(
+          `A pulseira de ${ticket.name} para o dia ${formatDate(
             ticket.day,
           )} já foi entregue.`,
         );
-
-      if (!isDateGreaterThanOrEqualToToday(ticket.day))
-        return setAlertMessage(
-          `A entrega para o dia ${formatDate(
-            ticket.day,
-          )} já passou! Nao é possível registrar entrega.`,
-        );
-      setAlertMessage('Entrega de pulseira registrada com sucesso.', '#32cd32');
+      console.log(ticket.day);
+      // if (!isDateGreaterThanOrEqualToToday(ticket.day))
+      //   return setAlertMessage(
+      //     `A entrega para o dia ${formatDate(
+      //       ticket.day,
+      //     )} já passou! Nao é possível registrar entrega.`,
+      //   );
+      setAlertMessage('ITAU Entrega de pulseira registrada com sucesso.', '#32cd32');
     } catch (error) {
-      console.error(error);
-      console.error(JSON.stringify(error));
-      setAlertMessage('Entrega não registrada.', '#dc143c');
+      //console.error(error);
+      //console.error(JSON.stringify(error));
+      console.error(error.response);
+      console.log('error by api: ' + error?.response?.data);
+      if(error?.response?.data?.errors)
+      {
+        setAlertMessage(error.response.data.errors, '#dc143c');
+        return null;
+      }
+      setAlertMessage('Entrega não registrada, problema ao enviar registro de entrega de pulseira.', '#dc143c');
       return null;
     } finally {
       setLoading(false);
