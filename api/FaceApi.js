@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const detectFace = async (formData) => {
   try {
-    const url = 'http://sprface-dev.us-east-2.elasticbeanstalk.com/api/faces/detect';
+    const url = 'https://api-facial.credenciamentospr.com/api/faces/detect';
     const response = await axios({
       url,
       method: 'POST',
