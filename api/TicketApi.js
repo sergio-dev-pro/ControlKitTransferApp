@@ -22,9 +22,21 @@ export const registerTicket = async (code, token) =>
       'Authorization': 'Bearer ' + token
     },
   });
+
 export const registerBraceletDelivery = async (code, token) =>
   await axios({
     url: BASE_URL + `/api/tickets/${code}/blaceletDelivery`,
+    method: 'PATCH',
+    headers: {
+      Accept: 'text/plain',
+      'Content-Type': 'application/json-patch+json',
+      'Authorization': 'Bearer ' + token
+    },
+  });
+
+  export const registerBraceletDeliveryByDocument = async (document, day, eventId, token) =>
+  await axios({
+    url: BASE_URL + `/api/tickets/blaceletDeliveryByDocument?document=${document}&day=${day}&eventId=${eventId}`,
     method: 'PATCH',
     headers: {
       Accept: 'text/plain',

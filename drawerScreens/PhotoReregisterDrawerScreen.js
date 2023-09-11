@@ -29,7 +29,7 @@ function PhotoReregisterDrawerScreen({navigation}) {
   const toggleCamVisibility = () => setIsVisibleCam(is => !is);
 
   const handleUserFound = userFounded => {
-    if (!userFounded.isActive)
+    if (!userFounded.isActive && !userFounded.useFacialWeb)
       return setAlertMessage('Usuário precisa realizar o cadastro inicial.');
 
     setUser(userFounded);
