@@ -1,12 +1,14 @@
 export function isValidEmail(mail) {
   if (!mail.length) return false;
-  var validRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  // var validRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
-  if (mail.match(validRegex)) {
-    return true;
-  } else {
-    return false;
-  }
+  // if (mail.match(validRegex)) {
+  //   return true;
+  // } else {
+  //   return false;
+  // }
+  
+  return mail.includes("@");
 }
 
 export const validateDate = date => {

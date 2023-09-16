@@ -13,6 +13,7 @@ import NewTicket from '../drawerScreens/NewTicket';
 import ChangeEmail from '../drawerScreens/ChangeEmail';
 import PhotoReregisterDrawerScreen from '../drawerScreens/PhotoReregisterDrawerScreen';
 import DeliverBraceletDrawerScreen from '../drawerScreens/DeliverBraceletDrawerScreen';
+import NewFastTicket from '../drawerScreens/NewFastTicket';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -59,6 +60,9 @@ function Navigators() {
           )}
           {canCreateTicket && (
             <Drawer.Screen name="Novo ingresso" component={NewTicket} />
+          )}
+          {canCreateTicket && (
+            <Drawer.Screen name="Cadastro rápido" component={NewFastTicket} />
           )}
           {canChangeEmail && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />

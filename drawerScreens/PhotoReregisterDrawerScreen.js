@@ -2,7 +2,7 @@ import {useIsFocused} from '@react-navigation/native';
 import {Button, Divider, Text} from '@rneui/themed';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {ScrollView, View} from 'react-native';
-import {saveUserPhoto} from '../api/UserApi';
+import {saveUserPhotoAgain} from '../api/UserApi';
 import Header from '../components/Header';
 import SearchUserModal from '../components/SearchUserModal';
 import TakePictureModal from '../components/TakePictureModal';
@@ -29,7 +29,7 @@ function PhotoReregisterDrawerScreen({navigation}) {
   const toggleCamVisibility = () => setIsVisibleCam(is => !is);
 
   const handleUserFound = userFounded => {
-    if (!userFounded.isActive)
+    if (!userFounded.isActive && !userFounded.useFacialWeb)
       return setAlertMessage('Usuário precisa realizar o cadastro inicial.');
 
     setUser(userFounded);
@@ -50,7 +50,7 @@ function PhotoReregisterDrawerScreen({navigation}) {
     });
     console.log('@@@@ formData', formData);
     setIsLoading(true);
-    var response = await saveUserPhoto(formData);
+    var response = await saveUserPhotoAgain(formData);
     if (response) {
       clearState();
       setAlertMessage('Foto atualizada com sucesso!', '#32cd32');

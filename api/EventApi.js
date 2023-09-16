@@ -20,3 +20,13 @@ export const getEventDays = async eventId =>
       'Content-Type': 'application/json-patch+json',
     },
   });
+
+  export const getEventSectors = async eventId =>
+  await axios({
+    url: BASE_URL + `/api/events/${eventId}/sectors`,
+    method: 'GET',
+    headers: {
+      Accept: 'text/plain',
+      'Content-Type': 'application/json-patch+json',
+    },
+  });
