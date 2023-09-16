@@ -14,6 +14,20 @@ export const getUserByCpf = async (cpf, eventId) =>
       Accept: 'application/json',
     },
   });
+  export const getUserByCpfWithAuth = async (cpf, eventId, token) =>
+  axios({
+    url:
+      BASE_URL +
+      '/api/users/manual/byDocument?document=' +
+      cpf +
+      '&eventId=' +
+      eventId,
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + token,
+    },
+  });
 
 export const getUserByEmail = async (email, eventId) =>
   axios({
@@ -103,3 +117,14 @@ export const completeTicketRegister = async (data, userToken) => {
     },
   });
 };
+
+export const updateEmail = async (data, userToken) =>
+  axios({
+    url: BASE_URL + '/api/users/updateEmail',
+    method: 'PUT',
+    data: data,
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });

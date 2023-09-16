@@ -65,7 +65,7 @@ const initialState = {
   userToken: null,
   selectedEventId: null,
   isAuthenticated: false,
-  events: null,
+  events: null, 
   requiredForms: null,
 };
 
@@ -90,6 +90,7 @@ export function AuthProvider({children}) {
       setAuthState({
         userToken: token,
         canCreateTicket: decodedToken.CanCreateTicket,
+        canChangeEmail: decodedToken.CanChangeEmail,
         // // TODO: setado temporariamente para testar, excluir linha a baixo.
         // token: 'ZiU3aYBWAg1LPl+061DrVA==',
         isAuthenticated: true,
@@ -166,6 +167,7 @@ export function AuthProvider({children}) {
         events,
         selectedEventId,
         canCreateTicket: decodedToken.CanCreateTicket === 'True',
+        canChangeEmail: decodedToken.CanChangeEmail === 'True',
       };
       if (requiredForms) {
         authStateChanges.requiredForms = requiredForms;
