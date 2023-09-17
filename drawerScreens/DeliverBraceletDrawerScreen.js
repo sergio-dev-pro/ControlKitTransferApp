@@ -65,7 +65,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
       //       ticket.day,
       //     )} já passou! Nao é possível registrar entrega.`,
       //   );
-      setAlertMessage('Entrega de pulseira registrada com sucesso.', '#32cd32');
+      setAlertMessage(`Entrega de pulseira registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32');
     } catch (error) {
       //console.error(error);
       //console.error(JSON.stringify(error));
@@ -111,7 +111,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
       console.log(ticket.day);
       setDocument(null);
       setEventDay(null);
-      setAlertMessage('Entrega de pulseira registrada com sucesso.', '#32cd32');
+      setAlertMessage(`Entrega de pulseira registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32');
     } catch (error) {
       //console.error(error);
       //console.error(JSON.stringify(error));
