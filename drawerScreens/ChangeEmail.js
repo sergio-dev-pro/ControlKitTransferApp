@@ -76,22 +76,27 @@ const ChangeEmail = ({navigation}) => {
 
   const saveEmailChange = async () => {
     const clearStates = () => {
-      setUserEmailFound(null)
+      setUserEmailFound(null);
       setUserEmailFoundUpdated(null);
-      setInputValue("")
-    }
-    if(userEmailFound === userEmailFoundUpdated) {
-      clearStates()
-      return
+      invalidUserEmailFoundInputValue &&
+        setInvalidUserEmailFoundInputValue(null);
+      setInputValue('');
+    };
+
+    if (userEmailFound === userEmailFoundUpdated) {
+      clearStates();
+      return;
     }
     const isValid = isValidEmail(userEmailFoundUpdated);
     if (!isValid) return setInvalidUserEmailFoundInputValue('e-mail inválido');
     setLoading(true);
     try {
-      const res = await updateEmail({token, email: userEmailFoundUpdated}, authContext.userToken);
-      console.log('@@@ res', res)
+      const res = await updateEmail(
+        {token, email: userEmailFoundUpdated},
+        authContext.userToken,
+      );
       clearStates();
-      alert('E-mail alterado com sucesso', '#32cd32')
+      alert('E-mail alterado com sucesso', '#32cd32');
     } catch (error) {
       console.error(error);
       if (error?.response?.data?.errors) {
@@ -166,6 +171,7 @@ const ChangeEmail = ({navigation}) => {
               Encontrado
             </Text>
             <Input
+              style={{marginBottom: 9}}
               label="Atualize o e-mail"
               value={userEmailFoundUpdated}
               onChangeText={value =>
