@@ -7,17 +7,8 @@ export function isValidEmail(mail) {
   // } else {
   //   return false;
   // }
-
-  function validarEmail(email) {
-    // Expressão regular para validar o formato do e-mail
-    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-    
-    // Testa o e-mail em relação à expressão regular
-    return regex.test(email);
-
-  }
   
-  return validarEmail(mail)
+  return mail.includes("@");
 }
 
 

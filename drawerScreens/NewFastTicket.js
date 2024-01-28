@@ -3,7 +3,7 @@ import React, {useContext, useEffect, useLayoutEffect, useState} from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
 import {Button, Divider, Text} from '@rneui/themed';
-import {getEventDays, getEventSectors} from '../api/EventApi';
+import {getEventDays, getEventSectors, getSponsors} from '../api/EventApi';
 import {AuthContext} from '../context/AuthContext';
 import Loading from '../components/Loading';
 import BasicFastRegisterForm from './ManualRegisterScreen/BasicFastRegisterForm';
@@ -17,6 +17,7 @@ import { RegisterStateContext } from './ManualRegisterScreen/registerContext';
 const NewFastTicket = ({navigation}) => {
   const [days, setDays] = useState([]);
   const [sectors, setSectors] = useState([]);
+  const [sponsors, setSponsors] = useState([]);
   const [tempToken, setTempToken] = useState(null);
   const [takePhoto, setTakePhoto] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -39,6 +40,9 @@ const NewFastTicket = ({navigation}) => {
 
         const {data: sectors} = await getEventSectors(authContext.selectedEventId);
         setSectors(sectors);
+
+        const {data: sponsors} = await getSponsors(authContext.selectedEventId, authContext.userToken);
+        setSponsors(sponsors)
       } catch (error) {
         console.error(error);
       } finally {
@@ -149,6 +153,7 @@ const NewFastTicket = ({navigation}) => {
                 onUserFormCompleted={handleUserFormCompleted}
                 availableDays={days}
                 availableSectors={sectors}
+                sponsors={sponsors}
               />
             )}
           </>
