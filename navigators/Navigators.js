@@ -10,6 +10,7 @@ import EventSelectionDrawerScreen from '../drawerScreens/EventSelectionDrawerScr
 import ManualRegisterScreen from '../drawerScreens/ManualRegisterScreen';
 import ItinerariesScreen from '../drawerScreens/ItinerariesScreen';
 import NewTicket from '../drawerScreens/NewTicket';
+import ChangeEmail from '../drawerScreens/ChangeEmail';
 import PhotoReregisterDrawerScreen from '../drawerScreens/PhotoReregisterDrawerScreen';
 import DeliverBraceletDrawerScreen from '../drawerScreens/DeliverBraceletDrawerScreen';
 import NewFastTicket from '../drawerScreens/NewFastTicket';
@@ -18,9 +19,10 @@ const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
 function Navigators() {
-  const {userToken, selectedEventId, events, canCreateTicket} =
+  const {userToken, selectedEventId, events, canCreateTicket, canChangeEmail} =
     React.useContext(AuthContext);
   const hasOnlyOneEvent = events && events.length === 1;
+
   return (
     <>
       {userToken && selectedEventId ? (
@@ -61,6 +63,9 @@ function Navigators() {
           )}
           {canCreateTicket && (
             <Drawer.Screen name="Cadastro rápido" component={NewFastTicket} />
+          )}
+          {canChangeEmail && (
+            <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
           )}
         </Drawer.Navigator>
       ) : (

@@ -11,6 +11,7 @@ export function isValidEmail(mail) {
   return mail.includes("@");
 }
 
+
 export const validateDate = date => {
   if (!date || date.length < 10) return false;
   const dateSplited = date.split('/');

@@ -13,7 +13,7 @@ const inputErrorMsgs = {
   },
 };
 
-const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSectors, onReturn, onCancel}) => {
+const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSectors, sponsors, onReturn, onCancel}) => {
   const [user, setUser] = useState({
     name: '',
     cpf: '', // usado para amazenar cpf ou passport
@@ -28,6 +28,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
   });
   const [eventDay, setEventDay] = useState(null);
   const [sectorId, setSectorId] = useState(null);
+  const [sponsorId, setSponsorId] = useState(null);
   const [documentType, setDocumentType] = useState('cpf');
   const [passportValidation, setPassportValidation] = useState({
     isValid: true,
@@ -121,7 +122,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
       return alert('Selecione o setor.');
 
     onUserFormCompleted({
-      user: {day: user.day, document: user.cpf, name: user.name, sectorId: sectorId}
+      user: {day: user.day, document: user.cpf, name: user.name, sectorId: sectorId, sponsorId: sponsorId}
     });
   };
 
@@ -136,6 +137,12 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
   for(var j in availableSectors)
   {
     itemsSector.push({key: availableSectors[j].id, value: availableSectors[j].name});
+  }
+
+  var itemsSponsors = [];
+  for(var h in sponsors)
+  {
+    itemsSponsors.push({key: sponsors[h].id, value: sponsors[h].name});
   }
 
   return (
@@ -206,6 +213,16 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
           setUser(prev => ({...prev, sectorId: sectorId}));
         }}
         value={sectorId}
+      />
+
+      <SelectModal
+        label={'Selecione o patrocinador'}
+        items={itemsSponsors}
+        setValue={value => {
+          setSponsorId(value);
+          setUser(prev => ({...prev, sponsorId: sponsorId}));
+        }}
+        value={sponsorId}
       />
 
       <View

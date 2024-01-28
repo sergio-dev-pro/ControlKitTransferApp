@@ -333,6 +333,20 @@ function KitsDrawerScreen({navigation}) {
                         </Text>
                       </View>
                     )}
+
+                  {ticketFound?.sectorName && (
+                      <View
+                        style={{
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          marginBottom: 8,
+                        }}>
+                        <Text h4>Setor</Text>
+                        <Text h4>
+                          {ticketFound.sectorName}
+                        </Text>
+                      </View>
+                    )}
                     {/* <View
                     style={{
                       flexDirection: IS_MOBILE ? 'column' : 'row',

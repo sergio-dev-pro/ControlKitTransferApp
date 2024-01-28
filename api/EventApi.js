@@ -11,6 +11,16 @@ export const getEventRequiredFields = async eventId =>
     },
   });
 
+  export const getSponsors = async (eventId, token) =>
+  await axios({
+    url: BASE_URL + `/api/events/${eventId}/sponsors`,
+    method: 'GET',
+    headers: {
+      Accept: 'text/plain',
+      'Authorization': 'Bearer ' + token
+    },
+  });
+
 export const getEventDays = async eventId =>
   axios({
     url: BASE_URL + `/api/events/${eventId}/days`,
