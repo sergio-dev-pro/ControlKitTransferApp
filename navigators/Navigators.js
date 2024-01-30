@@ -14,6 +14,7 @@ import ChangeEmail from '../drawerScreens/ChangeEmail';
 import PhotoReregisterDrawerScreen from '../drawerScreens/PhotoReregisterDrawerScreen';
 import DeliverBraceletDrawerScreen from '../drawerScreens/DeliverBraceletDrawerScreen';
 import NewFastTicket from '../drawerScreens/NewFastTicket';
+import BraceletRegistrationDrawerScreen from '../drawerScreens/BraceletRegistrationDrawerScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -42,6 +43,10 @@ function Navigators() {
           <Drawer.Screen
             name="Entregar pulseira"
             component={DeliverBraceletDrawerScreen}
+          />
+          <Drawer.Screen
+            name="Registrar pulseira"
+            component={BraceletRegistrationDrawerScreen}
           />
           <Drawer.Screen
             name="Cadastro manual"
