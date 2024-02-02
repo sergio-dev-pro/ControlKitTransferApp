@@ -240,15 +240,7 @@ function KitsDrawerScreen({navigation}) {
         type: 'image/png',
         name: 'signatureImage.png',
       });
-      if (mustSelectShirtSize) {
-        const shirtSizeByCode = {};
-        for (var ticket in ticketFounds) {
-          shirtSizeByCode[ticketFounds[ticket].code] =
-            ticketFounds[ticket].shirtSize;
-        }
-        formData.append('codesShirtSize', JSON.stringify(shirtSizeByCode));
-      }
-
+      
       console.log(
         '__________________ticketOwnerSignatureRegistration',
         formData,
