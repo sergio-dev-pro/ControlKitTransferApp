@@ -249,7 +249,7 @@ function KitsDrawerScreen({navigation}) {
       setAlertMessage('Entrega de kit registrada', '#32cd32');
     } catch (error) {
       console.error(error);
-      setAlertMessage('Entrega não registrada, não entregar o kit');
+      setAlertMessage('Entrega não registrada! KIT NAO FOI ENTREGUE!');
     } finally {
       cancel();
       setIsLoading(false);

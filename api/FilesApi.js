@@ -3,7 +3,7 @@ import BASE_URL from '../constants/api';
 
 export const ticketOwnerDocumentRegistration = (token, formData) =>
   axios({
-    url: BASE_URL + `/api/files/v2/documents`,
+    url: BASE_URL + `/api/files/v3/documents`,
     method: 'POST',
     data: formData,
     headers: {

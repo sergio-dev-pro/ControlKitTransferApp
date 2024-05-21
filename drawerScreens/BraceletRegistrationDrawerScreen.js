@@ -18,6 +18,7 @@ function BraceletRegistrationDrawerScreen({navigation}) {
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
   const [user, setUser] = useState();
   const [selectedDay, setSelectedDay] = useState();
+  const [sectorDescription, setSectorDescription] = useState(null);
   const [ticketCode, setTicketCode] = useState();
   const [loading, setLoading] = useState(false);
   const isFocused = useIsFocused();
@@ -128,10 +129,27 @@ function BraceletRegistrationDrawerScreen({navigation}) {
               placeholder=""
               items={user.days.map(day => ({key: day, value: formatDate(day)}))}
               value={selectedDay}
-              setValue={setSelectedDay}
+              setValue={(value) => {
+                setSelectedDay(value)
+                console.log(JSON.stringify(user))
+                var dayKey = value.split('T')[0];
+                console.log('dayKey=' + dayKey)
+                var sectorByDay = user.daySectors[dayKey];
+                console.log('sectorByDay=' + sectorByDay)
+                if(sectorByDay)
+                {
+                  setSectorDescription("Setor " + sectorByDay);
+                }
+              }}
             />
+            {sectorDescription && (<Text
+                  h4
+                  h4Style={{fontSize: 18, color: '#000', paddingLeft: 16}}>
+                  {sectorDescription}
+                </Text>)}
             {selectedDay && !hasTicketCodeRead && (
               <View style={{padding: 16, height: 'auto'}}>
+              
                 <Text
                   h4
                   h4Style={{fontSize: 18, color: '#86939e', marginBottom: 10}}>
