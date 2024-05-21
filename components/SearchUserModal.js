@@ -13,7 +13,13 @@ const INPUT_VALUE_TYPE = {
   cpf: 'cpf',
   passport: 'passport',
 };
-const SearchUserModal = ({onUserFound, isVisible, onClose, onUserIsActive}) => {
+const SearchUserModal = ({
+  onUserFound,
+  isVisible,
+  onClose,
+  title = 'Busque o usuário que deseja cadastrar',
+  onUserIsActive,
+}) => {
   const [loading, setLoading] = useState(false);
   // TODO: Setado temporariamente
   // 'sergio@spr.com'
@@ -54,12 +60,14 @@ const SearchUserModal = ({onUserFound, isVisible, onClose, onUserIsActive}) => {
     if (!validatedInputValueType) return;
     try {
       setLoading(true);
-      const {data: user} =
-        validatedInputValueType === INPUT_VALUE_TYPE.email
-          ? await getUserByEmail(inputValue, authContext.selectedEventId)
-          : await getUserByCpf(inputValue, authContext.selectedEventId);
-
-      onUserFound({...user, id: inputValue});
+      const isEmailSearch = validatedInputValueType === INPUT_VALUE_TYPE.email;
+      const {data: user} = isEmailSearch
+        ? await getUserByEmail(inputValue, authContext.selectedEventId)
+        : await getUserByCpf(inputValue, authContext.selectedEventId);
+      const searchedFor = {};
+      if (isEmailSearch) searchedFor.email = inputValue;
+      else searchedFor.cpf = inputValue;
+      onUserFound({...user, id: inputValue}, searchedFor);
     } catch (error) {
       console.error(error);
       console.error(error.response.data.errors);
@@ -93,7 +101,7 @@ const SearchUserModal = ({onUserFound, isVisible, onClose, onUserIsActive}) => {
           width: `95%`,
         }}>
         <Text h4 h4Style={{marginBottom: 10}}>
-          Busque o usuário que deseja cadastrar
+          {title}
         </Text>
         <Input
           ref={ref}

@@ -102,6 +102,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
         document, eventDay, authContext.selectedEventId,
         authContext.userToken,
       );
+      console.log(JSON.stringify(ticket))
       if (ticket.kitDelivered)
         return setAlertMessage(
           `A pulseira de ${ticket.name} para o dia ${formatDate(

@@ -40,9 +40,14 @@ export default function SelectModal({
           onPress={() => toggleShowSelectionModal()}>
           <Input
             label={label}
-            containerStyle={{width: '93%'}}
+            containerStyle={{width: '93%', height: 80}}
+            inputStyle={{margin: 0, padding: 0}}
             disabled
-            value={value ? items.filter(item => item.key == value)[0].value : 'Selecione'}
+            value={
+              value
+                ? items.filter(item => item.key == value)[0].value
+                : 'Selecione'
+            }
           />
           <Icon
             name="select1"
@@ -54,7 +59,7 @@ export default function SelectModal({
         </TouchableOpacity>
 
         {errorMessage && (
-          <Text as="P2" style={{color: 'red'}}>
+          <Text as="P2" style={{color: 'red', marginLeft: 10}}>
             {errorMessage}
           </Text>
         )}

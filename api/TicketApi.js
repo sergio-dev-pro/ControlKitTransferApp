@@ -19,7 +19,7 @@ export const registerTicket = async (code, token) =>
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
-      'Authorization': 'Bearer ' + token
+      Authorization: 'Bearer ' + token,
     },
   });
 
@@ -30,17 +30,40 @@ export const registerBraceletDelivery = async (code, token) =>
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
-      'Authorization': 'Bearer ' + token
+      Authorization: 'Bearer ' + token,
     },
   });
 
-  export const registerBraceletDeliveryByDocument = async (document, day, eventId, token) =>
+export const registerBraceletDeliveryByDocument = async (
+  document,
+  day,
+  eventId,
+  token,
+) =>
   await axios({
-    url: BASE_URL + `/api/tickets/blaceletDeliveryByDocument?document=${document}&day=${day}&eventId=${eventId}`,
+    url:
+      BASE_URL +
+      `/api/tickets/blaceletDeliveryByDocument?document=${document}&day=${day}&eventId=${eventId}`,
     method: 'PATCH',
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
-      'Authorization': 'Bearer ' + token
+      Authorization: 'Bearer ' + token,
     },
   });
+export const braceletRegister = async (operatorToken, token, day, code) => {
+  const formData = new FormData();
+  formData.append('token', token);
+  formData.append('day', day);
+  formData.append('code', code);
+  return await axios({
+    url: BASE_URL + `/api/tickets/blaceletCode`,
+    method: 'PATCH',
+    data: {token, code, day},
+    headers: {
+      Accept: 'text/plain',
+      'Content-Type': 'application/json-patch+json',
+      Authorization: 'Bearer ' + operatorToken,
+    },
+  });
+};

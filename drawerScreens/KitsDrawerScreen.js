@@ -23,6 +23,9 @@ import {IS_MOBILE} from '../constants/layout';
 import ReactNativeModal from 'react-native-modal';
 import {formatDateForTextDay} from '../helpers/format';
 import {isDateGreaterThanOrEqualToToday} from '../helpers/validation';
+import {getEventRequiredFields} from '../api/EventApi';
+import Loading from '../components/Loading';
+import SelectModal from '../components/SelectModal';
 
 function KitsDrawerScreen({navigation}) {
   const authContext = useContext(AuthContext);
@@ -42,6 +45,30 @@ function KitsDrawerScreen({navigation}) {
 
   const [isLoading, setIsLoading] = useState();
   const [isConfirmDelivery, setIsConfirmDelivery] = useState(false);
+  const [mustSelectShirtSize, setMustSelectShirtSize] = useState(false);
+  const [checkingIfNeedSelectShirtSize, setCheckingIfNeedSelectShirtSize] =
+    useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setCheckingIfNeedSelectShirtSize(true);
+        const response = await getEventRequiredFields(
+          authContext.selectedEventId,
+        );
+        console.log(
+          'KitsDrawerScreen useEffect getEventRequiredFields.data',
+          response.data,
+        );
+        setMustSelectShirtSize(response.data.shirtSizeIsRequired);
+      } catch (error) {
+        console.log('KitsDrawerScreen useEffect getEventRequiredFields', error);
+        alert('Erro ao buscar campos requeridos, saia e entre novamente.');
+      } finally {
+        setCheckingIfNeedSelectShirtSize(false);
+      }
+    })();
+  }, [authContext.selectedEventId]);
 
   const syncTickets = async () => {
     try {
@@ -135,9 +162,14 @@ function KitsDrawerScreen({navigation}) {
       //       ticket.day,
       //     )} já passou! Nao é possível contabilizar a entrega para esse dia.`,
       //   );
+      const newTicketFound = {
+        ...ticket,
+        code,
+      };
+      if (mustSelectShirtSize) newTicketFound.shirtSize = '';
       setTicketFounds(prevTicketFounds => [
         ...prevTicketFounds,
-        {...ticket, code},
+        newTicketFound,
       ]);
     } catch (error) {
       console.error(error);
@@ -156,6 +188,22 @@ function KitsDrawerScreen({navigation}) {
     setDocumentImg(undefined);
   };
   const registerDelivery = async () => {
+    if (mustSelectShirtSize) {
+      const ticktesWithSelectedShirtSize = ticketFounds.filter(
+        t => t.shirtSize.length > 0,
+      );
+      const hasShirtSizeTicketsSelected =
+        ticketFounds.length === ticktesWithSelectedShirtSize.length;
+
+      if (!hasShirtSizeTicketsSelected) {
+        setIsConfirmDelivery(false);
+        return setAlertMessage(
+          'Selecione o tamanho da camisa para cada ingresso listado',
+          '#dc143c',
+        );
+      }
+    }
+
     try {
       setIsLoading(true);
       try {
@@ -168,13 +216,22 @@ function KitsDrawerScreen({navigation}) {
           type: 'image/jpg',
           name: 'documentImage.jpg',
         });
-        console.log('ticketOwnerDocumentRegistration', formData);
+
+        if (mustSelectShirtSize) {
+          const shirtSizeByCode = {};
+          for (var ticket in ticketFounds) {
+            shirtSizeByCode[ticketFounds[ticket].code] =
+              ticketFounds[ticket].shirtSize;
+          }
+          formData.append('codesShirtSize', JSON.stringify(shirtSizeByCode));
+        }
         await ticketOwnerDocumentRegistration(authContext.userToken, formData);
       } catch (error) {
         throw `Chamada para registrar documento, payload = ${JSON.stringify({
           formData,
         })} ${ticketOwnerDocumentRegistration}${error}`;
       }
+
       const formData = new FormData();
 
       formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
@@ -183,12 +240,16 @@ function KitsDrawerScreen({navigation}) {
         type: 'image/png',
         name: 'signatureImage.png',
       });
-      console.log('ticketOwnerSignatureRegistration', formData);
+      
+      console.log(
+        '__________________ticketOwnerSignatureRegistration',
+        formData,
+      );
       await ticketOwnerSignatureRegistration(authContext.userToken, formData);
-      setAlertMessage('Entrega de kit registrada.', '#32cd32');
+      setAlertMessage('Entrega de kit registrada', '#32cd32');
     } catch (error) {
       console.error(error);
-      setAlertMessage('Entrega não registrada, não entregar o kit.');
+      setAlertMessage('Entrega não registrada! KIT NAO FOI ENTREGUE!');
     } finally {
       cancel();
       setIsLoading(false);
@@ -228,6 +289,7 @@ function KitsDrawerScreen({navigation}) {
 
     return [day, month, year].join('/');
   };
+
   return (
     <View style={{...GStyles.view}}>
       <Header
@@ -334,7 +396,7 @@ function KitsDrawerScreen({navigation}) {
                       </View>
                     )}
 
-                  {ticketFound?.sectorName && (
+                    {ticketFound?.sectorName && (
                       <View
                         style={{
                           flexDirection: 'column',
@@ -342,25 +404,45 @@ function KitsDrawerScreen({navigation}) {
                           marginBottom: 8,
                         }}>
                         <Text h4>Setor</Text>
-                        <Text h4>
-                          {ticketFound.sectorName}
-                        </Text>
+                        <Text h4>{ticketFound.sectorName}</Text>
                       </View>
                     )}
-                    {/* <View
-                    style={{
-                      flexDirection: IS_MOBILE ? 'column' : 'row',
-                      justifyContent: 'space-between',
-                      marginBottom: 8,
-                    }}>
-                    <Text h4>Nome</Text>
-                    <Text h4 h4Style={{fontSize: IS_MOBILE ? 14 : null}}>
-                      {(() => {
-                        const {name} = ticketFound;
-                        return name;
-                      })()}
-                    </Text>
-                  </View> */}
+                    {checkingIfNeedSelectShirtSize && (
+                      <View
+                        style={{
+                          flex: 1,
+                          justifyContent: 'center',
+                          marginTop: 20,
+                          marginBottom: 10,
+                        }}>
+                        <Loading isActive />
+                      </View>
+                    )}
+                    {mustSelectShirtSize && (
+                      <SelectModal
+                        label="Tamanho da camisa"
+                        value={ticketFound.shirtSize}
+                        setValue={value =>
+                          setTicketFounds(prevState =>
+                            prevState.map(ticketInfo =>
+                              ticketInfo.code == ticketFound.code
+                                ? {...ticketInfo, shirtSize: value}
+                                : ticketInfo,
+                            ),
+                          )
+                        }
+                        errorMessage={'Campo obrigatório'}
+                        placeholder="Selecione"
+                        items={[
+                          {key: 'P', value: 'P'},
+                          {key: 'M', value: 'M'},
+                          {key: 'G', value: 'G'},
+                          {key: 'GG', value: 'GG'},
+                          {key: 'EG1', value: 'EG1'},
+                          {key: 'EG2', value: 'EG2'},
+                        ]}
+                      />
+                    )}
                   </Card>
                 )}
               />
