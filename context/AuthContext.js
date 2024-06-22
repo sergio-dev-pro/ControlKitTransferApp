@@ -104,6 +104,7 @@ export function AuthProvider({children}) {
 
   const setSelectedEventId = async id => {
     try {
+      console.log('selectedEventIdNow='+ id)
       setIsSearchingEventSettings(true);
       const {data: requiredFieldsForUserRegistration} =
         await getEventRequiredFields(id);
@@ -122,6 +123,7 @@ export function AuthProvider({children}) {
         requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
       }));
     } catch (e) {
+      console.log(e.response?.data?.errors)
       console.error(e);
     }
   };
