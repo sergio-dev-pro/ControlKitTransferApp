@@ -75,51 +75,15 @@ export default function TakePictureModal({
     }
   };
 
-  const pictureValidation = async path => {
-    if (Platform.OS == 'android') path = 'file://' + path;
-    else {
-      //todo: check how to work in ios face detectors
-      return true;
-    }
-    console.log('Path saved image=' + path);
-    const numberFacesDetected = 1;//todo: call api to detect face
-    if (numberFacesDetected === 0) {
-      setAlertMessage(
-        'Foto inválida: seu rosto não foi detectado, tente novamente.',
-      );
-      return false;
-    } else if (numberFacesDetected > 1) {
-      setAlertMessage(
-        'Foto inválida: mais de um rosto detectado, tente novamente.',
-      );
-      return false;
-    }
-    return true;
-  };
-
   const takePicture = async () => {
     if (cameraPermissionStatus !== 'authorized') return askCameraPermission();
     setIsTakingPhoto(true);
     try {
-      if (Platform.OS === 'android') {
-        const snapshot = await camera.current.takeSnapshot({
-          quality: 85,
-          skipMetadata: true,
-        });
-        setPicture(snapshot);
-        const isValidPicture = true;
-        !isValidPicture && setPicture(null);
-        setIsTakingPhoto(false);
-      } else {
-        const photo = await camera.current.takePhoto({
-          flash: 'off',
-        });
-        setPicture(photo);
-
-        const isValidPicture = true;
-        !isValidPicture && setPicture(null);
-        setIsTakingPhoto(false);
-      }
+      const photo = await camera.current.takePhoto({
+        flash: 'off',
+      });
+      setPicture(photo);
+      setIsTakingPhoto(false);
     } catch (error) {
       console.error(error);
     }

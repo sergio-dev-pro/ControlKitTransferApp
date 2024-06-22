@@ -29,6 +29,7 @@ function BraceletRegistrationDrawerScreen({navigation}) {
     setUser();
     setSelectedDay();
     setTicketCode();
+    setSectorDescription(null);
   };
   const handleUserFound = (userFounded, searchedFor) => {
     if (!userFounded.isActive)

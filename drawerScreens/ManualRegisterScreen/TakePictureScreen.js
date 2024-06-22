@@ -95,25 +95,14 @@ export default function TakePictureScreen() {
     if (cameraPermissionStatus !== 'authorized') return askCameraPermission();
     setIsTakingPhoto(true);
     try {
-      if (Platform.OS === 'android') {
-        const snapshot = await camera.current.takeSnapshot({
-          quality: 85,
-          skipMetadata: true,
-        });
-        setPicture(snapshot);
-        const isValidPicture = await pictureValidation(snapshot.path);
-        !isValidPicture && setPicture(null);
-        setIsTakingPhoto(false);
-      } else {
-        const photo = await camera.current.takePhoto({
-          flash: 'off',
-        });
-        setPicture(photo);
+      const photo = await camera.current.takePhoto({
+        flash: 'off',
+      });
+      setPicture(photo);
 
-        const isValidPicture = await pictureValidation(photo.path);
-        !isValidPicture && setPicture(null);
-        setIsTakingPhoto(false);
-      }
+      const isValidPicture = await pictureValidation(photo.path);
+      !isValidPicture && setPicture(null);
+      setIsTakingPhoto(false);
     } catch (error) {
       console.error(error);
     }

@@ -53,11 +53,15 @@ function DeliverBraceletDrawerScreen({navigation}) {
         authContext.userToken,
       );
       if (ticket.kitDelivered)
+      {
+        setDocument(null);
+        setEventDay(null);
         return setAlertMessage(
           `A pulseira de ${ticket.name} para o dia ${formatDate(
             ticket.day,
           )} já foi entregue.`,
         );
+      }
       console.log(ticket.day);
       // if (!isDateGreaterThanOrEqualToToday(ticket.day))
       //   return setAlertMessage(
@@ -65,6 +69,8 @@ function DeliverBraceletDrawerScreen({navigation}) {
       //       ticket.day,
       //     )} já passou! Nao é possível registrar entrega.`,
       //   );
+      setDocument(null);
+      setEventDay(null);
       setAlertMessage(`Entrega de pulseira de ${ticket.name} registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32');
     } catch (error) {
       //console.error(error);

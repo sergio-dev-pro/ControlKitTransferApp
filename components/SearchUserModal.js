@@ -3,7 +3,7 @@ import {Button, Input, Text} from '@rneui/themed';
 import {useContext, useEffect, useRef, useState} from 'react';
 import {Modal, View} from 'react-native';
 import ReactNativeModal from 'react-native-modal';
-import {getUserByCpf, getUserByEmail} from '../api/UserApi';
+import {getUserByCpf, getUserByCpfWithAuth, getUserByEmail} from '../api/UserApi';
 import {useAlert} from '../context/AlertContext';
 import {AuthContext} from '../context/AuthContext';
 import {cpfValidation, isValidEmail} from '../helpers/validation';
@@ -63,7 +63,7 @@ const SearchUserModal = ({
       const isEmailSearch = validatedInputValueType === INPUT_VALUE_TYPE.email;
       const {data: user} = isEmailSearch
         ? await getUserByEmail(inputValue, authContext.selectedEventId)
-        : await getUserByCpf(inputValue, authContext.selectedEventId);
+        : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken);
       const searchedFor = {};
       if (isEmailSearch) searchedFor.email = inputValue;
       else searchedFor.cpf = inputValue;
