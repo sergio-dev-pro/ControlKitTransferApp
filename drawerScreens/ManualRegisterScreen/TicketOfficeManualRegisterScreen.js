@@ -3,23 +3,16 @@ import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {ScrollView, View} from 'react-native';
 import Header from '../../components/Header';
 import Loading from '../../components/Loading';
-import {useAlert} from '../../context/AlertContext';
-import {AuthContext} from '../../context/AuthContext';
 import GStyles from '../../style/global';
-import {cpfValidation, isValidEmail} from '../../helpers/validation';
 import {
-  completeManualRegister,
-  getUserByCpf,
-  getUserByEmail,
+  saveUserPhotoAgain,
 } from '../../api/UserApi';
-import Modal from 'react-native-modal';
 import THEME from '../../style/theme';
 import {useIsFocused} from '@react-navigation/native';
-import RegisterForm from './RegisterForm';
-import GuestRegistrations from './GuestRegistrations';
-import CodeReaderForEachDay from './CodeReaderForEachDay';
-import {formatDateAaaaMmDd} from '../../helpers/format';
 import SearchUserModal from '../../components/SearchUserModal';
+import { RegisterStateContext } from './registerContext';
+import TakePictureScreen from './TakePictureScreen';
+import { useAlert } from '../../context/AlertContext';
 const formatDate = date => {
   var d = new Date(date),
     month = '' + (d.getMonth() + 1),
@@ -37,8 +30,44 @@ function TicketOfficeManualRegisterScreen({navigation}) {
 
   const isFocused = useIsFocused();
   const [isVisible, setIsVisible] = useState(true);
+  const [takePhoto, setTakePhoto] = useState(false);
   const [loading, setLoading] = useState(false);
   const ref = useRef();
+
+  const setAlertMessage = useAlert();
+
+  const savePhoto = async picturePath => {
+
+    if (picturePath) {
+      const formData = new FormData();
+      formData.append('token', user.token);
+      formData.append('file', {
+        uri: picturePath,
+        type: 'image/jpeg',
+        name: 'userImage.jpg',
+      });
+      console.log('@@@@ formData', formData);
+      try {
+        setLoading(true);
+        var response = await saveUserPhotoAgain(formData);
+        if (response) {
+          setAlertMessage('Foto salva com sucesso!');
+          setTakePhoto(false);
+          clearStates();
+          setTimeout(() => {setIsVisible(true)}, 3000)
+        } else {
+          setAlertMessage('Erro ao enviar imagem, tente novamente.');
+        }
+      } catch (error) {
+        console.error(error);
+        setAlertMessage('Erro ao enviar imagem, tente novamente.');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  
 
   useEffect(() => {
     // O ref.current e utilizado para verificar se
@@ -54,12 +83,20 @@ function TicketOfficeManualRegisterScreen({navigation}) {
   };
 
   const clearStates = () => {
-    setUser(undefined);
+    setUser(null);
   };  
   const daySectorArray = user && Object.entries(user?.daySectors);
   console.log('@@@ user', user);
   return (
     <>
+      <RegisterStateContext.Provider
+        value={{
+          cancelPhoto: () => {
+            setTakePhoto(false);
+          },
+          savePhoto,
+          isSavingPhoto: loading,
+        }}>
       <View style={{...GStyles.view}}>
         <Header
           style={{marginBottom: 0}}
@@ -98,9 +135,21 @@ function TicketOfficeManualRegisterScreen({navigation}) {
                 ))}
               </View>
               <View>
-                <Button type="solid" size="lg" color="warning" style={{}}>
-                  Tirar foto
+                <Button type="solid" size="lg" color="warning" style={{}}
+                onPress={() => {
+                  setTakePhoto(true);
+                }}>
+                  Cadastrar foto
                 </Button>
+                <Button
+              type="outline"
+              containerStyle={{marginTop: 10}}
+              onPress={() => {
+                clearStates();
+                setIsVisible(true);
+              }}>
+              Cancelar
+            </Button>
               </View>
             </>
           )}
@@ -116,6 +165,8 @@ function TicketOfficeManualRegisterScreen({navigation}) {
           />
         )}
       </View>
+      {takePhoto && <TakePictureScreen />}
+      </RegisterStateContext.Provider>
     </>
   );
 }
