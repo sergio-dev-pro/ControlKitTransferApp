@@ -1,4 +1,13 @@
-import {Button, Card, Divider, Icon, Image, Input, Text} from '@rneui/themed';
+import {
+  Button,
+  Card,
+  CheckBox,
+  Divider,
+  Icon,
+  Image,
+  Input,
+  Text,
+} from '@rneui/themed';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {Platform, ScrollView, View} from 'react-native';
 import Header from '../components/Header';
@@ -26,6 +35,7 @@ import {isDateGreaterThanOrEqualToToday} from '../helpers/validation';
 import {getEventRequiredFields} from '../api/EventApi';
 import Loading from '../components/Loading';
 import SelectModal from '../components/SelectModal';
+import SearchUserModal from '../components/SearchUserModal';
 
 function KitsDrawerScreen({navigation}) {
   const authContext = useContext(AuthContext);
@@ -48,6 +58,7 @@ function KitsDrawerScreen({navigation}) {
   const [mustSelectShirtSize, setMustSelectShirtSize] = useState(false);
   const [checkingIfNeedSelectShirtSize, setCheckingIfNeedSelectShirtSize] =
     useState(false);
+  const [isDeliveryByCPF, setIsDeliveryByCPF] = useState();
 
   useEffect(() => {
     (async () => {
@@ -240,7 +251,7 @@ function KitsDrawerScreen({navigation}) {
         type: 'image/png',
         name: 'signatureImage.png',
       });
-      
+
       console.log(
         '__________________ticketOwnerSignatureRegistration',
         formData,
@@ -582,14 +593,32 @@ function KitsDrawerScreen({navigation}) {
             </ReactNativeModal>
           </>
         ) : (
+          !isDeliveryByCPF && (
+            <Button
+              loading={loading || syncronizingTicket}
+              onPress={() => {
+                setQrcodereader(null);
+                setShowQrcodereader(true);
+              }}>
+              Ler código do ingresso
+            </Button>
+          )
+        )}
+        {!isDeliveryByCPF && ticketFounds.length === 0 && (
           <Button
-            loading={loading || syncronizingTicket}
+            containerStyle={{marginTop: 10}}
+            type="outline"
             onPress={() => {
-              setQrcodereader(null);
-              setShowQrcodereader(true);
+              setIsDeliveryByCPF(true);
             }}>
-            Ler código do ingresso
+            Buscar por CPF
           </Button>
+        )}
+        {isDeliveryByCPF && (
+          <DeliveryByCPF
+            onCancelDeliveryByCPF={() => setIsDeliveryByCPF(false)}
+            mustSelectShirtSize={mustSelectShirtSize}
+          />
         )}
       </View>
       {showQrCodeReader && (
@@ -604,5 +633,367 @@ function KitsDrawerScreen({navigation}) {
     </View>
   );
 }
+
+const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
+  const [user, setUser] = useState();
+  const [selectedTicketCodes, setSelectedTicketCodes] = useState();
+  const [documentImg, setDocumentImg] = useState();
+  const [signature, setSignature] = useState();
+  const [showModalToTakePhotoOfDocument, setShowModalToTakePhotoOfDocument] =
+    useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [isConfirmDelivery, setIsConfirmDelivery] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [ticketCodeAndShirtSize, setTicketCodeAndShirtSize] = useState({});
+  const setAlertMessage = useAlert();
+  const authContext = useContext(AuthContext);
+
+  const handleUserFound = user => {
+    console.log('@@@@@@@@user', user);
+    user && setUser(user);
+  };
+  const clearState = () => {
+    setUser();
+    setSelectedTicketCodes();
+    setTicketCodeAndShirtSize({});
+    setDocumentImg();
+    setSignature();
+  };
+
+  const registerDelivery = async () => {
+    if (mustSelectShirtSize) {
+      // Verifica se foi selecionado o tamanho da camisa para cada ingresso
+      let wasSelected = true;
+      selectedTicketCodes.forEach((code) => { 
+        if(!ticketCodeAndShirtSize[code]) wasSelected = false;
+      })
+
+      if (!wasSelected) {
+        setIsConfirmDelivery(false);
+        return setAlertMessage(
+          'Selecione o tamanho da camisa para cada ingresso selecionado',
+          '#dc143c',
+        );
+      }
+    }
+
+    try {
+      setIsLoading(true);
+      try {
+        const formData = new FormData();
+
+        formData.append('codes', JSON.stringify(selectedTicketCodes));
+
+        formData.append('file', {
+          uri: documentImg,
+          type: 'image/jpg',
+          name: 'documentImage.jpg',
+        });
+
+        if (mustSelectShirtSize) {
+          formData.append('codesShirtSize', JSON.stringify(ticketCodeAndShirtSize));
+        }
+        await ticketOwnerDocumentRegistration(authContext.userToken, formData);
+      } catch (error) {
+        throw `Chamada para registrar documento, payload = ${JSON.stringify({
+          formData,
+        })} ${ticketOwnerDocumentRegistration}${error}`;
+      }
+
+      const formData = new FormData();
+
+      formData.append('codes', JSON.stringify(selectedTicketCodes));
+      formData.append('file', {
+        uri: 'data:image/png;base64,' + signature?.encoded + ';',
+        type: 'image/png',
+        name: 'signatureImage.png',
+      });
+
+      console.log(
+        '__________________ticketOwnerSignatureRegistration',
+        formData,
+      );
+      await ticketOwnerSignatureRegistration(authContext.userToken, formData);
+      setAlertMessage('Entrega de kit registrada', '#32cd32');
+    } catch (error) {
+      console.error(error);
+      setAlertMessage('Entrega não registrada! KIT NAO FOI ENTREGUE!');
+    } finally {
+      onCancelDeliveryByCPF();
+      setIsLoading(false);
+    }
+  };
+  console.log('@@@@@@@@ticketCodeAndShirtSize', ticketCodeAndShirtSize);
+  console.log('@@@@@@@@must', mustSelectShirtSize);
+  const confirmTicketCodeSelection = codes => {
+    setSelectedTicketCodes(codes);
+    // if(mustSelectShirtSize) {
+    //   const data = {}
+    //   codes.forEach(element => {
+    //     data[element] = ''
+    //   });
+    //   setTicketCodeAndShirtSize
+    // }
+  };
+  return (
+    <View>
+      <SearchUserModal
+        title="Buscar"
+        onUserFound={handleUserFound}
+        placeholderText="Busque pelo CPF"
+        isVisible={!user}
+        onClose={() => {
+          onCancelDeliveryByCPF();
+        }}
+      />
+      {user?.tickets && (
+        <TicketCodeSelectionModal
+          isVisible={user?.tickets && !selectedTicketCodes}
+          tickets={Object.entries(user.tickets)}
+          onClose={() => setUser(undefined)}
+          onConfirm={confirmTicketCodeSelection}
+        />
+      )}
+      <Button
+        onPress={() => {
+          onCancelDeliveryByCPF();
+          clearState();
+        }}
+        type="clear"
+        size="sm">
+        Cancelar
+      </Button>
+      {user && selectedTicketCodes && (
+        <>
+          <Text h4 style={{textAlign: 'center'}}>
+            {selectedTicketCodes.length} ingresso
+            {selectedTicketCodes.length > 1 && 's'} selecionado
+            {selectedTicketCodes.length > 1 && 's'}
+          </Text>
+          <FlatList
+            data={selectedTicketCodes}
+            renderItem={({item}) => (
+              <Card containerStyle={{alignItems: 'center'}}>
+                <Text style={{fontSize: 15, fontWeight: '700'}}>
+                  {user.tickets[item]}
+                </Text>
+                {mustSelectShirtSize && (
+                  <SelectModal
+                    label="Tamanho da camisa"
+                    value={ticketCodeAndShirtSize[item] || ''}
+                    setValue={value =>
+                      setTicketCodeAndShirtSize(prev => ({
+                        ...prev,
+                        [item]: value,
+                      }))
+                    }
+                    errorMessage={'Campo obrigatório'}
+                    placeholder="Selecione"
+                    items={[
+                      {key: 'P', value: 'P'},
+                      {key: 'M', value: 'M'},
+                      {key: 'G', value: 'G'},
+                      {key: 'GG', value: 'GG'},
+                      {key: 'EG1', value: 'EG1'},
+                      {key: 'EG2', value: 'EG2'},
+                    ]}
+                  />
+                )}
+              </Card>
+            )}
+            keyExtractor={item => item}
+          />
+        </>
+      )}
+      {user && selectedTicketCodes && !documentImg && (
+        <>
+          <TakePictureModal
+            isVisible={showModalToTakePhotoOfDocument}
+            cancelPhoto={() => {
+              setShowModalToTakePhotoOfDocument(false);
+            }}
+            savePhoto={picture => {
+              setShowModalToTakePhotoOfDocument(false);
+              setDocumentImg(picture);
+            }}
+          />
+          <Button
+            type="outline"
+            containerStyle={{paddingTop: 10}}
+            onPress={() => {
+              setShowModalToTakePhotoOfDocument(true);
+            }}>
+            Tire uma foto do documento
+          </Button>
+        </>
+      )}
+      {user && selectedTicketCodes && documentImg && (
+        <Card>
+          <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+            <Image
+              style={{height: 120, width: 120, marginRight: 8}}
+              source={{
+                uri:
+                  Platform.OS === 'android'
+                    ? 'file://' + documentImg
+                    : documentImg,
+              }}
+            />
+            {!!signature && (
+              <View>
+                <Image
+                  style={{height: 120, width: 120, marginRight: 8}}
+                  source={{
+                    uri:
+                      Platform.OS === 'android'
+                        ? 'data:image/png;base64,' + signature?.encoded + ';'
+                        : signature.pathName,
+                  }}
+                />
+                <Text
+                  h5
+                  style={{
+                    color: THEME.cor.primary,
+                    width: '100%',
+                    textAlign: 'center',
+                  }}>
+                  Assinado
+                </Text>
+              </View>
+            )}
+          </View>
+        </Card>
+      )}
+      {user && selectedTicketCodes && documentImg && !signature && (
+        <>
+          <Text h5 style={{fontSize: 18, marginBottom: 8}}>
+            Colete a assinatura do proprietário do ingresso
+          </Text>
+          <Button
+            type="outline"
+            onPress={() => {
+              setShowSubscriptionModal(true);
+            }}>
+            Assinar
+          </Button>
+          <Signature
+            show={showSubscriptionModal}
+            onNotShow={() => setShowSubscriptionModal(false)}
+            onSigned={data => {
+              setShowSubscriptionModal(false);
+              setSignature(data);
+            }}
+          />
+        </>
+      )}
+      {user && selectedTicketCodes && documentImg && signature && (
+        <Button
+          containerStyle={{marginTop: 10}}
+          onPress={() => setIsConfirmDelivery(true)}>
+          Entregar
+        </Button>
+      )}
+      <ReactNativeModal
+        isVisible={isConfirmDelivery}
+        onBackdropPress={() => setIsConfirmDelivery(false)}>
+        <View
+          style={{
+            backgroundColor: 'white',
+            padding: 20,
+          }}>
+          <Button
+            type="outline"
+            containerStyle={{marginBottom: 16}}
+            onPress={() => setIsConfirmDelivery(false)}>
+            Voltar
+          </Button>
+          <Button size="lg" loading={isLoading} onPress={registerDelivery}>
+            Confirmar entrega
+          </Button>
+        </View>
+      </ReactNativeModal>
+    </View>
+  );
+};
+
+// tickets = [[code, name]...]
+const TicketCodeSelectionModal = ({tickets, onClose, onConfirm, isVisible}) => {
+  const [selecteds, setSelecteds] = useState([]);
+  const setAlertMessage = useAlert();
+  const toggleCheckbox = code => {
+    setSelecteds(prev => {
+      if (prev.includes(code)) {
+        return prev.filter(c => c !== code);
+      } else {
+        return [...prev, code];
+      }
+    });
+  };
+
+  const handleConfirm = () => {
+    if (selecteds.length === 0)
+      return setAlertMessage('Nenhum dia selecionado.');
+    onConfirm(selecteds);
+  };
+
+  return (
+    <ReactNativeModal
+      isVisible={isVisible}
+      backdropOpacity={0.1}
+      style={{alignItems: 'center'}}
+      onBackdropPress={onClose}>
+      {/* {tickets} */}
+      <View
+        style={{
+          backgroundColor: 'white',
+          borderRadius: 10,
+          padding: 20,
+          height: 'auto',
+          width: `95%`,
+        }}>
+        <Text h4 h4Style={{marginBottom: 20}}>
+          Selecione o dia para a entrega do kit
+        </Text>
+        {tickets.map(([code, name]) => {
+          return (
+            <View
+              style={{flexDirection: 'row', alignItems: 'center'}}
+              key={code}>
+              <CheckBox
+                containerStyle={{padding: 0}}
+                checked={selecteds.includes(code)}
+                onPress={() => toggleCheckbox(code)}
+                iconType="material-community"
+                checkedIcon="checkbox-outline"
+                uncheckedIcon={'checkbox-blank-outline'}
+              />
+              <Text h5 style={{fontSize: 15}}>
+                {name}
+              </Text>
+            </View>
+          );
+        })}
+        <View
+          style={{
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: 20,
+          }}>
+          <Button title="Voltar" size="lg" type="clear" onPress={onClose} />
+          <Button
+            type="solid"
+            // loading={loading}
+            size="lg"
+            containerStyle={{marginLeft: 16}}
+            title="Confirmar"
+            onPress={handleConfirm}
+          />
+        </View>
+      </View>
+    </ReactNativeModal>
+  );
+};
 
 export default KitsDrawerScreen;

@@ -18,6 +18,7 @@ const SearchUserModal = ({
   isVisible,
   onClose,
   title = 'Busque o usuário que deseja cadastrar',
+  placeholderText = 'Busque por e-mail ou CPF ou passaporte',
   onUserIsActive,
 }) => {
   const [loading, setLoading] = useState(false);
@@ -106,7 +107,7 @@ const SearchUserModal = ({
         <Input
           ref={ref}
           value={inputValue}
-          placeholder="Busque por e-mail ou CPF ou passaporte"
+          placeholder={placeholderText}
           onChangeText={value => setInputValue(value.trim().replace(/\s/g, ''))}
           errorMessage={invalidInputValue}
         />

@@ -23,9 +23,9 @@ export const registerTicket = async (code, token) =>
     },
   });
 
-export const registerBraceletDelivery = async (code, token) =>
+export const registerBraceletDelivery = async (code, token, reason) =>
   await axios({
-    url: BASE_URL + `/api/tickets/${code}/blaceletDelivery`,
+    url: BASE_URL + `/api/tickets/${code}/blaceletDelivery?reason=${reason}`,
     method: 'PATCH',
     headers: {
       Accept: 'text/plain',
@@ -39,11 +39,12 @@ export const registerBraceletDeliveryByDocument = async (
   day,
   eventId,
   token,
+  reason
 ) =>
   await axios({
     url:
       BASE_URL +
-      `/api/tickets/blaceletDeliveryByDocument?document=${document}&day=${day}&eventId=${eventId}`,
+      `/api/tickets/blaceletDeliveryByDocument?document=${document}&day=${day}&eventId=${eventId}&reason=${reason}`,
     method: 'PATCH',
     headers: {
       Accept: 'text/plain',
@@ -51,7 +52,7 @@ export const registerBraceletDeliveryByDocument = async (
       Authorization: 'Bearer ' + token,
     },
   });
-export const braceletRegister = async (operatorToken, token, day, code) => {
+export const braceletRegister = async (operatorToken, token, day, code, reason) => {
   const formData = new FormData();
   formData.append('token', token);
   formData.append('day', day);
@@ -59,11 +60,33 @@ export const braceletRegister = async (operatorToken, token, day, code) => {
   return await axios({
     url: BASE_URL + `/api/tickets/blaceletCode`,
     method: 'PATCH',
-    data: {token, code, day},
+    data: {token, code, day, reason},
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
       Authorization: 'Bearer ' + operatorToken,
     },
   });
+};
+
+export const hasBraceleteCode = async (token, day, userToken) => {
+  const url = `${BASE_URL}/api/tickets/hasBlaceletCode?token=${encodeURIComponent(token)}&day=${day}`;
+
+  try {
+    const response = await axios({
+      url: url,
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+      },
+      
+    });
+    console.log(response)
+    return response.data;
+   
+  } catch (error) {
+    console.error('Erro ao verificar o código da pulseira:', error);
+    throw error;
+  }
+ 
 };

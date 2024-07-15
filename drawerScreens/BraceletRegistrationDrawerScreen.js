@@ -1,7 +1,7 @@
 import {Button, Divider, Text, Badge} from '@rneui/themed';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useState, useEffect} from 'react';
 import {View} from 'react-native';
-import {braceletRegister} from '../api/TicketApi';
+import {braceletRegister, hasBraceleteCode} from '../api/TicketApi';
 import Header from '../components/Header';
 import QrCodeReader from '../components/QrCodeReader';
 import {useAlert} from '../context/AlertContext';
@@ -13,6 +13,7 @@ import SelectModal from '../components/SelectModal';
 import {useIsFocused} from '@react-navigation/native';
 import SearchUserModal from '../components/SearchUserModal';
 import {reduceArrayToJustDifferentDates} from '../helpers/reduceCallbacks';
+import JustificationModal from '../components/JustificationModal';
 
 function BraceletRegistrationDrawerScreen({navigation}) {
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
@@ -24,6 +25,11 @@ function BraceletRegistrationDrawerScreen({navigation}) {
   const isFocused = useIsFocused();
   const {userToken} = useContext(AuthContext);
   const setAlertMessage = useAlert();
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isTicketPreScanned, setIsTicketPreScanned] = useState(false);
+  const [reason, setReason] = useState('');
+
 
   const resetState = () => {
     setUser();
@@ -45,10 +51,12 @@ function BraceletRegistrationDrawerScreen({navigation}) {
     const userHasOnlyOneEventDay = userEventDays.length == 1;
     const userState = {...userFounded, ...searchedFor, days: userEventDays};
     // Se tiver apenas um dias, set automaticamente
+    setUser(userState);
     if (userHasOnlyOneEventDay) {
       setSelectedDay(userEventDays[0]);
+      verifyTicketAssociation(userEventDays[0], userState.token);
     }
-    setUser(userState);
+    
   };
   //
 
@@ -61,21 +69,49 @@ function BraceletRegistrationDrawerScreen({navigation}) {
     setShowQrcodereader(false);
   };
 
+  const verifyTicketAssociation = async (day, token) => {
+    const bearerToken = userToken;
+    const tokenGetCpfOrEmail = user?.token ?? token;
+    const dayTicket = day;
+    try {
+      const data = await hasBraceleteCode(tokenGetCpfOrEmail, dayTicket, bearerToken);
+      console.log('estado: ' + data.hasCode);
+      setIsTicketPreScanned(data.hasCode);
+    } catch (error) {
+      console.error('Erro ao verificar código da pulseira:', error);
+    }
+  };
+ 
+  const handleJustificationSubmit = async (justification) => {
+    setReason(justification);
+    setIsModalVisible(false);
+    setIsTicketPreScanned(false);
+  };
+
+  const evaluateAndAddTicket = async () => {
+    if (!isTicketPreScanned) {
+      await save();
+    } else {
+      setIsModalVisible(true);
+    }
+  };
+
   const save = async () => {
     try {
       setLoading(true);
       const {data} = await braceletRegister(
         userToken,
-        user.token,
+        user?.token,
         selectedDay,
         ticketCode,
+        reason
       );
       console.log('braceletRegister data', data);
       resetState();
       setAlertMessage(`Registrado`, '#32cd32');
     } catch (error) {
       console.error(error.response);
-      console.log('error by api: ' + error?.response?.data);
+      console.log('error by api: '+ error?.response?.data);
       if (error?.response?.data?.errors) {
         setAlertMessage(error.response.data.errors, '#dc143c');
         return null;
@@ -90,7 +126,6 @@ function BraceletRegistrationDrawerScreen({navigation}) {
 
   const hasTicketCodeRead = !!ticketCode;
   const hasAllDataToRegisterBracelet = selectedDay && ticketCode;
-
   return (
     <View style={{...GStyles.view}}>
       <Header
@@ -130,27 +165,26 @@ function BraceletRegistrationDrawerScreen({navigation}) {
               placeholder=""
               items={user.days.map(day => ({key: day, value: formatDate(day)}))}
               value={selectedDay}
-              setValue={(value) => {
-                setSelectedDay(value)
-                console.log(JSON.stringify(user))
+              setValue={value => {
+                setSelectedDay(value);
+                verifyTicketAssociation(value);
+                console.log(JSON.stringify(user));
                 var dayKey = value.split('T')[0];
-                console.log('dayKey=' + dayKey)
+                console.log('dayKey=' + dayKey);
                 var sectorByDay = user.daySectors[dayKey];
-                console.log('sectorByDay=' + sectorByDay)
-                if(sectorByDay)
-                {
-                  setSectorDescription("Setor " + sectorByDay);
+                console.log('sectorByDay=' + sectorByDay);
+                if (sectorByDay) {
+                  setSectorDescription('Setor ' + sectorByDay);
                 }
               }}
             />
-            {sectorDescription && (<Text
-                  h4
-                  h4Style={{fontSize: 18, color: '#000', paddingLeft: 16}}>
-                  {sectorDescription}
-                </Text>)}
+            {sectorDescription && (
+              <Text h4 h4Style={{fontSize: 18, color: '#000', paddingLeft: 16}}>
+                {sectorDescription}
+              </Text>
+            )}
             {selectedDay && !hasTicketCodeRead && (
               <View style={{padding: 16, height: 'auto'}}>
-              
                 <Text
                   h4
                   h4Style={{fontSize: 18, color: '#86939e', marginBottom: 10}}>
@@ -200,13 +234,19 @@ function BraceletRegistrationDrawerScreen({navigation}) {
                   type="solid"
                   size="lg"
                   title="Salvar"
-                  onPress={save}
+                  onPress={evaluateAndAddTicket}
                 />
               )}
             </View>
           </>
         )}
       </View>
+      <JustificationModal
+        modalVisible={isModalVisible}
+        setModalVisible={setIsModalVisible}
+        onSubmit={handleJustificationSubmit}
+        message="Para adicionar uma nova pulseira, por favor, forneça uma justificativa."
+      />
       {showQrCodeReader && (
         <QrCodeReader
           onRead={handleQRCodeRead}

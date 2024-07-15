@@ -15,6 +15,7 @@ import PhotoReregisterDrawerScreen from '../drawerScreens/PhotoReregisterDrawerS
 import DeliverBraceletDrawerScreen from '../drawerScreens/DeliverBraceletDrawerScreen';
 import NewFastTicket from '../drawerScreens/NewFastTicket';
 import BraceletRegistrationDrawerScreen from '../drawerScreens/BraceletRegistrationDrawerScreen';
+import TicketOfficeManualRegisterScreen from '../drawerScreens/ManualRegisterScreen/TicketOfficeManualRegisterScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -32,7 +33,7 @@ function Navigators() {
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {
-              fontSize: 25,
+              fontSize: 23,
             },
             drawerContentStyle: {
               marginTop: 16,
@@ -51,6 +52,10 @@ function Navigators() {
           <Drawer.Screen
             name="Cadastro manual"
             component={ManualRegisterScreen}
+          />
+          <Drawer.Screen
+            name="Cadastro - Bilheteria"
+            component={TicketOfficeManualRegisterScreen}
           />
           <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
           <Drawer.Screen
