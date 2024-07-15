@@ -245,6 +245,7 @@ function BraceletRegistrationDrawerScreen({navigation}) {
         modalVisible={isModalVisible}
         setModalVisible={setIsModalVisible}
         onSubmit={handleJustificationSubmit}
+        message="Para adicionar uma nova pulseira, por favor, forneça uma justificativa."
       />
       {showQrCodeReader && (
         <QrCodeReader
