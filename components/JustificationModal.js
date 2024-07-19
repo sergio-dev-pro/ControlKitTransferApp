@@ -3,7 +3,7 @@ import { View, StyleSheet, TextInput } from 'react-native';
 import Modal from 'react-native-modal';
 import { Text, Button } from '@rneui/themed';
 
-export default function JustificationModal({ modalVisible, setModalVisible, onSubmit }) {
+export default function JustificationModal({ modalVisible, setModalVisible, onSubmit, message }) {
   const [justification, setJustification] = useState('');
 
   // Reset justification state when modal visibility changes
@@ -22,7 +22,7 @@ export default function JustificationModal({ modalVisible, setModalVisible, onSu
     <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)}>
       <View style={styles.modalView}>
         <Text style={styles.modalText}>
-          Para adicionar uma nova pulseira, por favor, forneça uma justificativa.
+          {message}
         </Text>
 
         <TextInput
