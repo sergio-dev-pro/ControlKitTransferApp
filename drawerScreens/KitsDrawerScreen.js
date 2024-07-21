@@ -258,7 +258,7 @@ function KitsDrawerScreen({navigation}) {
         name: 'signatureImage.png',
       });
 
-      if(hasKitAlreadyDelivered) formData.append('reason', reasonForKitDelivery);
+      if(reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
 
       console.log(
         '__________________ticketOwnerSignatureRegistration',
@@ -799,6 +799,7 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
         onUserFound={handleUserFound}
         placeholderText="Busque pelo CPF"
         isVisible={!user}
+        fromKitDelivery={true}
         onClose={() => {
           onCancelDeliveryByCPF();
         }}
