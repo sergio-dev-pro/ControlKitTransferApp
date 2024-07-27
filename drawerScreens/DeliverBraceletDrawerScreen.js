@@ -37,7 +37,9 @@ function DeliverBraceletDrawerScreen({navigation}) {
   const [justificationSubmitted, setJustificationSubmitted] = useState(false);
   const [justificationMessage, setJustificationMessage] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState(null);
-  const [savedTicketCode, setSavedTicketCode] = useState(null);
+  const [savedTicketCode, setSavedTicketCode] = useState('');
+  const [ticketCodesReuse, setTicketCodesReuse] = useState([]);
+  const [operationCancelled, setOperationCancelled] = useState(false);
 
   useEffect(() => {
     // (async () => {
@@ -57,8 +59,11 @@ function DeliverBraceletDrawerScreen({navigation}) {
   useEffect(() => {
     if (justificationSubmitted && reason) {
       if (deliveryMethod === 'Document') {
-        saveBraceletDeliveryByDocument();
+        confirmTicketCodeSelection(ticketCodesReuse);
       } else if (deliveryMethod === 'QRCode' && savedTicketCode) {
+
+        console.log('ENTROUUUUUU', savedTicketCode)
+
         handleQRCodeRead(savedTicketCode);
       }
       setJustificationSubmitted(false);
@@ -67,8 +72,11 @@ function DeliverBraceletDrawerScreen({navigation}) {
   }, [reason]);
 
   const handleQRCodeRead = async ticketCode => {
+    console.log('ticketCode =============> ', ticketCode)
+    console.log('savedTicketCode =============> ', savedTicketCode)
 
     if (!savedTicketCode) {
+      console.log('ENTROU savedTicketCode =============> ', savedTicketCode)
       setSavedTicketCode(ticketCode);
     }
 
@@ -84,6 +92,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
         reason,
       );
       if (ticket.kitDelivered && !reason) {
+        setDeliveryMethod('QRCode');
         setDocument(null);
         setEventDay(null);
         setJustificationMessage(
@@ -116,11 +125,10 @@ function DeliverBraceletDrawerScreen({navigation}) {
       return null;
     } finally {
       setLoading(false);
-      
     }
   };
 
-  const saveBlaceletDeliveryByDocument = async () => {
+  const saveBraceletDeliveryByDocument = async () => {
     if (!document) {
       Alert.alert('', 'Documento precisa ser preenchido.');
       return;
@@ -189,54 +197,81 @@ function DeliverBraceletDrawerScreen({navigation}) {
     setIsModalVisible(false);
     setJustificationSubmitted(true);
   };
-  
+
+  const handleJustificationCancel = () => {
+    setIsModalVisible(false);
+    setShowSearchModalByCPF(false);
+    setUserTickets(null);
+
+    setLoading(false);
+    setEventDay(null);
+    setDocument(null);
+    setShowQrcodereader(false);
+    setSavedTicketCode(null);
+    setReason('');
+  };
+
   const handleUserFound = user => {
-    console.log('@@@@@@@@user.tickets', user.tickets);
+    console.log('@@@@@@@@user.tickets =================>', user.tickets);
     user && setUserTickets(user.tickets);
     setShowSearchModalByCPF(false);
   };
 
   const confirmTicketCodeSelection = async ticketCodes => {
-    console.log('@@@ticketCodes', ticketCodes);
     try {
       setLoading(true);
+      setOperationCancelled(false);
       await new Promise((resolve, reject) => {
         ticketCodes.forEach(async (code, index) => {
+          if (operationCancelled) {
+
+            return; 
+          }
           try {
-            const {data: ticket} = await registerBraceletDelivery(
+            const { data: ticket } = await registerBraceletDelivery(
               code,
               authContext.userToken,
+              reason,
             );
-            if (ticket.kitDelivered) {
-              return Alert.alert(
-                '',
+  
+            if (ticket.kitDelivered && !reason) {
+              setJustificationMessage(
                 `A pulseira de ${ticket.name} para o dia ${formatDate(
                   ticket.day,
                 )} já foi entregue.`,
               );
+              setTicketCodesReuse(ticketCodes);
+              setIsModalVisible(true);
+              return;
             }
+            
             Alert.alert(
               '',
               `Entrega da pulseira para ${ticket.name}, dia ${formatDate(
                 ticket.day,
               )}, setor ${ticket.sectorName}, foi registrada com sucesso.`,
             );
-          } catch (error) {
-            reject(error);
-          } finally {
+  
             if (index === ticketCodes.length - 1) {
               resolve();
             }
+          } catch (error) {
+            reject(error);
           }
         });
       });
     } catch (error) {
+      console.log('error =============> ', error);
       setAlertMessage('Erro ao registrar entrega da pulseira');
     } finally {
-      setLoading(false);
-      setUserTickets();
+     
+      if (!isModalVisible && !operationCancelled) {
+        setLoading(false);
+        setUserTickets(undefined); // Fecha o modal de seleção de ingressos se a operação não for cancelada
+      }
     }
   };
+  
 
   return (
     <View style={{...GStyles.view}}>
@@ -298,6 +333,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
         modalVisible={isModalVisible}
         setModalVisible={setIsModalVisible}
         onSubmit={handleJustificationSubmit}
+        onCancel={handleJustificationCancel}
         message={`${justificationMessage}\nPara registrar uma nova entrega, por favor, forneça uma justificativa detalhada.`}
       />
     </View>
