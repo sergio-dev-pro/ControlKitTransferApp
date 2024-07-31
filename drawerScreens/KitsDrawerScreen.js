@@ -298,7 +298,7 @@ function KitsDrawerScreen({navigation}) {
   };
 
   const formatDate = date => {
-    var d = new Date(date),
+    var d = new Date(date+ 'T00:00:01'),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
       year = d.getFullYear();
