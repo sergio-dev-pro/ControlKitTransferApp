@@ -36,6 +36,7 @@ import {getEventRequiredFields} from '../api/EventApi';
 import Loading from '../components/Loading';
 import SelectModal from '../components/SelectModal';
 import SearchUserModal from '../components/SearchUserModal';
+import ReasonForKitDeliveryModal from '../components/ReasonForKitDeliveryModal';
 
 function KitsDrawerScreen({navigation}) {
   const authContext = useContext(AuthContext);
@@ -59,6 +60,9 @@ function KitsDrawerScreen({navigation}) {
   const [checkingIfNeedSelectShirtSize, setCheckingIfNeedSelectShirtSize] =
     useState(false);
   const [isDeliveryByCPF, setIsDeliveryByCPF] = useState();
+  const [hasKitAlreadyDelivered, setHasKitAlreadyDelivered] = useState(false);
+  const [showModalOfReasonForKitDelivery, setShowModalOfReasonForKitDelivery] = useState(false);
+  const [reasonForKitDelivery, setReasonForKitDelivery] = useState();
 
   useEffect(() => {
     (async () => {
@@ -161,12 +165,10 @@ function KitsDrawerScreen({navigation}) {
     try {
       setLoading(true);
       const {data: ticket} = await registerTicket(code, authContext.userToken);
-      if (ticket.kitDelivered)
-        return setAlertMessage(
-          `O kit de ${ticket.name} para o dia ${formatDate(
-            ticket.day,
-          )} já foi entregue.`,
-        );
+      if (ticket.kitDelivered) {
+        setHasKitAlreadyDelivered(true);
+        setShowModalOfReasonForKitDelivery(true)
+      }
       // if (!isDateGreaterThanOrEqualToToday(ticket.day))
       //   return setAlertMessage(
       //     `O dia para esse ingresso ${formatDate(
@@ -197,6 +199,10 @@ function KitsDrawerScreen({navigation}) {
     setName('');
     setTicketFounds([]);
     setDocumentImg(undefined);
+    setShowModalOfReasonForKitDelivery(false);
+    setHasKitAlreadyDelivered(false)
+    setReasonForKitDelivery();
+    setIsConfirmDelivery(false)
   };
   const registerDelivery = async () => {
     if (mustSelectShirtSize) {
@@ -251,6 +257,8 @@ function KitsDrawerScreen({navigation}) {
         type: 'image/png',
         name: 'signatureImage.png',
       });
+
+      if(reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
 
       console.log(
         '__________________ticketOwnerSignatureRegistration',
@@ -318,6 +326,14 @@ function KitsDrawerScreen({navigation}) {
       <View style={[GStyles.container]}>
         {ticketFounds.length > 0 ? (
           <>
+          <ReasonForKitDeliveryModal
+            isVisible={showModalOfReasonForKitDelivery}
+            onCancel={cancel}
+            onConfirm={reason => {
+              setReasonForKitDelivery(reason);
+              setShowModalOfReasonForKitDelivery(false);
+            }}
+          />
             {/* ticket code reader manager */}
             <View style={{flex: 2}}>
               <View
@@ -645,6 +661,13 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
   const [isConfirmDelivery, setIsConfirmDelivery] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [ticketCodeAndShirtSize, setTicketCodeAndShirtSize] = useState({});
+  const [
+    isConfirmingTheTicketCodeSelection,
+    setIsConfirmingTheTicketCodeSelection,
+  ] = useState(false);
+  const [hasKitAlreadyDelivered, setHasKitAlreadyDelivered] = useState(false);
+  const [reasonForKitDelivery, setReasonForKitDelivery] = useState();
+  const [showModalOfReasonForKitDelivery, setShowModalOfReasonForKitDelivery] = useState(false);
   const setAlertMessage = useAlert();
   const authContext = useContext(AuthContext);
 
@@ -658,15 +681,18 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
     setTicketCodeAndShirtSize({});
     setDocumentImg();
     setSignature();
+    setHasKitAlreadyDelivered(false);
+    setReasonForKitDelivery();
+    setShowModalOfReasonForKitDelivery(false)
   };
 
   const registerDelivery = async () => {
     if (mustSelectShirtSize) {
       // Verifica se foi selecionado o tamanho da camisa para cada ingresso
       let wasSelected = true;
-      selectedTicketCodes.forEach((code) => { 
-        if(!ticketCodeAndShirtSize[code]) wasSelected = false;
-      })
+      selectedTicketCodes.forEach(code => {
+        if (!ticketCodeAndShirtSize[code]) wasSelected = false;
+      });
 
       if (!wasSelected) {
         setIsConfirmDelivery(false);
@@ -691,7 +717,10 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
         });
 
         if (mustSelectShirtSize) {
-          formData.append('codesShirtSize', JSON.stringify(ticketCodeAndShirtSize));
+          formData.append(
+            'codesShirtSize',
+            JSON.stringify(ticketCodeAndShirtSize),
+          );
         }
         await ticketOwnerDocumentRegistration(authContext.userToken, formData);
       } catch (error) {
@@ -709,6 +738,8 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
         name: 'signatureImage.png',
       });
 
+      if(hasKitAlreadyDelivered) formData.append('reason', reasonForKitDelivery);
+
       console.log(
         '__________________ticketOwnerSignatureRegistration',
         formData,
@@ -723,18 +754,44 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
       setIsLoading(false);
     }
   };
+
+  const confirmTicketCodeSelection = async codes => {
+    try {
+      setIsConfirmingTheTicketCodeSelection(true);
+      // Verifica se tem algum ingresso com entrega de kit realizada
+      const hasKitDelivered = await new Promise((resolve, reject) => {
+        codes.forEach(async (code, index) => {
+          try {
+            const isCodeWithHashtag = code.includes('#');
+            const {data: ticket} = await registerTicket(
+              isCodeWithHashtag ? code.split('#')[0] : code,
+              authContext.userToken,
+            );
+            if (ticket.kitDelivered) resolve(true);
+          } catch (error) {
+            reject(error);
+          } finally {
+            // é a ultima chamada para verificar se o kit ja foi entregue?
+            if (codes.length - 1 === index) resolve(false);
+          }
+        });
+      });
+      setHasKitAlreadyDelivered(hasKitDelivered);
+      setShowModalOfReasonForKitDelivery(hasKitDelivered);
+      setSelectedTicketCodes(codes);
+    } catch (error) {
+      setAlertMessage(
+        'Erro ao verificar se o kit já foi entregue para o ingresso.',
+      );
+    } finally {
+      setIsConfirmingTheTicketCodeSelection(false);
+    }
+  };
+
   console.log('@@@@@@@@ticketCodeAndShirtSize', ticketCodeAndShirtSize);
   console.log('@@@@@@@@must', mustSelectShirtSize);
-  const confirmTicketCodeSelection = codes => {
-    setSelectedTicketCodes(codes);
-    // if(mustSelectShirtSize) {
-    //   const data = {}
-    //   codes.forEach(element => {
-    //     data[element] = ''
-    //   });
-    //   setTicketCodeAndShirtSize
-    // }
-  };
+  console.log('@@@@@@@@hasKitAlreadyDelivered', hasKitAlreadyDelivered);
+  console.log('@@@@@@@@reasonForKitDelivery', reasonForKitDelivery);
   return (
     <View>
       <SearchUserModal
@@ -742,6 +799,7 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
         onUserFound={handleUserFound}
         placeholderText="Busque pelo CPF"
         isVisible={!user}
+        fromKitDelivery={true}
         onClose={() => {
           onCancelDeliveryByCPF();
         }}
@@ -752,8 +810,17 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
           tickets={Object.entries(user.tickets)}
           onClose={() => setUser(undefined)}
           onConfirm={confirmTicketCodeSelection}
+          isConfirming={isConfirmingTheTicketCodeSelection}
         />
       )}
+      <ReasonForKitDeliveryModal
+        isVisible={showModalOfReasonForKitDelivery}
+        onCancel={clearState}
+        onConfirm={reason => {
+          setReasonForKitDelivery(reason);
+          setShowModalOfReasonForKitDelivery(false);
+        }}
+      />
       <Button
         onPress={() => {
           onCancelDeliveryByCPF();
@@ -917,7 +984,13 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
 };
 
 // tickets = [[code, name]...]
-const TicketCodeSelectionModal = ({tickets, onClose, onConfirm, isVisible}) => {
+const TicketCodeSelectionModal = ({
+  tickets,
+  onClose,
+  onConfirm,
+  isVisible,
+  isConfirming,
+}) => {
   const [selecteds, setSelecteds] = useState([]);
   const setAlertMessage = useAlert();
   const toggleCheckbox = code => {
@@ -984,7 +1057,7 @@ const TicketCodeSelectionModal = ({tickets, onClose, onConfirm, isVisible}) => {
           <Button title="Voltar" size="lg" type="clear" onPress={onClose} />
           <Button
             type="solid"
-            // loading={loading}
+            loading={isConfirming}
             size="lg"
             containerStyle={{marginLeft: 16}}
             title="Confirmar"

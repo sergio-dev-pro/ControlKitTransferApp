@@ -20,6 +20,7 @@ const SearchUserModal = ({
   title = 'Busque o usuário que deseja cadastrar',
   placeholderText = 'Busque por e-mail ou CPF ou passaporte',
   onUserIsActive,
+  fromKitDelivery = false
 }) => {
   const [loading, setLoading] = useState(false);
   // TODO: Setado temporariamente
@@ -64,7 +65,7 @@ const SearchUserModal = ({
       const isEmailSearch = validatedInputValueType === INPUT_VALUE_TYPE.email;
       const {data: user} = isEmailSearch
         ? await getUserByEmail(inputValue, authContext.selectedEventId)
-        : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken);
+        : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken, fromKitDelivery);
       const searchedFor = {};
       if (isEmailSearch) searchedFor.email = inputValue;
       else searchedFor.cpf = inputValue;

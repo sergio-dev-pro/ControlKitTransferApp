@@ -3,27 +3,39 @@ import { View, StyleSheet, TextInput } from 'react-native';
 import Modal from 'react-native-modal';
 import { Text, Button } from '@rneui/themed';
 
-export default function JustificationModal({ modalVisible, setModalVisible, onSubmit }) {
+export default function JustificationModal({ modalVisible, setModalVisible, onSubmit, onCancel, message }) {
   const [justification, setJustification] = useState('');
+  const [isSaveEnabled, setIsSaveEnabled] = useState(false); // Estado para habilitar/desabilitar o botão
 
   // Reset justification state when modal visibility changes
   useEffect(() => {
     if (!modalVisible) {
       setJustification('');
+      setIsSaveEnabled(false); // Desabilita o botão ao fechar o modal
     }
   }, [modalVisible]);
 
+  // Atualiza o estado do botão sempre que o conteúdo do campo de input mudar
+  useEffect(() => {
+    setIsSaveEnabled(justification.trim().length > 0);
+  }, [justification]);
+
   const handleSave = () => {
-    onSubmit(justification);
+    if (isSaveEnabled) {
+      onSubmit(justification);
+      setModalVisible(false);
+    }
+  };
+
+  const handleCancel = () => {
+    onCancel();
     setModalVisible(false);
   };
 
   return (
     <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)}>
       <View style={styles.modalView}>
-        <Text style={styles.modalText}>
-          Para adicionar uma nova pulseira, por favor, forneça uma justificativa.
-        </Text>
+        <Text style={styles.modalText}>{message}</Text>
 
         <TextInput
           style={styles.inputArea}
@@ -37,8 +49,13 @@ export default function JustificationModal({ modalVisible, setModalVisible, onSu
         />
 
         <View style={styles.viewButtons}>
-          <Button title="Salvar" onPress={handleSave} containerStyle={{ marginBottom: 10 }} />
-          <Button title="Cancelar" onPress={() => setModalVisible(false)} />
+          <Button
+            title="Salvar"
+            onPress={handleSave}
+            containerStyle={{ marginBottom: 10 }}
+            disabled={!isSaveEnabled} // Desabilita o botão se isSaveEnabled for false
+          />
+          <Button title="Cancelar" onPress={handleCancel} />
         </View>
       </View>
     </Modal>

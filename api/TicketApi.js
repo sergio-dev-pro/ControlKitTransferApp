@@ -23,9 +23,9 @@ export const registerTicket = async (code, token) =>
     },
   });
 
-export const registerBraceletDelivery = async (code, token) =>
+export const registerBraceletDelivery = async (code, token, reason) =>
   await axios({
-    url: BASE_URL + `/api/tickets/${code}/blaceletDelivery`,
+    url: BASE_URL + `/api/tickets/${code}/blaceletDelivery?reason=${reason}`,
     method: 'PATCH',
     headers: {
       Accept: 'text/plain',
@@ -39,11 +39,12 @@ export const registerBraceletDeliveryByDocument = async (
   day,
   eventId,
   token,
+  reason
 ) =>
   await axios({
     url:
       BASE_URL +
-      `/api/tickets/blaceletDeliveryByDocument?document=${document}&day=${day}&eventId=${eventId}`,
+      `/api/tickets/blaceletDeliveryByDocument?document=${document}&day=${day}&eventId=${eventId}&reason=${reason}`,
     method: 'PATCH',
     headers: {
       Accept: 'text/plain',

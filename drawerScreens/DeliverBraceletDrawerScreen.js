@@ -1,7 +1,10 @@
-import {Button, Divider, Text} from '@rneui/themed';
+import {Button, CheckBox, Divider, Text} from '@rneui/themed';
 import React, {useContext, useEffect, useState} from 'react';
 import {Alert, View} from 'react-native';
-import {registerBraceletDelivery, registerBraceletDeliveryByDocument} from '../api/TicketApi';
+import {
+  registerBraceletDelivery,
+  registerBraceletDeliveryByDocument,
+} from '../api/TicketApi';
 import Header from '../components/Header';
 import QrCodeReader from '../components/QrCodeReader';
 import {useAlert} from '../context/AlertContext';
@@ -11,8 +14,11 @@ import {isDateGreaterThanOrEqualToToday} from '../helpers/validation';
 import GStyles from '../style/global';
 import THEME from '../style/theme';
 import {Input} from '@rneui/themed';
-import { getEventDays } from '../api/EventApi';
+import {getEventDays} from '../api/EventApi';
 import SelectModal from '../components/SelectModal';
+import JustificationModal from '../components/JustificationModal';
+import SearchUserModal from '../components/SearchUserModal';
+import ReactNativeModal from 'react-native-modal';
 
 function DeliverBraceletDrawerScreen({navigation}) {
   const [loading, setLoading] = useState(false);
@@ -20,28 +26,60 @@ function DeliverBraceletDrawerScreen({navigation}) {
   const [days, setDays] = useState([]);
   const [document, setDocument] = useState(null);
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
+  const [showSearchModalByCPF, setShowSearchModalByCPF] = useState(false);
+  const [userTickets, setUserTickets] = useState();
+
   const authContext = useContext(AuthContext);
   const setAlertMessage = useAlert();
 
-  //authContext.selectedEventId
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [reason, setReason] = useState('');
+  const [justificationSubmitted, setJustificationSubmitted] = useState(false);
+  const [justificationMessage, setJustificationMessage] = useState('');
+  const [deliveryMethod, setDeliveryMethod] = useState(null);
+  const [savedTicketCode, setSavedTicketCode] = useState('');
+  const [ticketCodesReuse, setTicketCodesReuse] = useState([]);
+  const [operationCancelled, setOperationCancelled] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        console.log("selectedEventId="+authContext.selectedEventId);
-        const {data: days} = await getEventDays(authContext.selectedEventId);
-        setDays(days);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    // (async () => {
+    //   try {
+    //     setLoading(true);
+    //     console.log('selectedEventId=' + authContext.selectedEventId);
+    //     const {data: days} = await getEventDays(authContext.selectedEventId);
+    //     setDays(days);
+    //   } catch (error) {
+    //     console.error(error);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // })();
   }, []);
 
+  useEffect(() => {
+    if (justificationSubmitted && reason) {
+      if (deliveryMethod === 'Document') {
+        confirmTicketCodeSelection(ticketCodesReuse);
+      } else if (deliveryMethod === 'QRCode' && savedTicketCode) {
+
+        console.log('ENTROUUUUUU', savedTicketCode)
+
+        handleQRCodeRead(savedTicketCode);
+      }
+      setJustificationSubmitted(false);
+      setReason('');
+    }
+  }, [reason]);
+
   const handleQRCodeRead = async ticketCode => {
-    // #
+    console.log('ticketCode =============> ', ticketCode)
+    console.log('savedTicketCode =============> ', savedTicketCode)
+
+    if (!savedTicketCode) {
+      console.log('ENTROU savedTicketCode =============> ', savedTicketCode)
+      setSavedTicketCode(ticketCode);
+    }
+
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
 
@@ -51,98 +89,188 @@ function DeliverBraceletDrawerScreen({navigation}) {
       const {data: ticket} = await registerBraceletDelivery(
         code,
         authContext.userToken,
+        reason,
       );
-      if (ticket.kitDelivered)
-      {
+      if (ticket.kitDelivered && !reason) {
+        setDeliveryMethod('QRCode');
         setDocument(null);
         setEventDay(null);
-        return setAlertMessage(
+        setJustificationMessage(
           `A pulseira de ${ticket.name} para o dia ${formatDate(
             ticket.day,
           )} já foi entregue.`,
         );
+        setIsModalVisible(true);
+        return;
       }
-      console.log(ticket.day);
-      // if (!isDateGreaterThanOrEqualToToday(ticket.day))
-      //   return setAlertMessage(
-      //     `A entrega para o dia ${formatDate(
-      //       ticket.day,
-      //     )} já passou! Nao é possível registrar entrega.`,
-      //   );
+
       setDocument(null);
       setEventDay(null);
-      setAlertMessage(`Entrega de pulseira de ${ticket.name} registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32');
+      setSavedTicketCode(null);
+      setAlertMessage(
+        `Entrega de pulseira de ${ticket.name} registrada com sucesso para o setor ${ticket.sectorName}.`,
+        '#32cd32',
+      );
     } catch (error) {
-      //console.error(error);
-      //console.error(JSON.stringify(error));
       console.error(error.response);
       console.log('error by api: ' + error?.response?.data);
-      if(error?.response?.data?.errors)
-      {
+      if (error?.response?.data?.errors) {
         setAlertMessage(error.response.data.errors, '#dc143c');
         return null;
       }
-      setAlertMessage('Entrega não registrada, problema ao enviar registro de entrega de pulseira.', '#dc143c');
+      setAlertMessage(
+        'Entrega não registrada, problema ao enviar registro de entrega de pulseira.',
+        '#dc143c',
+      );
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const saveBlaceletDeliveryByDocument = async () => {
-    if(!document)
-    {
-      Alert.alert("", "Documento precisa ser preenchido.");
+  const saveBraceletDeliveryByDocument = async () => {
+    if (!document) {
+      Alert.alert('', 'Documento precisa ser preenchido.');
       return;
     }
 
-    if(!eventDay)
-    {
-      Alert.alert("", "Dia precisa ser selecionado.");
+    if (!eventDay) {
+      Alert.alert('', 'Dia precisa ser selecionado.');
       return;
     }
 
     try {
       setLoading(true);
       const {data: ticket} = await registerBraceletDeliveryByDocument(
-        document, eventDay, authContext.selectedEventId,
+        document,
+        eventDay,
+        authContext.selectedEventId,
         authContext.userToken,
+        reason,
       );
-      console.log(JSON.stringify(ticket))
-      if (ticket.kitDelivered)
-        return setAlertMessage(
+
+      console.log('Ticket returned:', ticket);
+
+      if (ticket.kitDelivered && !reason) {
+        setDeliveryMethod('Document');
+        setJustificationMessage(
           `A pulseira de ${ticket.name} para o dia ${formatDate(
             ticket.day,
           )} já foi entregue.`,
         );
-      console.log(ticket.day);
+        setIsModalVisible(true);
+        return;
+      }
+
       setDocument(null);
       setEventDay(null);
-      setAlertMessage(`Entrega de pulseira registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32');
+      setAlertMessage(
+        `Entrega de pulseira registrada com sucesso para o setor ${ticket.sectorName}.`,
+        '#32cd32',
+      );
     } catch (error) {
-      //console.error(error);
-      //console.error(JSON.stringify(error));
       console.error(error.response);
       console.log('error by api: ' + error?.response?.data);
-      if(error?.response?.data?.errors)
-      {
+      if (error?.response?.data?.errors) {
         setAlertMessage(error.response.data.errors, '#dc143c');
         return null;
       }
-      setAlertMessage('Entrega não registrada, problema ao registrar entrega de pulseira.', '#dc143c');
+      setAlertMessage(
+        'Entrega não registrada, problema ao registrar entrega de pulseira.',
+        '#dc143c',
+      );
       return null;
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   var itemsDay = [];
-  for(var i in days)
-  {
-    var dayElements = days[i].split("T")[0].split("-");
-    var day = dayElements[2] + "/" + dayElements[1] + "/"+ dayElements[0];
+  for (var i in days) {
+    var dayElements = days[i].split('T')[0].split('-');
+    var day = dayElements[2] + '/' + dayElements[1] + '/' + dayElements[0];
     itemsDay.push({key: day, value: day});
   }
+
+  const handleJustificationSubmit = justification => {
+    setReason(justification);
+    setIsModalVisible(false);
+    setJustificationSubmitted(true);
+  };
+
+  const handleJustificationCancel = () => {
+    setIsModalVisible(false);
+    setShowSearchModalByCPF(false);
+    setUserTickets(null);
+
+    setLoading(false);
+    setEventDay(null);
+    setDocument(null);
+    setShowQrcodereader(false);
+    setSavedTicketCode(null);
+    setReason('');
+  };
+
+  const handleUserFound = user => {
+    console.log('@@@@@@@@user.tickets =================>', user.tickets);
+    user && setUserTickets(user.tickets);
+    setShowSearchModalByCPF(false);
+  };
+
+  const confirmTicketCodeSelection = async ticketCodes => {
+    try {
+      setLoading(true);
+      setOperationCancelled(false);
+      await new Promise((resolve, reject) => {
+        ticketCodes.forEach(async (code, index) => {
+          if (operationCancelled) {
+
+            return; 
+          }
+          try {
+            const { data: ticket } = await registerBraceletDelivery(
+              code,
+              authContext.userToken,
+              reason,
+            );
+  
+            if (ticket.kitDelivered && !reason) {
+              setJustificationMessage(
+                `A pulseira de ${ticket.name} para o dia ${formatDate(
+                  ticket.day,
+                )} já foi entregue.`,
+              );
+              setTicketCodesReuse(ticketCodes);
+              setIsModalVisible(true);
+              return;
+            }
+            
+            Alert.alert(
+              '',
+              `Entrega da pulseira para ${ticket.name}, dia ${formatDate(
+                ticket.day,
+              )}, setor ${ticket.sectorName}, foi registrada com sucesso.`,
+            );
+  
+            if (index === ticketCodes.length - 1) {
+              resolve();
+            }
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+    } catch (error) {
+      console.log('error =============> ', error);
+      setAlertMessage('Erro ao registrar entrega da pulseira');
+    } finally {
+     
+      if (!isModalVisible && !operationCancelled) {
+        setLoading(false);
+        setUserTickets(undefined); // Fecha o modal de seleção de ingressos se a operação não for cancelada
+      }
+    }
+  };
   
 
   return (
@@ -161,30 +289,38 @@ function DeliverBraceletDrawerScreen({navigation}) {
         <Button
           loading={loading}
           onPress={() => {
-            // setQrcodereader(null);
             setShowQrcodereader(true);
           }}>
           Ler código do ingresso
         </Button>
-        <Input
-          style={{marginTop: 10}}
-          placeholder="Digite o CPF ou passaporte"
-          value={document}
-          onChangeText={setDocument}
-        />
-        <SelectModal
-        label={'Selecione o dia'}
-        items={itemsDay}
-        setValue={value => {
-          setEventDay(value);
-        }}
-        value={eventDay}
-        />
         <Button
-          loading={loading}
-          onPress={saveBlaceletDeliveryByDocument}>
-          Entregar por documento
+          containerStyle={{marginTop: 10}}
+          type="outline"
+          onPress={() => {
+            setShowSearchModalByCPF(true);
+          }}>
+          Buscar por CPF
         </Button>
+        {showSearchModalByCPF && (
+          <SearchUserModal
+            title="Buscar"
+            onUserFound={handleUserFound}
+            placeholderText="Busque pelo CPF"
+            isVisible={showSearchModalByCPF}
+            onClose={() => {
+              setShowSearchModalByCPF(false);
+            }}
+          />
+        )}
+        {userTickets && (
+          <TicketCodeSelectionModal
+            isVisible
+            tickets={Object.entries(userTickets)}
+            onClose={() => setUserTickets(undefined)}
+            onConfirm={confirmTicketCodeSelection}
+            isConfirming={loading}
+          />
+        )}
       </View>
       {showQrCodeReader && (
         <QrCodeReader
@@ -192,8 +328,100 @@ function DeliverBraceletDrawerScreen({navigation}) {
           onClose={() => setShowQrcodereader(false)}
         />
       )}
+
+      <JustificationModal
+        modalVisible={isModalVisible}
+        setModalVisible={setIsModalVisible}
+        onSubmit={handleJustificationSubmit}
+        onCancel={handleJustificationCancel}
+        message={`${justificationMessage}\nPara registrar uma nova entrega, por favor, forneça uma justificativa detalhada.`}
+      />
     </View>
   );
 }
+// tickets = [[code, name]...]
+const TicketCodeSelectionModal = ({
+  tickets,
+  onClose,
+  onConfirm,
+  isVisible,
+  isConfirming,
+}) => {
+  const [selecteds, setSelecteds] = useState([]);
+  const setAlertMessage = useAlert();
+  const toggleCheckbox = code => {
+    setSelecteds(prev => {
+      if (prev.includes(code)) {
+        return prev.filter(c => c !== code);
+      } else {
+        return [...prev, code];
+      }
+    });
+  };
 
+  const handleConfirm = () => {
+    if (selecteds.length === 0)
+      return setAlertMessage('Nenhum dia selecionado.');
+    onConfirm(selecteds);
+  };
+
+  return (
+    <ReactNativeModal
+      isVisible={isVisible}
+      backdropOpacity={0.1}
+      style={{alignItems: 'center'}}
+      onBackdropPress={onClose}>
+      {/* {tickets} */}
+      <View
+        style={{
+          backgroundColor: 'white',
+          borderRadius: 10,
+          padding: 20,
+          height: 'auto',
+          width: `95%`,
+        }}>
+        <Text h4 h4Style={{marginBottom: 20}}>
+          Selecione o dia para a entrega da pulseira
+        </Text>
+        {tickets.map(([code, name]) => {
+          return (
+            <View
+              style={{flexDirection: 'row', alignItems: 'center'}}
+              key={code}>
+              <CheckBox
+                containerStyle={{padding: 0}}
+                checked={selecteds.includes(code)}
+                onPress={() => toggleCheckbox(code)}
+                iconType="material-community"
+                checkedIcon="checkbox-outline"
+                uncheckedIcon={'checkbox-blank-outline'}
+              />
+              <Text h5 style={{fontSize: 15}}>
+                {name}
+              </Text>
+            </View>
+          );
+        })}
+        <View
+          style={{
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: 20,
+          }}>
+          <Button title="Voltar" size="lg" type="clear" onPress={onClose} />
+          <Button
+            type="solid"
+            loading={isConfirming}
+            size="lg"
+            containerStyle={{marginLeft: 16}}
+            title="Confirmar"
+            onPress={handleConfirm}
+          />
+        </View>
+      </View>
+    </ReactNativeModal>
+  );
+};
 export default DeliverBraceletDrawerScreen;
