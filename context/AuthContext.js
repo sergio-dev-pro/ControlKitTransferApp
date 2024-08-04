@@ -86,9 +86,19 @@ export function AuthProvider({children}) {
       const eventInJsonFormat = await AsyncStorage.getItem('event');
       const event = JSON.parse(eventInJsonFormat);
       var decodedToken = jwt_decode(token);
+      console.log('@@@decodedToken', decodedToken);
       const events = JSON.parse(decodedToken.Events);
       setAuthState({
         userToken: token,
+        hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true", 
+        hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true", 
+        hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true", 
+        hasItinerariesPermission: decodedToken?.hasItinerariesPermission === "true", 
+        hasKitDeliveryPermission: decodedToken?.hasKitDeliveryPermission === "true", 
+        hasManualBoxOfficeRegistrationPermission: decodedToken?.hasManualBoxOfficeRegistrationPermission === "true", 
+        hasManualRegistrationPermission: decodedToken?.hasManualRegistrationPermission === "true", 
+        hasNewTicketPermission: decodedToken?.hasNewTicketPermission === "true", 
+        hasPhotoReregisterPermission: decodedToken?.hasPhotoReregisterPermission === "true", 
         canCreateTicket: decodedToken.CanCreateTicket,
         canChangeEmail: decodedToken.CanChangeEmail,
         // // TODO: setado temporariamente para testar, excluir linha a baixo.
@@ -168,6 +178,15 @@ export function AuthProvider({children}) {
         isAuthenticated: true,
         events,
         selectedEventId,
+        hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true", 
+        hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true", 
+        hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true", 
+        hasItinerariesPermission: decodedToken?.hasItinerariesPermission === "true", 
+        hasKitDeliveryPermission: decodedToken?.hasKitDeliveryPermission === "true", 
+        hasManualBoxOfficeRegistrationPermission: decodedToken?.hasManualBoxOfficeRegistrationPermission === "true", 
+        hasManualRegistrationPermission: decodedToken?.hasManualRegistrationPermission === "true", 
+        hasNewTicketPermission: decodedToken?.hasNewTicketPermission === "true", 
+        hasPhotoReregisterPermission: decodedToken?.hasPhotoReregisterPermission === "true",
         canCreateTicket: decodedToken.CanCreateTicket === 'True',
         canChangeEmail: decodedToken.CanChangeEmail === 'True',
       };
