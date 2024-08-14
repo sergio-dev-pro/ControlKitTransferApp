@@ -793,7 +793,7 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
   console.log('@@@@@@@@hasKitAlreadyDelivered', hasKitAlreadyDelivered);
   console.log('@@@@@@@@reasonForKitDelivery', reasonForKitDelivery);
   return (
-    <View>
+    <View style={{flex: 1}}>
       <SearchUserModal
         title="Buscar"
         onUserFound={handleUserFound}
@@ -1018,41 +1018,44 @@ const TicketCodeSelectionModal = ({
       {/* {tickets} */}
       <View
         style={{
+          flex: 1,
           backgroundColor: 'white',
           borderRadius: 10,
           padding: 20,
           height: 'auto',
           width: `95%`,
         }}>
-        <Text h4 h4Style={{marginBottom: 20}}>
+        <Text h4 h4Style={{marginBottom: 10}}>
           Selecione o dia para a entrega do kit
         </Text>
-        {tickets.map(([code, name]) => {
-          return (
-            <View
-              style={{flexDirection: 'row', alignItems: 'center'}}
-              key={code}>
-              <CheckBox
-                containerStyle={{padding: 0}}
-                checked={selecteds.includes(code)}
-                onPress={() => toggleCheckbox(code)}
-                iconType="material-community"
-                checkedIcon="checkbox-outline"
-                uncheckedIcon={'checkbox-blank-outline'}
-              />
-              <Text h5 style={{fontSize: 15}}>
-                {name}
-              </Text>
-            </View>
-          );
-        })}
+        <FlatList
+        data={tickets}
+        renderItem={({item: [code, name]}) => (
+          <View
+            style={{flexDirection: 'row', alignItems: 'center'}}
+            key={code}>
+            <CheckBox
+              containerStyle={{padding: 0}}
+              checked={selecteds.includes(code)}
+              onPress={() => toggleCheckbox(code)}
+              iconType="material-community"
+              checkedIcon="checkbox-outline"
+              uncheckedIcon={'checkbox-blank-outline'}
+            />
+            <Text h5 style={{fontSize: 15, paddingRight: 4}}>
+              {name}
+            </Text>
+          </View>
+        )}
+        keyExtractor={item => item[0]}
+      />
         <View
           style={{
             width: '100%',
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginTop: 20,
+            marginTop: 10,
           }}>
           <Button title="Voltar" size="lg" type="clear" onPress={onClose} />
           <Button
