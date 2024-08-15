@@ -1,5 +1,6 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
+import { getModel } from 'react-native-device-info';
 
 export const getUserByCpf = async (cpf, eventId) =>
   axios({
@@ -14,14 +15,14 @@ export const getUserByCpf = async (cpf, eventId) =>
       Accept: 'application/json',
     },
   });
-export const getUserByCpfWithAuth = async (cpf, eventId, token) =>
+export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false) =>
   axios({
     url:
       BASE_URL +
       '/api/users/manual/byDocument?document=' +
       cpf +
       '&eventId=' +
-      eventId,
+      eventId + '&isKitDelivery=' + fromKitDelivery,
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -44,6 +45,7 @@ export const getUserByEmail = async (email, eventId) =>
   });
 
 export const saveUserPhoto = async formData => {
+  formData.append('deviceInfo', getModel());
   try {
     var response = await axios({
       url: BASE_URL + '/api/files/self',
@@ -64,6 +66,7 @@ export const saveUserPhoto = async formData => {
 };
 
 export const saveUserPhotoAgain = async formData => {
+  formData.append('deviceInfo', getModel());
   try {
     var response = await axios({
       url: BASE_URL + '/api/files/self?alias=meetingpointapp',

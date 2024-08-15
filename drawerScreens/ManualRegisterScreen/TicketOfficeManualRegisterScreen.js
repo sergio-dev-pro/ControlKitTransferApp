@@ -14,11 +14,11 @@ import { RegisterStateContext } from './registerContext';
 import TakePictureScreen from './TakePictureScreen';
 import { useAlert } from '../../context/AlertContext';
 const formatDate = date => {
-  var d = new Date(date),
+  var d = new Date(date+ 'T00:00:01'),
     month = '' + (d.getMonth() + 1),
     day = '' + d.getDate(),
     year = d.getFullYear();
-
+    console.log("formatDate", d, typeof d.getDate())
   if (month.length < 2) month = '0' + month;
   if (day.length < 2) day = '0' + day;
 
@@ -87,6 +87,7 @@ function TicketOfficeManualRegisterScreen({navigation}) {
   };  
   const daySectorArray = user && Object.entries(user?.daySectors);
   console.log('@@@ user', user);
+  console.log('@@@ daySectorArray',daySectorArray);
   return (
     <>
       <RegisterStateContext.Provider

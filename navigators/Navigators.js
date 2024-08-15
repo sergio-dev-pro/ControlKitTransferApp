@@ -21,10 +21,24 @@ const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
 function Navigators() {
-  const {userToken, selectedEventId, events, canCreateTicket, canChangeEmail} =
-    React.useContext(AuthContext);
+  const {
+    userToken,
+    selectedEventId,
+    events,
+    canCreateTicket,
+    canChangeEmail,
+    hasBraceletDeliveryPermission,
+    hasBraceletRegistrationPermission,
+    hasChangeEmailPermission,
+    hasItinerariesPermission,
+    hasKitDeliveryPermission,
+    hasManualBoxOfficeRegistrationPermission,
+    hasManualRegistrationPermission,
+    hasNewTicketPermission,
+    hasPhotoReregisterPermission,
+  } = React.useContext(AuthContext);
   const hasOnlyOneEvent = events && events.length === 1;
-
+  
   return (
     <>
       {userToken && selectedEventId ? (
@@ -39,42 +53,55 @@ function Navigators() {
               marginTop: 16,
             },
           }}>
-          <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
-          {/* <Drawer.Screen name="Entrega de pulseiras" component={DeliverBraceletDrawerScreen} /> */}
-          <Drawer.Screen
-            name="Entregar pulseira"
-            component={DeliverBraceletDrawerScreen}
-          />
-          <Drawer.Screen
-            name="Registrar pulseira"
-            component={BraceletRegistrationDrawerScreen}
-          />
-          <Drawer.Screen
-            name="Cadastro manual"
-            component={ManualRegisterScreen}
-          />
-          <Drawer.Screen
-            name="Cadastro - Bilheteria"
-            component={TicketOfficeManualRegisterScreen}
-          />
-          <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
-          <Drawer.Screen
-            name="Recadastrar foto"
-            component={PhotoReregisterDrawerScreen}
-          />
+          {hasKitDeliveryPermission && (
+            <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
+          )}
+          {hasBraceletDeliveryPermission && (
+            <Drawer.Screen
+              name="Entregar pulseira"
+              component={DeliverBraceletDrawerScreen}
+            />
+          )}
+          {hasBraceletRegistrationPermission && (
+            <Drawer.Screen
+              name="Registrar pulseira"
+              component={BraceletRegistrationDrawerScreen}
+            />
+          )}
+          {hasManualRegistrationPermission && (
+            <Drawer.Screen
+              name="Cadastro manual"
+              component={ManualRegisterScreen}
+            />
+          )}
+          {hasManualBoxOfficeRegistrationPermission && (
+            <Drawer.Screen
+              name="Cadastro - Bilheteria"
+              component={TicketOfficeManualRegisterScreen}
+            />
+          )}
+          {hasItinerariesPermission && (
+            <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
+          )}
+          {hasPhotoReregisterPermission && (
+            <Drawer.Screen
+              name="Recadastrar foto"
+              component={PhotoReregisterDrawerScreen}
+            />
+          )}
           {!hasOnlyOneEvent && (
             <Drawer.Screen
               name="Mudar evento"
               component={EventSelectionDrawerScreen}
             />
           )}
-          {canCreateTicket && (
+          {canCreateTicket && hasNewTicketPermission && (
             <Drawer.Screen name="Novo ingresso" component={NewTicket} />
           )}
           {canCreateTicket && (
             <Drawer.Screen name="Cadastro rápido" component={NewFastTicket} />
           )}
-          {canChangeEmail && (
+          {canChangeEmail && hasChangeEmailPermission && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
           )}
         </Drawer.Navigator>
