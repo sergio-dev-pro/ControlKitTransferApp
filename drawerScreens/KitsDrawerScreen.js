@@ -61,7 +61,8 @@ function KitsDrawerScreen({navigation}) {
     useState(false);
   const [isDeliveryByCPF, setIsDeliveryByCPF] = useState();
   const [hasKitAlreadyDelivered, setHasKitAlreadyDelivered] = useState(false);
-  const [showModalOfReasonForKitDelivery, setShowModalOfReasonForKitDelivery] = useState(false);
+  const [showModalOfReasonForKitDelivery, setShowModalOfReasonForKitDelivery] =
+    useState(false);
   const [reasonForKitDelivery, setReasonForKitDelivery] = useState();
 
   useEffect(() => {
@@ -167,7 +168,7 @@ function KitsDrawerScreen({navigation}) {
       const {data: ticket} = await registerTicket(code, authContext.userToken);
       if (ticket.kitDelivered) {
         setHasKitAlreadyDelivered(true);
-        setShowModalOfReasonForKitDelivery(true)
+        setShowModalOfReasonForKitDelivery(true);
       }
       // if (!isDateGreaterThanOrEqualToToday(ticket.day))
       //   return setAlertMessage(
@@ -200,9 +201,9 @@ function KitsDrawerScreen({navigation}) {
     setTicketFounds([]);
     setDocumentImg(undefined);
     setShowModalOfReasonForKitDelivery(false);
-    setHasKitAlreadyDelivered(false)
+    setHasKitAlreadyDelivered(false);
     setReasonForKitDelivery();
-    setIsConfirmDelivery(false)
+    setIsConfirmDelivery(false);
   };
   const registerDelivery = async () => {
     if (mustSelectShirtSize) {
@@ -258,7 +259,7 @@ function KitsDrawerScreen({navigation}) {
         name: 'signatureImage.png',
       });
 
-      if(reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
+      if (reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
 
       console.log(
         '__________________ticketOwnerSignatureRegistration',
@@ -298,7 +299,7 @@ function KitsDrawerScreen({navigation}) {
   };
 
   const formatDate = date => {
-    var d = new Date(date+ 'T00:00:01'),
+    var d = new Date(date + 'T00:00:01'),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
       year = d.getFullYear();
@@ -326,14 +327,14 @@ function KitsDrawerScreen({navigation}) {
       <View style={[GStyles.container]}>
         {ticketFounds.length > 0 ? (
           <>
-          <ReasonForKitDeliveryModal
-            isVisible={showModalOfReasonForKitDelivery}
-            onCancel={cancel}
-            onConfirm={reason => {
-              setReasonForKitDelivery(reason);
-              setShowModalOfReasonForKitDelivery(false);
-            }}
-          />
+            <ReasonForKitDeliveryModal
+              isVisible={showModalOfReasonForKitDelivery}
+              onCancel={cancel}
+              onConfirm={reason => {
+                setReasonForKitDelivery(reason);
+                setShowModalOfReasonForKitDelivery(false);
+              }}
+            />
             {/* ticket code reader manager */}
             <View style={{flex: 2}}>
               <View
@@ -667,7 +668,8 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
   ] = useState(false);
   const [hasKitAlreadyDelivered, setHasKitAlreadyDelivered] = useState(false);
   const [reasonForKitDelivery, setReasonForKitDelivery] = useState();
-  const [showModalOfReasonForKitDelivery, setShowModalOfReasonForKitDelivery] = useState(false);
+  const [showModalOfReasonForKitDelivery, setShowModalOfReasonForKitDelivery] =
+    useState(false);
   const setAlertMessage = useAlert();
   const authContext = useContext(AuthContext);
 
@@ -683,7 +685,7 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
     setSignature();
     setHasKitAlreadyDelivered(false);
     setReasonForKitDelivery();
-    setShowModalOfReasonForKitDelivery(false)
+    setShowModalOfReasonForKitDelivery(false);
   };
 
   const registerDelivery = async () => {
@@ -738,7 +740,8 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
         name: 'signatureImage.png',
       });
 
-      if(hasKitAlreadyDelivered) formData.append('reason', reasonForKitDelivery);
+      if (hasKitAlreadyDelivered)
+        formData.append('reason', reasonForKitDelivery);
 
       console.log(
         '__________________ticketOwnerSignatureRegistration',
@@ -792,6 +795,16 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
   console.log('@@@@@@@@must', mustSelectShirtSize);
   console.log('@@@@@@@@hasKitAlreadyDelivered', hasKitAlreadyDelivered);
   console.log('@@@@@@@@reasonForKitDelivery', reasonForKitDelivery);
+  const ticketRecurrence =
+    selectedTicketCodes &&
+    Object.entries(
+      selectedTicketCodes
+        .map(code => user.tickets[code])
+        .reduce((acc, text) => {
+          acc[text] = (acc[text] || 0) + 1;
+          return acc;
+        }, {}),
+    );
   return (
     <View style={{flex: 1}}>
       <SearchUserModal
@@ -968,6 +981,18 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
             backgroundColor: 'white',
             padding: 20,
           }}>
+          <FlatList
+          style={{marginBottom: 5}}
+            data={ticketRecurrence}
+            renderItem={({item: [name, number]}) => (
+              <View style={{flexDirection: 'row'}}>
+                <Text style={{paddingRight: 5, fontSize: 15, fontWeight: '900'}}>
+                  {number} {`ingresso${number > 1 ? 's': ''}`}, {name}
+                </Text>
+              </View>
+            )}
+            keyExtractor={item => item[0]}
+          />
           <Button
             type="outline"
             containerStyle={{marginBottom: 16}}
@@ -1029,26 +1054,26 @@ const TicketCodeSelectionModal = ({
           Selecione o dia para a entrega do kit
         </Text>
         <FlatList
-        data={tickets}
-        renderItem={({item: [code, name]}) => (
-          <View
-            style={{flexDirection: 'row', alignItems: 'center'}}
-            key={code}>
-            <CheckBox
-              containerStyle={{padding: 0}}
-              checked={selecteds.includes(code)}
-              onPress={() => toggleCheckbox(code)}
-              iconType="material-community"
-              checkedIcon="checkbox-outline"
-              uncheckedIcon={'checkbox-blank-outline'}
-            />
-            <Text h5 style={{fontSize: 15, paddingRight: 4}}>
-              {name}
-            </Text>
-          </View>
-        )}
-        keyExtractor={item => item[0]}
-      />
+          data={tickets}
+          renderItem={({item: [code, name]}) => (
+            <View
+              style={{flexDirection: 'row', alignItems: 'center'}}
+              key={code}>
+              <CheckBox
+                containerStyle={{padding: 0}}
+                checked={selecteds.includes(code)}
+                onPress={() => toggleCheckbox(code)}
+                iconType="material-community"
+                checkedIcon="checkbox-outline"
+                uncheckedIcon={'checkbox-blank-outline'}
+              />
+              <Text h5 style={{fontSize: 15, paddingRight: 4}}>
+                {name}
+              </Text>
+            </View>
+          )}
+          keyExtractor={item => item[0]}
+        />
         <View
           style={{
             width: '100%',
