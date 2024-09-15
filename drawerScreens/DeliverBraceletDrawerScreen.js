@@ -57,8 +57,14 @@ function DeliverBraceletDrawerScreen({navigation}) {
   }, []);
 
   useEffect(() => {
+    console.log('useEffect change reason... reason=' + reason +  ' and justificationSubmitted=' + justificationSubmitted)
+    if(loading)
+    {
+      setLoading(false);
+    }
     if (justificationSubmitted && reason) {
       if (deliveryMethod === 'Document') {
+        console.log('ENTROUUUUUU ' + reason)
         confirmTicketCodeSelection(ticketCodesReuse);
       } else if (deliveryMethod === 'QRCode' && savedTicketCode) {
 
@@ -67,7 +73,6 @@ function DeliverBraceletDrawerScreen({navigation}) {
         handleQRCodeRead(savedTicketCode);
       }
       setJustificationSubmitted(false);
-      setReason('');
     }
   }, [reason]);
 
@@ -193,9 +198,9 @@ function DeliverBraceletDrawerScreen({navigation}) {
   }
 
   const handleJustificationSubmit = justification => {
+    setJustificationSubmitted(true);
     setReason(justification);
     setIsModalVisible(false);
-    setJustificationSubmitted(true);
   };
 
   const handleJustificationCancel = () => {
@@ -228,6 +233,9 @@ function DeliverBraceletDrawerScreen({navigation}) {
             return; 
           }
           try {
+            
+            console.log("try register blacelet delivery to " + code + " and reason = " + reason);
+
             const { data: ticket } = await registerBraceletDelivery(
               code,
               authContext.userToken,
@@ -253,9 +261,11 @@ function DeliverBraceletDrawerScreen({navigation}) {
             );
   
             if (index === ticketCodes.length - 1) {
+              setReason('');
               resolve();
             }
           } catch (error) {
+            console.log('error -------------> ', error);
             reject(error);
           }
         });
@@ -266,9 +276,10 @@ function DeliverBraceletDrawerScreen({navigation}) {
     } finally {
      
       if (!isModalVisible && !operationCancelled) {
-        setLoading(false);
         setUserTickets(undefined); // Fecha o modal de seleção de ingressos se a operação não for cancelada
       }
+
+      setLoading(false);
     }
   };
   
