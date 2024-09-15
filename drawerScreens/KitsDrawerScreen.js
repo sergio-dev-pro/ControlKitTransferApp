@@ -299,7 +299,7 @@ function KitsDrawerScreen({navigation}) {
   };
 
   const formatDate = date => {
-    var d = new Date(date + 'T00:00:01'),
+    var d = new Date(date.split('T')[0] + 'T00:00:01'),
       month = '' + (d.getMonth() + 1),
       day = '' + d.getDate(),
       year = d.getFullYear();
@@ -795,6 +795,7 @@ const DeliveryByCPF = ({onCancelDeliveryByCPF, mustSelectShirtSize}) => {
   console.log('@@@@@@@@must', mustSelectShirtSize);
   console.log('@@@@@@@@hasKitAlreadyDelivered', hasKitAlreadyDelivered);
   console.log('@@@@@@@@reasonForKitDelivery', reasonForKitDelivery);
+  console.log('@@@@@@@@selectedTicketCodes', selectedTicketCodes);
   const ticketRecurrence =
     selectedTicketCodes &&
     Object.entries(
