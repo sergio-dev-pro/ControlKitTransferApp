@@ -28,8 +28,10 @@ export default function JustificationModal({ modalVisible, setModalVisible, onSu
   };
 
   const handleCancel = () => {
+   if(onCancel){
     onCancel();
-    setModalVisible(false);
+   }
+    setModalVisible(false); 
   };
 
   return (
