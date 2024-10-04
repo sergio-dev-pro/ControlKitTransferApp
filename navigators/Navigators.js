@@ -20,30 +20,58 @@ import TicketOfficeManualRegisterScreen from '../drawerScreens/ManualRegisterScr
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
+const getRouteNameByPermission = permissions => {
+  switch (true) {
+    case permissions.hasKitDeliveryPermission:
+      return 'Kits';
+    case permissions.hasBraceletDeliveryPermission:
+      return 'Entregar pulseira';
+    case permissions.hasBraceletRegistrationPermission:
+      return 'Registrar pulseira';
+    case permissions.hasManualRegistrationPermission:
+      return 'Cadastro manual';
+    case permissions.hasManualBoxOfficeRegistrationPermission:
+      return 'Cadastro - Bilheteria';
+    case permissions.hasItinerariesPermission:
+      return 'Itinerários';
+    case permissions.hasPhotoReregisterPermission:
+      return 'Recadastrar foto';
+    case permissions.canCreateTicket:
+      return 'Cadastro rápido';
+    case permissions.canChangeUserEmail:
+      return 'Alterar e-mail';
+    default:
+      return 'Kits';
+  }
+};
+
 function Navigators() {
   const {
     userToken,
     selectedEventId,
     events,
-    canCreateTicket,
-    canChangeEmail,
-    hasBraceletDeliveryPermission,
-    hasBraceletRegistrationPermission,
-    hasChangeEmailPermission,
-    hasItinerariesPermission,
-    hasKitDeliveryPermission,
-    hasManualBoxOfficeRegistrationPermission,
-    hasManualRegistrationPermission,
-    hasNewTicketPermission,
-    hasPhotoReregisterPermission,
+    permissions,
+    logout,
   } = React.useContext(AuthContext);
+
   const hasOnlyOneEvent = events && events.length === 1;
-  
+
+  const eventPermissions =
+    selectedEventId &&
+    permissions &&
+    permissions.find(permission => permission.eventId == selectedEventId);
+
+  if (userToken && selectedEventId && !eventPermissions) {
+    logout();
+  }
+
+  const initialRoute =
+    eventPermissions && getRouteNameByPermission(eventPermissions);
   return (
     <>
-      {userToken && selectedEventId ? (
+      {userToken && selectedEventId && eventPermissions ? (
         <Drawer.Navigator
-          initialRouteName="Kits"
+          initialRouteName={initialRoute || 'Kits'}
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {
@@ -53,37 +81,37 @@ function Navigators() {
               marginTop: 16,
             },
           }}>
-          {hasKitDeliveryPermission && (
+          {eventPermissions.hasKitDeliveryPermission && (
             <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
           )}
-          {hasBraceletDeliveryPermission && (
+          {eventPermissions.hasBraceletDeliveryPermission && (
             <Drawer.Screen
               name="Entregar pulseira"
               component={DeliverBraceletDrawerScreen}
             />
           )}
-          {hasBraceletRegistrationPermission && (
+          {eventPermissions.hasBraceletRegistrationPermission && (
             <Drawer.Screen
               name="Registrar pulseira"
               component={BraceletRegistrationDrawerScreen}
             />
           )}
-          {hasManualRegistrationPermission && (
+          {eventPermissions.hasManualRegistrationPermission && (
             <Drawer.Screen
               name="Cadastro manual"
               component={ManualRegisterScreen}
             />
           )}
-          {hasManualBoxOfficeRegistrationPermission && (
+          {eventPermissions.hasManualBoxOfficeRegistrationPermission && (
             <Drawer.Screen
               name="Cadastro - Bilheteria"
               component={TicketOfficeManualRegisterScreen}
             />
           )}
-          {hasItinerariesPermission && (
+          {eventPermissions.hasItinerariesPermission && (
             <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
           )}
-          {hasPhotoReregisterPermission && (
+          {eventPermissions.hasPhotoReregisterPermission && (
             <Drawer.Screen
               name="Recadastrar foto"
               component={PhotoReregisterDrawerScreen}
@@ -95,13 +123,13 @@ function Navigators() {
               component={EventSelectionDrawerScreen}
             />
           )}
-          {canCreateTicket && hasNewTicketPermission && (
+          {eventPermissions.canCreateTicket && (
             <Drawer.Screen name="Novo ingresso" component={NewTicket} />
           )}
-          {canCreateTicket && (
+          {eventPermissions.canCreateTicket && (
             <Drawer.Screen name="Cadastro rápido" component={NewFastTicket} />
           )}
-          {canChangeEmail && hasChangeEmailPermission && (
+          {eventPermissions.canChangeUserEmail && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
           )}
         </Drawer.Navigator>
