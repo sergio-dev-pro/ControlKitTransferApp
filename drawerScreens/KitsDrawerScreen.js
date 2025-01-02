@@ -251,7 +251,7 @@ function KitsDrawerScreen({navigation}) {
       }
 
       const formData = new FormData();
-
+      //todo: precisa adicionar os kitCodes aqui: formData.append('kitCodes', JSON.stringfy(kitCodes))
       formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
       formData.append('file', {
         uri: 'data:image/png;base64,' + signature?.encoded + ';',
