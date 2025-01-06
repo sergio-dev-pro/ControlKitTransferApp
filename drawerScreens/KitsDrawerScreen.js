@@ -228,7 +228,7 @@ function KitsDrawerScreen({ navigation }) {
       );
       const hasShirtSizeTicketsSelected =
         ticketFounds.length === ticktesWithSelectedShirtSize.length;
-
+  
       if (!hasShirtSizeTicketsSelected) {
         setIsConfirmDelivery(false);
         return setAlertMessage(
@@ -237,20 +237,21 @@ function KitsDrawerScreen({ navigation }) {
         );
       }
     }
-
+  
     try {
       setIsLoading(true);
+  
+      // Tentando registrar o documento
       try {
         const formData = new FormData();
-
+  
         formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
-
         formData.append('file', {
           uri: documentImg,
           type: 'image/jpg',
           name: 'documentImage.jpg',
         });
-
+  
         if (mustSelectShirtSize) {
           const shirtSizeByCode = {};
           for (var ticket in ticketFounds) {
@@ -259,40 +260,45 @@ function KitsDrawerScreen({ navigation }) {
           }
           formData.append('codesShirtSize', JSON.stringify(shirtSizeByCode));
         }
+        
         await ticketOwnerDocumentRegistration(authContext.userToken, formData);
       } catch (error) {
-        throw `Chamada para registrar documento, payload = ${JSON.stringify({
-          formData,
-        })} ${ticketOwnerDocumentRegistration}${error}`;
+        console.error('Erro ao registrar o documento:', error);
+        setAlertMessage('Erro ao registrar o documento!', '#dc143c');
+        throw error; // Relança o erro para que o fluxo de execução pare
       }
-
-      const formData = new FormData();
-      //todo: precisa adicionar os kitCodes aqui: formData.append('kitCodes', JSON.stringfy(kitCodes))
-      console.log('Kit Codes antes de adicionar ao FormData:', JSON.stringify(kitCodes));
-      formData.append('kitCodes', JSON.stringify(kitCodes));
-
-      formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
-      formData.append('file', {
-        uri: 'data:image/png;base64,' + signature?.encoded + ';',
-        type: 'image/png',
-        name: 'signatureImage.png',
-      });
-
-
-      if (reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
-      
-      await ticketOwnerSignatureRegistration(authContext.userToken, formData);
-      setAlertMessage('Entrega de kit registrada', '#32cd32');
+  
+      // Tentando registrar a assinatura do kit
+      try {
+        const formData = new FormData();
+        console.log('Kit Codes antes de adicionar ao FormData:', JSON.stringify(kitCodes));
+        
+        formData.append('kitCodes', JSON.stringify(kitCodes));
+        formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
+        formData.append('file', {
+          uri: 'data:image/png;base64,' + signature?.encoded + ';',
+          type: 'image/png',
+          name: 'signatureImage.png',
+        });
+  
+        if (reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
+  
+        await ticketOwnerSignatureRegistration(authContext.userToken, formData);
+        setAlertMessage('Entrega de kit registrada', '#32cd32');
+      } catch (error) {
+        console.error('Erro ao registrar a assinatura do kit:', error);
+        setAlertMessage('Entrega não registrada! KIT NAO FOI ENTREGUE!');
+      }
     } catch (error) {
-      console.error(error);
-      setAlertMessage('Entrega não registrada! KIT NAO FOI ENTREGUE!');
+      console.error('Erro geral no registro da entrega:', error);
     } finally {
       cancel();
       setIsLoading(false);
-      setKitCodes([])
-      setShowResponseCamisa(null)
+      setKitCodes([]);
+      setShowResponseCamisa(null);
     }
   };
+  
 
 
   const all = realmApi.getAllTickets().reduce((a, b) => {
