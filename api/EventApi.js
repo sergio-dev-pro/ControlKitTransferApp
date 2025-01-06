@@ -42,7 +42,7 @@ export const getEventDays = async eventId =>
   });
 
   export const getKitDelivery = async (code) => {
-    try {
+    
       var response = await axios({
         url: BASE_URL + `/api/events/${code}/kitDelivery`,
         method: 'GET',
@@ -52,10 +52,5 @@ export const getEventDays = async eventId =>
         },
       });
       return response.data;
-    } catch (error) {
-      console.log('error', error);
-      console.log('error error.response.data', error.response.data);
-      alert(error.response.data.errors);
-      return null;
-    }
+    
   };

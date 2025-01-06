@@ -12,14 +12,16 @@ export const ticketOwnerDocumentRegistration = (token, formData) =>
       Authorization: 'Bearer ' + token,
     },
   });
-export const ticketOwnerSignatureRegistration = (token, formData) =>
-  axios({
-    url: BASE_URL + `/api/files/v2/signatures`,
-    method: 'POST',
-    data: formData,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'multipart/form-data',
-      Authorization: 'Bearer ' + token,
-    },
-  });
+  export const ticketOwnerSignatureRegistration = (token, formData) => {
+      return axios({
+      url: BASE_URL + `/api/files/v2/signatures`,
+      method: 'POST',
+      data: formData,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'multipart/form-data',
+        Authorization: 'Bearer ' + token,
+      },
+    });
+  };
+  

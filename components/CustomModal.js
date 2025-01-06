@@ -1,0 +1,73 @@
+import React from 'react';
+import { Modal, View, Text, Button, StyleSheet, ScrollView } from 'react-native';
+
+const CustomModal = ({ visible, title, content, onClose, confirm }) => {
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          {/* Renderização do título */}
+          <Text style={styles.modalTitle}>{title}</Text>
+          <ScrollView>
+            {React.isValidElement(content) ? (
+              content
+            ) : (
+              <Text style={styles.modalText}>{content}</Text>
+            )}
+          </ScrollView>
+
+          {/* Container para os botões */}
+          <View style={styles.buttonsContainer}>
+            <Button title="Confirmar" onPress={confirm} />
+            <Button title="Fechar" onPress={onClose} />
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: 'black',
+  },
+  modalText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
+  },
+});
+
+export default CustomModal;
