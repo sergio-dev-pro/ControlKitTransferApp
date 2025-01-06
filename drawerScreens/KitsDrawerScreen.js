@@ -69,6 +69,7 @@ function KitsDrawerScreen({ navigation }) {
   const [showResponseCamisa, setShowResponseCamisa] = useState(null); // Armazena a resposta da requisição
   const [showModalResponse, setShowModalResponse] = useState(false); // Controla a exibição do modal
   const [kitCodes, setKitCodes] = useState([])
+  const [shirtSizes, setShirtSizes] = useState([])
   const [currentTicketCode, setCurrentTicketCode] = useState(null);
   const [eventAllowed, setEventAllowed] = useState(false);
 
@@ -370,6 +371,7 @@ function KitsDrawerScreen({ navigation }) {
   const addToArray = () => {
     setShowModalResponse(false);
     setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
+    setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
   };
   
   useEffect(() => {
@@ -506,6 +508,17 @@ function KitsDrawerScreen({ navigation }) {
                         }}>
                         <Text h4>Setor</Text>
                         <Text h4>{ticketFound.sectorName}</Text>
+                      </View>
+                    )}
+                    {ticketFounds.indexOf(ticketFound) < kitCodes?.length && eventAllowed && (
+                      <View
+                        style={{
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          marginBottom: 8,
+                        }}>
+                        <Text h4>Código da camisa</Text>
+                        <Text h4>{kitCodes[ticketFounds.indexOf(ticketFound)] + '('+ shirtSizes[ticketFounds.indexOf(ticketFound)] + ')'}</Text>
                       </View>
                     )}
                     {checkingIfNeedSelectShirtSize && (
