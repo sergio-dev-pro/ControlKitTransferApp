@@ -291,6 +291,7 @@ function KitsDrawerScreen({ navigation }) {
       }
     } catch (error) {
       console.error('Erro geral no registro da entrega:', error);
+      console.error(error.response.data.errors);
     } finally {
       cancel();
       setIsLoading(false);
@@ -379,6 +380,8 @@ function KitsDrawerScreen({ navigation }) {
   
 
   console.log(kitCodes)
+
+  let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == ticketFounds?.length;
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -599,18 +602,9 @@ function KitsDrawerScreen({ navigation }) {
                   {/* <Text h5 h5Style={{padding: 8}}>
                     Confira os ingressos antes de continuar.
                   </Text> */}
-                  <Button
-                    type="outline"
-                    onPress={() => {
-                      setIsVisible(true);
-                    }}>
-                    Tire uma foto do documento
-                  </Button>
-                </>
-              )}
-              <>
-                {/* Apenas exibe o botão se o evento for permitido */}
+
                 {eventAllowed && !documentImg && (
+                  <View style={{marginVertical: 10}}>
                   <Button
                     type="outline"
                     onPress={() => {
@@ -619,8 +613,23 @@ function KitsDrawerScreen({ navigation }) {
                   >
                     Ler Código Camisa
                   </Button>
+                  </View>
                 )}
-              </>
+
+                {enableTakeDocumentPicture && (
+                  <View style={{marginVertical: 10}}>
+                  <Button
+                      type="outline"
+                      onPress={() => {
+                        setIsVisible(true);
+                      }}>
+                      Tire uma foto do documento
+                    </Button>
+                  </View>
+                )}
+                  
+                </>
+              )}
 
               {!!signature ? (
                 <>

@@ -23,8 +23,8 @@ const CustomModal = ({ visible, title, content, onClose, confirm }) => {
 
           {/* Container para os botões */}
           <View style={styles.buttonsContainer}>
-            <Button title="Confirmar" onPress={confirm} />
             <Button title="Fechar" onPress={onClose} />
+            <Button title="Confirmar" onPress={confirm} />
           </View>
         </View>
       </View>

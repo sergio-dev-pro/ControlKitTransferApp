@@ -12,8 +12,8 @@ export const ticketOwnerDocumentRegistration = (token, formData) =>
       Authorization: 'Bearer ' + token,
     },
   });
-  export const ticketOwnerSignatureRegistration = (token, formData) => {
-      return axios({
+  export const ticketOwnerSignatureRegistration = async (token, formData) => {
+      await axios({
       url: BASE_URL + `/api/files/v2/signatures`,
       method: 'POST',
       data: formData,
@@ -23,5 +23,6 @@ export const ticketOwnerDocumentRegistration = (token, formData) =>
         Authorization: 'Bearer ' + token,
       },
     });
+    return true;
   };
   
