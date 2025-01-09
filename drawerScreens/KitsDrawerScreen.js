@@ -229,7 +229,7 @@ function KitsDrawerScreen({ navigation }) {
       );
       const hasShirtSizeTicketsSelected =
         ticketFounds.length === ticktesWithSelectedShirtSize.length;
-  
+
       if (!hasShirtSizeTicketsSelected) {
         setIsConfirmDelivery(false);
         return setAlertMessage(
@@ -238,21 +238,21 @@ function KitsDrawerScreen({ navigation }) {
         );
       }
     }
-  
+
     try {
       setIsLoading(true);
-  
+
       // Tentando registrar o documento
       try {
         const formData = new FormData();
-  
+
         formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
         formData.append('file', {
           uri: documentImg,
           type: 'image/jpg',
           name: 'documentImage.jpg',
         });
-  
+
         if (mustSelectShirtSize) {
           const shirtSizeByCode = {};
           for (var ticket in ticketFounds) {
@@ -261,19 +261,19 @@ function KitsDrawerScreen({ navigation }) {
           }
           formData.append('codesShirtSize', JSON.stringify(shirtSizeByCode));
         }
-        
+
         await ticketOwnerDocumentRegistration(authContext.userToken, formData);
       } catch (error) {
         console.error('Erro ao registrar o documento:', error);
         setAlertMessage('Erro ao registrar o documento!', '#dc143c');
         throw error; // Relança o erro para que o fluxo de execução pare
       }
-  
+
       // Tentando registrar a assinatura do kit
       try {
         const formData = new FormData();
         console.log('Kit Codes antes de adicionar ao FormData:', JSON.stringify(kitCodes));
-        
+
         formData.append('kitCodes', JSON.stringify(kitCodes));
         formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
         formData.append('file', {
@@ -281,9 +281,9 @@ function KitsDrawerScreen({ navigation }) {
           type: 'image/png',
           name: 'signatureImage.png',
         });
-  
+
         if (reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
-  
+
         await ticketOwnerSignatureRegistration(authContext.userToken, formData);
         setAlertMessage('Entrega de kit registrada', '#32cd32');
       } catch (error) {
@@ -300,7 +300,7 @@ function KitsDrawerScreen({ navigation }) {
       setShowResponseCamisa(null);
     }
   };
-  
+
 
 
   const all = realmApi.getAllTickets().reduce((a, b) => {
@@ -343,17 +343,17 @@ function KitsDrawerScreen({ navigation }) {
       console.error("ticketCode está indefinido ou nulo");
       return;
     }
-  
+
     if (kitCodes.includes(ticketCode)) {
-      setShowQrCodeCamisa(false); 
+      setShowQrCodeCamisa(false);
       setAlertMessage('Erro: Código já escaneado.', '#dc143c');
       return;
     }
-  
+
     try {
       const response = await getKitDelivery(ticketCode);
       if (response) {
-        setShowQrCodeCamisa(false); 
+        setShowQrCodeCamisa(false);
         setShowResponseCamisa(response);
         setCurrentTicketCode(ticketCode);
         setShowModalResponse(true);
@@ -367,23 +367,23 @@ function KitsDrawerScreen({ navigation }) {
       setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
     }
   };
-  
+
   const addToArray = () => {
     setShowModalResponse(false);
     setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
     setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
   };
-  
+
   useEffect(() => {
     if (authContext.selectedEventId === 10 || authContext.selectedEventId === 435) {
       setEventAllowed(true);
     }
   }, [authContext.selectedEventId]);
-  
 
-  console.log(kitCodes)
+
 
   let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == ticketFounds?.length;
+
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -518,7 +518,7 @@ function KitsDrawerScreen({ navigation }) {
                           marginBottom: 8,
                         }}>
                         <Text h4>Código da camisa</Text>
-                        <Text h4>{kitCodes[ticketFounds.indexOf(ticketFound)] + '('+ shirtSizes[ticketFounds.indexOf(ticketFound)] + ')'}</Text>
+                        <Text h4>{kitCodes[ticketFounds.indexOf(ticketFound)] + '(' + shirtSizes[ticketFounds.indexOf(ticketFound)] + ')'}</Text>
                       </View>
                     )}
                     {checkingIfNeedSelectShirtSize && (
@@ -616,31 +616,31 @@ function KitsDrawerScreen({ navigation }) {
                     Confira os ingressos antes de continuar.
                   </Text> */}
 
-                {eventAllowed && !documentImg && (
-                  <View style={{marginVertical: 10}}>
-                  <Button
-                    type="outline"
-                    onPress={() => {
-                      setShowQrCodeCamisa(true);
-                    }}
-                  >
-                    Ler Código Camisa
-                  </Button>
-                  </View>
-                )}
+                  {eventAllowed && !documentImg && (
+                    <View style={{ marginVertical: 10 }}>
+                      <Button
+                        type="outline"
+                        onPress={() => {
+                          setShowQrCodeCamisa(true);
+                        }}
+                      >
+                        Ler Código Camisa
+                      </Button>
+                    </View>
+                  )}
 
-                {enableTakeDocumentPicture && (
-                  <View style={{marginVertical: 10}}>
-                  <Button
-                      type="outline"
-                      onPress={() => {
-                        setIsVisible(true);
-                      }}>
-                      Tire uma foto do documento
-                    </Button>
-                  </View>
-                )}
-                  
+                  {enableTakeDocumentPicture && (
+                    <View style={{ marginVertical: 10 }}>
+                      <Button
+                        type="outline"
+                        onPress={() => {
+                          setIsVisible(true);
+                        }}>
+                        Tire uma foto do documento
+                      </Button>
+                    </View>
+                  )}
+
                 </>
               )}
 
@@ -815,6 +815,15 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const setAlertMessage = useAlert();
   const authContext = useContext(AuthContext);
 
+  const [showQrCodeCamisa, setShowQrCodeCamisa] = useState(false); // Controla a exibição do QR Code
+  const [showResponseCamisa, setShowResponseCamisa] = useState(null); // Armazena a resposta da requisição
+  const [showModalResponse, setShowModalResponse] = useState(false); // Controla a exibição do modal
+  const [kitCodes, setKitCodes] = useState([])
+  const [shirtSizes, setShirtSizes] = useState([])
+  const [currentTicketCode, setCurrentTicketCode] = useState(null);
+  const [eventAllowed, setEventAllowed] = useState(false);
+
+
   const handleUserFound = user => {
     console.log('@@@@@@@@user', user);
     user && setUser(user);
@@ -875,6 +884,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
       const formData = new FormData();
 
+      formData.append('kitCodes', JSON.stringify(kitCodes));
       formData.append('codes', JSON.stringify(selectedTicketCodes));
       formData.append('file', {
         uri: 'data:image/png;base64,' + signature?.encoded + ';',
@@ -950,6 +960,66 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           return acc;
         }, {}),
     );
+
+  const handleQRCodeCamisa = async (ticketCode) => {
+    if (!ticketCode) {
+      console.error("ticketCode está indefinido ou nulo");
+      return;
+    }
+
+    if (kitCodes.includes(ticketCode)) {
+      setShowQrCodeCamisa(false);
+      setAlertMessage('Erro: Código já escaneado.', '#dc143c');
+      return;
+    }
+
+    try {
+      const response = await getKitDelivery(ticketCode);
+      if (response) {
+        setShowQrCodeCamisa(false);
+        setShowResponseCamisa(response);
+        setCurrentTicketCode(ticketCode);
+        setShowModalResponse(true);
+      } else {
+        setShowQrCodeCamisa(false);
+        setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
+      }
+    } catch (error) {
+      setShowQrCodeCamisa(false);
+      console.error("Erro em handleQRCodeCamisa:", error);
+      setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
+    }
+  };
+
+  const addToArray = () => {
+    setShowModalResponse(false);
+    setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
+    setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
+  };
+
+  useEffect(() => {
+    if (authContext.selectedEventId === 10 || authContext.selectedEventId === 435) {
+      setEventAllowed(true);
+    }
+  }, [authContext.selectedEventId]);
+
+  let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == selectedTicketCodes?.length;
+
+
+  useEffect(() => {
+    // Verificar se o user foi carregado corretamente
+    if (user) {
+      console.log(user.tickets);  // Verifique se 'tickets' existe no user
+    }
+  }, [user]);
+
+  const tickets = user?.tickets || {};
+
+
+
+  console.log('selectedTicketCodes' + selectedTicketCodes)
+  console.log('user', user)
+
   return (
     <View style={{ flex: 1 }}>
       <SearchUserModal
@@ -993,15 +1063,17 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           <Text h4 style={{ textAlign: 'center' }}>
             {selectedTicketCodes.length} ingresso
             {selectedTicketCodes.length > 1 && 's'} selecionado
-            {selectedTicketCodes.length > 1 && 's'}
           </Text>
+
           <FlatList
             data={selectedTicketCodes}
-            renderItem={({ item }) => (
-              <Card containerStyle={{ alignItems: 'center' }}>
+            renderItem={({ item, index }) => (
+              <Card containerStyle={{ alignItems: 'center' }} key={item}>
                 <Text style={{ fontSize: 15, fontWeight: '700' }}>
-                  {user.tickets[item]}
+                  {user.tickets[item]} {/* Exibe o ingresso */}
                 </Text>
+
+                {/* Exibe o SelectModal para escolher o tamanho da camisa, se necessário */}
                 {mustSelectShirtSize && (
                   <SelectModal
                     label="Tamanho da camisa"
@@ -1012,7 +1084,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                         [item]: value,
                       }))
                     }
-                    errorMessage={'Campo obrigatório'}
+                    errorMessage="Campo obrigatório"
                     placeholder="Selecione"
                     items={[
                       { key: 'P', value: 'P' },
@@ -1024,12 +1096,29 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                     ]}
                   />
                 )}
+
+                {/* Exibe o código do kit associado ao ingresso */}
+                {kitCodes[index] && shirtSizes[index] && (
+                  <View
+                    style={{
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Text h4>Código do Kit</Text>
+                    <Text h4>
+                      {kitCodes[index]} ({shirtSizes[index]})
+                    </Text>
+                  </View>
+                )}
               </Card>
             )}
             keyExtractor={item => item}
           />
         </>
       )}
+
       {user && selectedTicketCodes && !documentImg && (
         <>
           <TakePictureModal
@@ -1042,14 +1131,35 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
               setDocumentImg(picture);
             }}
           />
-          <Button
-            type="outline"
-            containerStyle={{ paddingTop: 10 }}
-            onPress={() => {
-              setShowModalToTakePhotoOfDocument(true);
-            }}>
-            Tire uma foto do documento
-          </Button>
+
+          <Text style={{ paddingRight: 5, fontSize: 15, fontWeight: '900', textAlign: 'center', marginBottom: 10 }} >
+            Quantidade de kits escaneados {kitCodes.length} / {selectedTicketCodes.length}
+          </Text>
+
+          {eventAllowed && !documentImg && (
+            <View style={{ marginVertical: 10 }}>
+              <Button
+                type="outline"
+                onPress={() => {
+                  setShowQrCodeCamisa(true);
+                }}
+              >
+                Ler Código Camisa
+              </Button>
+            </View>
+          )}
+
+          {enableTakeDocumentPicture && (
+            <Button
+              type="outline"
+              containerStyle={{ paddingTop: 10 }}
+              onPress={() => {
+                setShowModalToTakePhotoOfDocument(true);
+              }}>
+              Tire uma foto do documento
+            </Button>
+          )}
+
         </>
       )}
       {user && selectedTicketCodes && documentImg && (
@@ -1149,7 +1259,39 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           </Button>
         </View>
       </ReactNativeModal>
+
+      {showQrCodeCamisa && (
+        <QrCodeReader
+          onRead={handleQRCodeCamisa}
+          onClose={() => setShowQrCodeCamisa(false)} // Fecha o QR Code
+        />
+      )}
+
+      {showModalResponse && (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <CustomModal
+            visible={showModalResponse}
+            title="Informações do Kit"
+            content={
+              <View>
+                <Text style={{ fontWeight: 'bold' }}>Setor:</Text>
+                <Text>{showResponseCamisa?.sectorName || 'Não informado'}</Text>
+                <Text style={{ fontWeight: 'bold' }}>Dia:</Text>
+                <Text>{showResponseCamisa?.day || 'Não informado'}</Text>
+                <Text style={{ fontWeight: 'bold' }}>Tamanho da Camisa:</Text>
+                <Text>{showResponseCamisa?.shirtSize || 'Não informado'}</Text>
+              </View>
+            }
+            onClose={() => setShowModalResponse(false)}
+            confirm={addToArray}
+          />
+
+        </View>
+      )}
+
     </View>
+
+
   );
 };
 
