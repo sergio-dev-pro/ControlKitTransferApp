@@ -616,7 +616,7 @@ function KitsDrawerScreen({ navigation }) {
                     Confira os ingressos antes de continuar.
                   </Text> */}
 
-                  {eventAllowed && !documentImg && (
+                  {eventAllowed && !documentImg && !enableTakeDocumentPicture &&(
                     <View style={{ marginVertical: 10 }}>
                       <Button
                         type="outline"
@@ -837,6 +837,13 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setHasKitAlreadyDelivered(false);
     setReasonForKitDelivery();
     setShowModalOfReasonForKitDelivery(false);
+    setShowQrCodeCamisa(false);
+    setShowResponseCamisa();
+    setShowModalResponse(false);
+    setKitCodes([]);
+    setShirtSizes([]);
+    setCurrentTicketCode();
+    setEventAllowed(false);
   };
 
   const registerDelivery = async () => {
@@ -1005,18 +1012,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
   let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == selectedTicketCodes?.length;
 
-
-  useEffect(() => {
-    // Verificar se o user foi carregado corretamente
-    if (user) {
-      console.log(user.tickets);  // Verifique se 'tickets' existe no user
-    }
-  }, [user]);
-
-  const tickets = user?.tickets || {};
-
-
-
   console.log('selectedTicketCodes' + selectedTicketCodes)
   console.log('user', user)
 
@@ -1073,7 +1068,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                   {user.tickets[item]} {/* Exibe o ingresso */}
                 </Text>
 
-                {/* Exibe o SelectModal para escolher o tamanho da camisa, se necessário */}
                 {mustSelectShirtSize && (
                   <SelectModal
                     label="Tamanho da camisa"
@@ -1097,20 +1091,28 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                   />
                 )}
 
-                {/* Exibe o código do kit associado ao ingresso */}
                 {kitCodes[index] && shirtSizes[index] && (
                   <View
-                    style={{
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Text h4>Código do Kit</Text>
-                    <Text h4>
-                      {kitCodes[index]} ({shirtSizes[index]})
-                    </Text>
-                  </View>
+                  style={{
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    marginTop: 8,                    
+                  }}
+                >
+                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                    Código do Kit:
+                  </Text>
+                  <Text style={{ fontSize: 14, color: '#555', marginBottom: 10 }}>
+                    {kitCodes[index] || 'Não disponível'}
+                  </Text>
+                
+                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                    Tamanho da camisa:
+                  </Text>
+                  <Text style={{ fontSize: 14, color: '#555' }}>
+                    ({shirtSizes[index] || 'Não disponível'})
+                  </Text>
+                </View>
                 )}
               </Card>
             )}
@@ -1132,11 +1134,13 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
             }}
           />
 
-          <Text style={{ paddingRight: 5, fontSize: 15, fontWeight: '900', textAlign: 'center', marginBottom: 10 }} >
-            Quantidade de kits escaneados {kitCodes.length} / {selectedTicketCodes.length}
-          </Text>
-
           {eventAllowed && !documentImg && (
+            <Text style={{ marginTop: 10, fontSize: 15, fontWeight: '900', textAlign: 'center', textDecorationLine: 'underline' }} >
+              Quantidade de kits escaneados {kitCodes.length} / {selectedTicketCodes.length}
+            </Text>
+          )}
+
+          {eventAllowed && !documentImg && !enableTakeDocumentPicture && (
             <View style={{ marginVertical: 10 }}>
               <Button
                 type="outline"
