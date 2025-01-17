@@ -368,6 +368,8 @@ function KitsDrawerScreen({ navigation }) {
     }
   };
 
+  console.log('setShowResponseCamisa: ', showResponseCamisa)
+
   const addToArray = () => {
     setShowModalResponse(false);
     setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
@@ -616,7 +618,7 @@ function KitsDrawerScreen({ navigation }) {
                     Confira os ingressos antes de continuar.
                   </Text> */}
 
-                  {eventAllowed && !documentImg && !enableTakeDocumentPicture &&(
+                  {eventAllowed && !documentImg && !enableTakeDocumentPicture && (
                     <View style={{ marginVertical: 10 }}>
                       <Button
                         type="outline"
@@ -779,7 +781,9 @@ function KitsDrawerScreen({ navigation }) {
               </View>
             }
             onClose={() => setShowModalResponse(false)}
-            confirm={addToArray}
+            confirm={() => { addToArray() }}
+            disableConfirm={showResponseCamisa?.wasDelivered}
+            alertText={showResponseCamisa?.wasDelivered ? 'Este kit já foi entregue.' : null}
           />
 
         </View>
@@ -1093,26 +1097,26 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
                 {kitCodes[index] && shirtSizes[index] && (
                   <View
-                  style={{
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    marginTop: 8,                    
-                  }}
-                >
-                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
-                    Código do Kit:
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#555', marginBottom: 10 }}>
-                    {kitCodes[index] || 'Não disponível'}
-                  </Text>
-                
-                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
-                    Tamanho da camisa:
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#555' }}>
-                    ({shirtSizes[index] || 'Não disponível'})
-                  </Text>
-                </View>
+                    style={{
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      marginTop: 8,
+                    }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                      Código do Kit:
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#555', marginBottom: 10 }}>
+                      {kitCodes[index] || 'Não disponível'}
+                    </Text>
+
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                      Tamanho da camisa:
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#555' }}>
+                      ({shirtSizes[index] || 'Não disponível'})
+                    </Text>
+                  </View>
                 )}
               </Card>
             )}
@@ -1287,9 +1291,10 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
               </View>
             }
             onClose={() => setShowModalResponse(false)}
-            confirm={addToArray}
+            confirm={() => { addToArray() }}
+            disableConfirm={showResponseCamisa?.wasDelivered}
+            alertText={showResponseCamisa?.wasDelivered ? 'Este kit já foi entregue.' : null}
           />
-
         </View>
       )}
 
