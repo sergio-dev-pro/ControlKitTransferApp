@@ -368,6 +368,8 @@ function KitsDrawerScreen({ navigation }) {
     }
   };
 
+  console.log('setShowResponseCamisa: ', showResponseCamisa)
+
   const addToArray = () => {
     setShowModalResponse(false);
     setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
@@ -616,7 +618,7 @@ function KitsDrawerScreen({ navigation }) {
                     Confira os ingressos antes de continuar.
                   </Text> */}
 
-                  {eventAllowed && !documentImg && !enableTakeDocumentPicture &&(
+                  {eventAllowed && !documentImg && !enableTakeDocumentPicture && (
                     <View style={{ marginVertical: 10 }}>
                       <Button
                         type="outline"
@@ -779,7 +781,9 @@ function KitsDrawerScreen({ navigation }) {
               </View>
             }
             onClose={() => setShowModalResponse(false)}
-            confirm={addToArray}
+            confirm={() => { addToArray() }}
+            disableConfirm={showResponseCamisa?.wasDelivered}
+            alertText={showResponseCamisa?.wasDelivered ? 'Este kit já foi entregue.' : null}
           />
 
         </View>
@@ -1314,8 +1318,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
             }
             onClose={() => setShowModalResponse(false)}
             confirm={hasSelectedTicketsForDay ? addToArray : null}
+            disableConfirm={showResponseCamisa?.wasDelivered}
+            alertText={showResponseCamisa?.wasDelivered ? 'Este kit já foi entregue.' : null}
           />
-
         </View>
       )}
 

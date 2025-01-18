@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, Button, StyleSheet, ScrollView } from 'react-native';
 
-const CustomModal = ({ visible, title, content, onClose, confirm }) => {
+const CustomModal = ({ visible, title, content, onClose, confirm, disableConfirm, alertText }) => {
   return (
     <Modal
       visible={visible}
@@ -24,8 +24,9 @@ const CustomModal = ({ visible, title, content, onClose, confirm }) => {
           {/* Container para os botões */}
           <View style={confirm ? styles.buttonsContainer : styles.buttonsContainerCentered}>
             <Button title={"Fechar"} onPress={onClose} />
-            {confirm && <Button title="Confirmar" onPress={confirm} />}
+            {confirm && <Button title="Confirmar" onPress={confirm} disabled={disableConfirm} />}
           </View>
+          {alertText && <Text style={styles.alertText}>{alertText}</Text>}
         </View>
       </View>
     </Modal>
@@ -74,6 +75,12 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 20,
   },
+  alertText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: '#000',
+    fontWeight: 'bold' 
+  }
 });
 
 export default CustomModal;
