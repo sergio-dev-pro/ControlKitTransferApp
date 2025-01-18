@@ -368,8 +368,6 @@ function KitsDrawerScreen({ navigation }) {
     }
   };
 
-  console.log('setShowResponseCamisa: ', showResponseCamisa)
-
   const addToArray = () => {
     setShowModalResponse(false);
     setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
@@ -1014,7 +1012,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
     // const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.map(code => ({code: user.tickets[code]})).filter(item => item.code.includes(day))[0];
     const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.filter(item => user.tickets[item].includes(day))[0];
-    setShirtCodesRead(prevState => ({...prevState, [getTicketIdByDayOfCodeRead(showResponseCamisa.day)]: {code: currentTicketCode, ...showResponseCamisa}}))
+    setShirtCodesRead(prevState => ({ ...prevState, [getTicketIdByDayOfCodeRead(showResponseCamisa.day)]: { code: currentTicketCode, ...showResponseCamisa } }))
   };
 
   useEffect(() => {
@@ -1086,6 +1084,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                 <Text style={{ fontSize: 15, fontWeight: '700' }}>
                   {user.tickets[item]} {/* Exibe o ingresso */}
                 </Text>
+                {user.shirtSizes && user.shirtSizes[item] && (
+                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>Tamanho da camisa: {user.shirtSizes[item]}</Text>
+                )}                
 
                 {mustSelectShirtSize && (
                   <SelectModal
@@ -1112,26 +1113,26 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
                 {shirtCodesRead[item] && (
                   <View
-                  style={{
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    marginTop: 8,                    
-                  }}
-                >
-                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
-                    Código do Kit:
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#555', marginBottom: 10 }}>
-                    {shirtCodesRead[item].code || 'Não disponível'}
-                  </Text>
-                
-                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
-                    Tamanho da camisa:
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#555' }}>
-                    ({shirtCodesRead[item].shirtSize || 'Não disponível'})
-                  </Text>
-                </View>
+                    style={{
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      marginTop: 8,
+                    }}
+                  >
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                      Código do Kit:
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#555', marginBottom: 10 }}>
+                      {shirtCodesRead[item].code || 'Não disponível'}
+                    </Text>
+
+                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                      Tamanho da camisa:
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#555' }}>
+                      ({shirtCodesRead[item].shirtSize || 'Não disponível'})
+                    </Text>
+                  </View>
                 )}
               </Card>
             )}
@@ -1309,10 +1310,10 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
               <Text>{showResponseCamisa?.sectorName || 'Não informado'}</Text>
               <Text style={{ fontWeight: 'bold' }}>Dia:</Text>
               <Text>{showResponseCamisa?.day || 'Não informado'}</Text>
-              <View style={{borderWidth: 1, borderColor: 'white', backgroundColor: '#FFEBEE', padding: 15, borderRadius: 8, marginTop: 10, alignItems: 'center',}}>
-              <Text style={{color: '#D32F2F', fontSize: 14}}>
-                Não há ingresso selecionado para esse dia.
-              </Text>
+              <View style={{ borderWidth: 1, borderColor: 'white', backgroundColor: '#FFEBEE', padding: 15, borderRadius: 8, marginTop: 10, alignItems: 'center', }}>
+                <Text style={{ color: '#D32F2F', fontSize: 14 }}>
+                  Não há ingresso selecionado para esse dia.
+                </Text>
               </View>
             </View>)
             }
