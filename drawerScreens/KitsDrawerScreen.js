@@ -822,6 +822,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [shirtSizes, setShirtSizes] = useState([])
   const [currentTicketCode, setCurrentTicketCode] = useState(null);
   const [eventAllowed, setEventAllowed] = useState(false);
+  const [shirtCodesRead, setShirtCodesRead] = useState({});
 
 
   const handleUserFound = user => {
@@ -841,6 +842,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setShowResponseCamisa();
     setShowModalResponse(false);
     setKitCodes([]);
+    setShirtCodesRead({})
     setShirtSizes([]);
     setCurrentTicketCode();
     setEventAllowed(false);
@@ -890,8 +892,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       }
 
       const formData = new FormData();
-
-      formData.append('kitCodes', JSON.stringify(kitCodes));
+      const getQrcodeReads = () => selectedTicketCodes.map(code => shirtCodesRead[code].code);
+      formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
+      // formData.append('kitCodes', JSON.stringify(kitCodes));
       formData.append('codes', JSON.stringify(selectedTicketCodes));
       formData.append('file', {
         uri: 'data:image/png;base64,' + signature?.encoded + ';',
@@ -910,6 +913,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       setAlertMessage('Entrega de kit registrada', '#32cd32');
     } catch (error) {
       console.error(error);
+      console.log('error error.response.data', error.response.data);
       setAlertMessage('Entrega não registrada! KIT NAO FOI ENTREGUE!');
     } finally {
       onCancelDeliveryByCPF();
@@ -998,10 +1002,15 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     }
   };
 
+  // const ticketsWithReadCodes = Object.keys(shirtCodesRead);
+  const selectedTicketsAvailable = selectedTicketCodes && selectedTicketCodes.filter(ticketId => !shirtCodesRead[ticketId]);
   const addToArray = () => {
     setShowModalResponse(false);
     setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
     setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
+    // const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.map(code => ({code: user.tickets[code]})).filter(item => item.code.includes(day))[0];
+    const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.filter(item => user.tickets[item].includes(day))[0];
+    setShirtCodesRead(prevState => ({...prevState, [getTicketIdByDayOfCodeRead(showResponseCamisa.day)]: {code: currentTicketCode, ...showResponseCamisa}}))
   };
 
   useEffect(() => {
@@ -1013,7 +1022,13 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == selectedTicketCodes?.length;
 
   console.log('selectedTicketCodes' + selectedTicketCodes)
+  console.log('selectedTicketsAvailable', selectedTicketsAvailable)
+  console.log('shirtCodesRead', shirtCodesRead)
+  console.log('showResponseCamisa', showResponseCamisa)
+  console.log('kitCodes', kitCodes)
   console.log('user', user)
+
+  const hasSelectedTicketsForDay = selectedTicketCodes && showResponseCamisa && selectedTicketsAvailable.map(code => user.tickets[code]).filter(item => item.includes(showResponseCamisa.day)).length > 0
 
   return (
     <View style={{ flex: 1 }}>
@@ -1057,7 +1072,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         <>
           <Text h4 style={{ textAlign: 'center' }}>
             {selectedTicketCodes.length} ingresso
-            {selectedTicketCodes.length > 1 && 's'} selecionado
+            {selectedTicketCodes.length > 1 && 's'} selecionado{selectedTicketCodes.length > 1 && 's'}
           </Text>
 
           <FlatList
@@ -1091,7 +1106,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                   />
                 )}
 
-                {kitCodes[index] && shirtSizes[index] && (
+                {shirtCodesRead[item] && (
                   <View
                   style={{
                     flexDirection: 'column',
@@ -1103,14 +1118,14 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                     Código do Kit:
                   </Text>
                   <Text style={{ fontSize: 14, color: '#555', marginBottom: 10 }}>
-                    {kitCodes[index] || 'Não disponível'}
+                    {shirtCodesRead[item].code || 'Não disponível'}
                   </Text>
                 
                   <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
                     Tamanho da camisa:
                   </Text>
                   <Text style={{ fontSize: 14, color: '#555' }}>
-                    ({shirtSizes[index] || 'Não disponível'})
+                    ({shirtCodesRead[item].shirtSize || 'Não disponível'})
                   </Text>
                 </View>
                 )}
@@ -1276,7 +1291,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           <CustomModal
             visible={showModalResponse}
             title="Informações do Kit"
-            content={
+            content={hasSelectedTicketsForDay ? (
               <View>
                 <Text style={{ fontWeight: 'bold' }}>Setor:</Text>
                 <Text>{showResponseCamisa?.sectorName || 'Não informado'}</Text>
@@ -1285,9 +1300,20 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                 <Text style={{ fontWeight: 'bold' }}>Tamanho da Camisa:</Text>
                 <Text>{showResponseCamisa?.shirtSize || 'Não informado'}</Text>
               </View>
+            ) : (<View>
+              <Text style={{ fontWeight: 'bold' }}>Setor:</Text>
+              <Text>{showResponseCamisa?.sectorName || 'Não informado'}</Text>
+              <Text style={{ fontWeight: 'bold' }}>Dia:</Text>
+              <Text>{showResponseCamisa?.day || 'Não informado'}</Text>
+              <View style={{borderWidth: 1, borderColor: '#D32F2F', backgroundColor: '#FFEBEE', padding: 10, borderRadius: 8, marginTop: 10, alignItems: 'center',}}>
+              <Text style={{color: '#D32F2F', fontSize: 14}}>
+                Não há ingresso selecionado para esse dia.
+              </Text>
+              </View>
+            </View>)
             }
             onClose={() => setShowModalResponse(false)}
-            confirm={addToArray}
+            confirm={hasSelectedTicketsForDay ? addToArray : null}
           />
 
         </View>

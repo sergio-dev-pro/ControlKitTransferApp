@@ -22,9 +22,9 @@ const CustomModal = ({ visible, title, content, onClose, confirm }) => {
           </ScrollView>
 
           {/* Container para os botões */}
-          <View style={styles.buttonsContainer}>
-            <Button title="Fechar" onPress={onClose} />
-            <Button title="Confirmar" onPress={confirm} />
+          <View style={confirm ? styles.buttonsContainer : styles.buttonsContainerCentered}>
+            <Button title={"Fechar"} onPress={onClose} />
+            {confirm && <Button title="Confirmar" onPress={confirm} />}
           </View>
         </View>
       </View>
@@ -65,6 +65,12 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
+  },
+  buttonsContainerCentered: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     width: '100%',
     marginTop: 20,
   },
