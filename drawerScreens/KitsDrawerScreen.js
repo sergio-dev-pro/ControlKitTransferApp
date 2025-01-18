@@ -1309,7 +1309,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
               <Text>{showResponseCamisa?.sectorName || 'Não informado'}</Text>
               <Text style={{ fontWeight: 'bold' }}>Dia:</Text>
               <Text>{showResponseCamisa?.day || 'Não informado'}</Text>
-              <View style={{borderWidth: 1, borderColor: '#D32F2F', backgroundColor: '#FFEBEE', padding: 10, borderRadius: 8, marginTop: 10, alignItems: 'center',}}>
+              <View style={{borderWidth: 1, borderColor: 'white', backgroundColor: '#FFEBEE', padding: 15, borderRadius: 8, marginTop: 10, alignItems: 'center',}}>
               <Text style={{color: '#D32F2F', fontSize: 14}}>
                 Não há ingresso selecionado para esse dia.
               </Text>
