@@ -1339,6 +1339,7 @@ const TicketCodeSelectionModal = ({
   isConfirming,
 }) => {
   const [selecteds, setSelecteds] = useState([]);
+  const [hasAllSelected, setHasAllSelected] = useState(false);
   const setAlertMessage = useAlert();
   const toggleCheckbox = code => {
     setSelecteds(prev => {
@@ -1356,6 +1357,20 @@ const TicketCodeSelectionModal = ({
     onConfirm(selecteds);
   };
 
+  const selectAll = () => {
+    if(hasAllSelected) {
+      setHasAllSelected(false);
+      setSelecteds([]);
+    } else {
+      setHasAllSelected(true);
+      const allTickestCodes = tickets.map(ticket => ticket[0]);
+      setSelecteds(allTickestCodes);
+    }
+  }
+
+  console.log('TicketCodeSelectionModal prop tickets', tickets);
+  console.log('TicketCodeSelectionModal selecteds', selecteds);
+
   return (
     <ReactNativeModal
       isVisible={isVisible}
@@ -1372,24 +1387,62 @@ const TicketCodeSelectionModal = ({
           height: 'auto',
           width: `95%`,
         }}>
-        <Text h4 h4Style={{ marginBottom: 10 }}>
+        <Text h4 h4Style={{ marginBottom: 8 }}>
           Selecione o dia para a entrega do kit
         </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: 5,
+            backgroundColor: "#F9F9F9",
+            borderBottomWidth: 1,
+            borderBottomColor: "#E0E0E0",
+            marginBottom: 8,
+          }}>
+          <Text h5
+            style={{ fontSize: 16, color: "#7A7A7A", fontWeight: "bold" }}
+          >
+            Selecionar todos
+          </Text>
+          <CheckBox
+            size={30}
+            containerStyle={{ padding: 0, backgroundColor: "#F9F9F9" }}
+            uncheckedColor='#7A7A7A'
+            checked={hasAllSelected}
+            onPress={() => selectAll()}
+            iconType="material-community"
+            checkedIcon="checkbox-outline"
+            uncheckedIcon={'checkbox-blank-outline'}
+          />
+        </View>
         <FlatList
           data={tickets}
-          renderItem={({ item: [code, name] }) => (
+          renderItem={({ item: [code, name], index }) => (
             <View
               style={{ flexDirection: 'row', alignItems: 'center' }}
               key={code}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  color: "#8F8F8F",
+                  marginRight: 10,
+                }}
+              >
+                {index + 1}.
+              </Text>
               <CheckBox
-                containerStyle={{ padding: 0 }}
+              size={28}
+                containerStyle={{ padding: 0, marginLeft: -5, marginRight: 10 }}
                 checked={selecteds.includes(code)}
                 onPress={() => toggleCheckbox(code)}
                 iconType="material-community"
                 checkedIcon="checkbox-outline"
                 uncheckedIcon={'checkbox-blank-outline'}
               />
-              <Text h5 style={{ fontSize: 15, paddingRight: 4 }}>
+              <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
                 {name}
               </Text>
             </View>
