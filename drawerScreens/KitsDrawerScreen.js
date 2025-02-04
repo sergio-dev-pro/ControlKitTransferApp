@@ -38,6 +38,7 @@ import SelectModal from '../components/SelectModal';
 import SearchUserModal from '../components/SearchUserModal';
 import ReasonForKitDeliveryModal from '../components/ReasonForKitDeliveryModal';
 import CustomModal from '../components/CustomModal';
+import JustificationModal from '../components/JustificationModal';
 
 function KitsDrawerScreen({ navigation }) {
   const authContext = useContext(AuthContext);
@@ -72,6 +73,8 @@ function KitsDrawerScreen({ navigation }) {
   const [shirtSizes, setShirtSizes] = useState([])
   const [currentTicketCode, setCurrentTicketCode] = useState(null);
   const [eventAllowed, setEventAllowed] = useState(false);
+  const [isValidBoolean, setIsValidBoolean] = useState(false);
+  const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
 
 
   useEffect(() => {
@@ -219,6 +222,8 @@ function KitsDrawerScreen({ navigation }) {
     setShowResponseCamisa(null)
     setKitCodes([])
     setShowResponseCamisa(null)
+    setIsValidBoolean(false)
+    setIncompleteRegistrationReason()
 
   };
 
@@ -283,6 +288,10 @@ function KitsDrawerScreen({ navigation }) {
         });
 
         if (reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
+
+        if (incompleteRegistrationReason) {
+          formData.append('reasonInvalidUser', incompleteRegistrationReason);
+        }
 
         await ticketOwnerSignatureRegistration(authContext.userToken, formData);
         setAlertMessage('Entrega de kit registrada', '#32cd32');
@@ -375,15 +384,30 @@ function KitsDrawerScreen({ navigation }) {
   };
 
   useEffect(() => {
+    if (ticketFounds) {
+
+      if (!ticketFounds.isValid) {
+        setIsValidBoolean(true)
+      }
+    } else {
+      console.log("Ticket está indefinido");
+    }
+
     if (authContext.selectedEventId === 10 || authContext.selectedEventId === 435) {
       setEventAllowed(true);
     }
-  }, [authContext.selectedEventId]);
+  }, [ticketFounds, authContext.selectedEventId]);
 
 
 
   let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == ticketFounds?.length;
 
+  const handleJustificationSubmit = justification => {
+    setIncompleteRegistrationReason(justification);
+    setIsValidBoolean(false);
+  };
+
+  console.log('isValidBoolean' + isValidBoolean)
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -467,7 +491,7 @@ function KitsDrawerScreen({ navigation }) {
                         flexWrap: 'wrap',
                         marginBottom: 8,
                       }}>
-                      <Text h4>Dia</Text>
+                      <Text h4>Dia:</Text>
                       <View>
                         <Text h4>{formatDate(ticketFound?.day)}</Text>
                         <Text h4>{formatDateForTextDay(ticketFound?.day)}</Text>
@@ -480,8 +504,8 @@ function KitsDrawerScreen({ navigation }) {
                           justifyContent: 'space-between',
                           marginBottom: 8,
                         }}>
-                        <Text h4>Documento</Text>
-                        <Text h4>
+                        <Text h4>Documento:</Text>
+                        <Text style={{ fontSize: 18 }}>
                           {(() => {
                             const { document } = ticketFound;
                             if (document.length === 11) {
@@ -502,14 +526,27 @@ function KitsDrawerScreen({ navigation }) {
                     {ticketFound?.sectorName && (
                       <View
                         style={{
+                          flexDirection: 'column-reverse',
+                          justifyContent: 'space-between',
+                          marginBottom: 8,
+                        }}>
+                        <Text h4>Setor:</Text>
+                        <Text style={{ fontSize: 18 }}>{ticketFound.sectorName}</Text>
+                      </View>
+                    )}
+
+                    {ticketFound?.shirtSize && (
+                      <View
+                        style={{
                           flexDirection: 'column',
                           justifyContent: 'space-between',
                           marginBottom: 8,
                         }}>
-                        <Text h4>Setor</Text>
-                        <Text h4>{ticketFound.sectorName}</Text>
+                        <Text h4>Tamanho da camisa:</Text>
+                        <Text style={{ fontSize: 18 }}>{ticketFound.shirtSize}</Text>
                       </View>
                     )}
+
                     {ticketFounds.indexOf(ticketFound) < kitCodes?.length && eventAllowed && (
                       <View
                         style={{
@@ -787,6 +824,18 @@ function KitsDrawerScreen({ navigation }) {
         </View>
       )}
 
+      <JustificationModal
+        modalVisible={isValidBoolean}
+        setModalVisible={setIsValidBoolean}
+        onSubmit={handleJustificationSubmit}
+        onCancel={() => {
+          cancel();
+          setIsLoading(false);
+          setKitCodes([]);
+          setShowResponseCamisa(null);
+        }}
+        message={`Cadastro incompleto. Informe um motivo para continuar com a entrega do kit.`}
+      />
 
 
     </View>
@@ -825,7 +874,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [currentTicketCode, setCurrentTicketCode] = useState(null);
   const [eventAllowed, setEventAllowed] = useState(false);
   const [shirtCodesRead, setShirtCodesRead] = useState({});
-
+  const [isValidBoolean, setIsValidBoolean] = useState(false);
+  const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
 
   const handleUserFound = user => {
     console.log('@@@@@@@@user', user);
@@ -848,6 +898,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setShirtSizes([]);
     setCurrentTicketCode();
     setEventAllowed(false);
+    setIsValidBoolean(false)
+    setIncompleteRegistrationReason()
   };
 
   const registerDelivery = async () => {
@@ -881,11 +933,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         });
 
         if (mustSelectShirtSize) {
-          formData.append(
-            'codesShirtSize',
-            JSON.stringify(ticketCodeAndShirtSize),
-          );
+          formData.append('codesShirtSize', JSON.stringify(ticketCodeAndShirtSize));
         }
+
         await ticketOwnerDocumentRegistration(authContext.userToken, formData);
       } catch (error) {
         throw `Chamada para registrar documento, payload = ${JSON.stringify({
@@ -894,7 +944,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       }
 
       const formData = new FormData();
-      const getQrcodeReads = () => selectedTicketCodes.map(code => shirtCodesRead[code].code);
+      const getQrcodeReads = () => selectedTicketCodes.map(code => shirtCodesRead[code]?.code || 'Código não encontrado');
       formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
       // formData.append('kitCodes', JSON.stringify(kitCodes));
       formData.append('codes', JSON.stringify(selectedTicketCodes));
@@ -904,8 +954,13 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         name: 'signatureImage.png',
       });
 
-      if (hasKitAlreadyDelivered)
+      if (hasKitAlreadyDelivered) {
         formData.append('reason', reasonForKitDelivery);
+      }
+
+      if (incompleteRegistrationReason) {
+        formData.append('reasonInvalidUser', incompleteRegistrationReason);
+      }
 
       console.log(
         '__________________ticketOwnerSignatureRegistration',
@@ -914,9 +969,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       await ticketOwnerSignatureRegistration(authContext.userToken, formData);
       setAlertMessage('Entrega de kit registrada', '#32cd32');
     } catch (error) {
-      console.error(error);
-      console.log('error error.response.data', error.response.data);
-      setAlertMessage('Entrega não registrada! KIT NAO FOI ENTREGUE!');
+      console.error('Erro durante o registro da entrega:', error);
+      console.log('Detalhes do erro:', error?.response?.data || 'Sem resposta da API');
+      setAlertMessage('Entrega não registrada! KIT NÃO FOI ENTREGUE!');
     } finally {
       onCancelDeliveryByCPF();
       setIsLoading(false);
@@ -947,6 +1002,11 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       setHasKitAlreadyDelivered(hasKitDelivered);
       setShowModalOfReasonForKitDelivery(hasKitDelivered);
       setSelectedTicketCodes(codes);
+
+      if (isValidBoolean) {
+
+      }
+
     } catch (error) {
       setAlertMessage(
         'Erro ao verificar se o kit já foi entregue para o ingresso.',
@@ -1016,10 +1076,19 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   };
 
   useEffect(() => {
+    if (user) {
+      if (!user.isValid) {
+        setIsValidBoolean(true)
+      }
+    } else {
+      console.log("User está indefinido");
+    }
+
     if (authContext.selectedEventId === 10 || authContext.selectedEventId === 435) {
       setEventAllowed(true);
     }
-  }, [authContext.selectedEventId]);
+  }, [user, authContext.selectedEventId]);
+
 
   let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == selectedTicketCodes?.length;
 
@@ -1031,6 +1100,11 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   console.log('user', user)
 
   const hasSelectedTicketsForDay = selectedTicketCodes && showResponseCamisa && selectedTicketsAvailable.map(code => user.tickets[code]).filter(item => item.includes(showResponseCamisa.day)).length > 0
+
+  const handleJustificationSubmit = justification => {
+    setIncompleteRegistrationReason(justification);
+    setIsValidBoolean(false);
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -1086,7 +1160,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                 </Text>
                 {user.shirtSizes && user.shirtSizes[item] && (
                   <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>Tamanho da camisa: {user.shirtSizes[item]}</Text>
-                )}                
+                )}
 
                 {mustSelectShirtSize && (
                   <SelectModal
@@ -1325,6 +1399,18 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         </View>
       )}
 
+      <JustificationModal
+        modalVisible={isValidBoolean}
+        setModalVisible={setIsValidBoolean}
+        onSubmit={handleJustificationSubmit}
+        onCancel={() => {
+          onCancelDeliveryByCPF();
+          clearState();
+        }}
+        message={`Cadastro incompleto. Informe um motivo para continuar com a entrega do kit.`}
+      />
+
+
     </View>
 
 
@@ -1359,7 +1445,7 @@ const TicketCodeSelectionModal = ({
   };
 
   const selectAll = () => {
-    if(hasAllSelected) {
+    if (hasAllSelected) {
       setHasAllSelected(false);
       setSelecteds([]);
     } else {
@@ -1435,7 +1521,7 @@ const TicketCodeSelectionModal = ({
                 {index + 1}.
               </Text>
               <CheckBox
-              size={28}
+                size={28}
                 containerStyle={{ padding: 0, marginLeft: -5, marginRight: 10 }}
                 checked={selecteds.includes(code)}
                 onPress={() => toggleCheckbox(code)}
