@@ -73,9 +73,8 @@ function KitsDrawerScreen({ navigation }) {
   const [shirtSizes, setShirtSizes] = useState([])
   const [currentTicketCode, setCurrentTicketCode] = useState(null);
   const [eventAllowed, setEventAllowed] = useState(false);
-  const [isValidBoolean, setIsValidBoolean] = useState(false);
+  const [isValidBoolean, setIsValidBoolean] = useState();
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
-
 
   useEffect(() => {
     (async () => {
@@ -219,11 +218,10 @@ function KitsDrawerScreen({ navigation }) {
     setHasKitAlreadyDelivered(false);
     setReasonForKitDelivery();
     setIsConfirmDelivery(false);
-    setShowResponseCamisa(null)
-    setKitCodes([])
-    setShowResponseCamisa(null)
-    setIsValidBoolean(false)
-    setIncompleteRegistrationReason()
+    setShowResponseCamisa(null);
+    setKitCodes([]);
+    setIsValidBoolean(false);
+    setIncompleteRegistrationReason();
 
   };
 
@@ -383,21 +381,20 @@ function KitsDrawerScreen({ navigation }) {
     setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
   };
 
-  useEffect(() => {
-    if (ticketFounds) {
-
-      if (!ticketFounds.isValid) {
-        setIsValidBoolean(true)
-      }
-    } else {
-      console.log("Ticket está indefinido");
-    }
-
+  useEffect(() => { 
+   
+  
     if (authContext.selectedEventId === 10 || authContext.selectedEventId === 435) {
       setEventAllowed(true);
     }
-  }, [ticketFounds, authContext.selectedEventId]);
+  }, [authContext.selectedEventId]);
 
+
+  useEffect(() => {
+    if (ticketFounds && ticketFounds.length > 0 && !ticketFounds[0].isValid) {
+      setIsValidBoolean(true);
+    }
+  }, [ticketFounds]); 
 
 
   let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == ticketFounds?.length;
@@ -407,7 +404,6 @@ function KitsDrawerScreen({ navigation }) {
     setIsValidBoolean(false);
   };
 
-  console.log('isValidBoolean' + isValidBoolean)
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -829,10 +825,7 @@ function KitsDrawerScreen({ navigation }) {
         setModalVisible={setIsValidBoolean}
         onSubmit={handleJustificationSubmit}
         onCancel={() => {
-          cancel();
-          setIsLoading(false);
-          setKitCodes([]);
-          setShowResponseCamisa(null);
+          cancel()
         }}
         message={`Cadastro incompleto. Informe um motivo para continuar com a entrega do kit.`}
       />
