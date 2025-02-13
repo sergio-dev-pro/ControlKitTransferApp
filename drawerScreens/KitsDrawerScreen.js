@@ -827,7 +827,7 @@ function KitsDrawerScreen({ navigation }) {
         onCancel={() => {
           cancel()
         }}
-        message={`Cadastro incompleto. Informe um motivo para continuar com a entrega do kit.`}
+        message={`Cadastro do usuário ínvalido. Informe um motivo para continuar com a entrega do kit.`}
       />
 
 
@@ -1400,7 +1400,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           onCancelDeliveryByCPF();
           clearState();
         }}
-        message={`Cadastro incompleto. Informe um motivo para continuar com a entrega do kit.`}
+        message={`Cadastro do usuário ínvalido. Informe um motivo para continuar com a entrega do kit.`}
       />
 
 
