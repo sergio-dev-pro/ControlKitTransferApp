@@ -1,21 +1,21 @@
-import {Button, Divider, Text, Badge} from '@rneui/themed';
-import React, {useContext, useState, useEffect} from 'react';
-import {View} from 'react-native';
-import {braceletRegister, hasBraceleteCode} from '../api/TicketApi';
+import { Button, Divider, Text, Badge } from '@rneui/themed';
+import React, { useContext, useState, useEffect } from 'react';
+import { View } from 'react-native';
+import { braceletRegister, hasBraceleteCode } from '../api/TicketApi';
 import Header from '../components/Header';
 import QrCodeReader from '../components/QrCodeReader';
-import {useAlert} from '../context/AlertContext';
-import {AuthContext} from '../context/AuthContext';
-import {formatDate, sortDates} from '../helpers/format';
+import { useAlert } from '../context/AlertContext';
+import { AuthContext } from '../context/AuthContext';
+import { formatDate, sortDates } from '../helpers/format';
 import GStyles from '../style/global';
 import THEME from '../style/theme';
 import SelectModal from '../components/SelectModal';
-import {useIsFocused} from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 import SearchUserModal from '../components/SearchUserModal';
-import {reduceArrayToJustDifferentDates} from '../helpers/reduceCallbacks';
+import { reduceArrayToJustDifferentDates } from '../helpers/reduceCallbacks';
 import JustificationModal from '../components/JustificationModal';
 
-function BraceletRegistrationDrawerScreen({navigation}) {
+function BraceletRegistrationDrawerScreen({ navigation }) {
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
   const [user, setUser] = useState();
   const [selectedDay, setSelectedDay] = useState();
@@ -23,42 +23,30 @@ function BraceletRegistrationDrawerScreen({navigation}) {
   const [ticketCode, setTicketCode] = useState();
   const [loading, setLoading] = useState(false);
   const isFocused = useIsFocused();
-  const {userToken} = useContext(AuthContext);
+  const { userToken } = useContext(AuthContext);
   const setAlertMessage = useAlert();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isTicketPreScanned, setIsTicketPreScanned] = useState(false);
   const [reason, setReason] = useState('');
-
+  const [selectedEvent, setSelectedEvent] = useState('')
+  const [selectedEventKey, setSelectedEventKey] = useState('');
 
   const resetState = () => {
     setUser();
     setSelectedDay();
     setTicketCode();
     setSectorDescription(null);
+    setSelectedEvent("")
+    setSelectedEventKey("")
   };
   const handleUserFound = (userFounded, searchedFor) => {
     if (!userFounded.isActive)
       return alert('Usuário não registrado, registre no cadastro manual.');
 
-    // Removendo dias duplicados
-    const userEventDays = sortDates(
-      userFounded.days.reduce(
-        reduceArrayToJustDifferentDates.callback,
-        reduceArrayToJustDifferentDates.initialValue,
-      ),
-    );
-    const userHasOnlyOneEventDay = userEventDays.length == 1;
-    const userState = {...userFounded, ...searchedFor, days: userEventDays};
-    // Se tiver apenas um dias, set automaticamente
+    const userState = { ...userFounded, ...searchedFor };
     setUser(userState);
-    if (userHasOnlyOneEventDay) {
-      setSelectedDay(userEventDays[0]);
-      verifyTicketAssociation(userEventDays[0], userState.token);
-    }
-    
   };
-  //
 
   const handleQRCodeRead = async ticketCode => {
     // #
@@ -81,7 +69,7 @@ function BraceletRegistrationDrawerScreen({navigation}) {
       console.error('Erro ao verificar código da pulseira:', error);
     }
   };
- 
+
   const handleJustificationSubmit = async (justification) => {
     setReason(justification);
     setIsModalVisible(false);
@@ -99,19 +87,20 @@ function BraceletRegistrationDrawerScreen({navigation}) {
   const save = async () => {
     try {
       setLoading(true);
-      const {data} = await braceletRegister(
+      const { data } = await braceletRegister(
         userToken,
         user?.token,
         selectedDay,
         ticketCode,
-        reason
+        reason,
+        selectedEventKey
       );
       console.log('braceletRegister data', data);
       resetState();
       setAlertMessage(`Registrado`, '#32cd32');
     } catch (error) {
       console.error(error.response);
-      console.log('error by api: '+ error?.response?.data);
+      console.log('error by api: ' + error?.response?.data);
       if (error?.response?.data?.errors) {
         setAlertMessage(error.response.data.errors, '#dc143c');
         return null;
@@ -124,16 +113,32 @@ function BraceletRegistrationDrawerScreen({navigation}) {
     console.log(user.token, selectedDay, ticketCode);
   };
 
+
+  useEffect(() => {
+    if (selectedEvent) {
+        const data = selectedEvent.split('-')[0]?.trim();
+        if (data) {
+            const [dia, mes, ano] = data.split('/');
+            if (dia && mes && ano) {
+                setSelectedDay(`${ano}/${mes}/${dia}`);
+            }
+        }
+    } else {
+        setSelectedDay("");
+    }
+}, [selectedEvent]);
+
+
   const hasTicketCodeRead = !!ticketCode;
-  const hasAllDataToRegisterBracelet = selectedDay && ticketCode;
+  const hasAllDataToRegisterBracelet = selectedEvent && ticketCode;
   return (
-    <View style={{...GStyles.view}}>
+    <View style={{ ...GStyles.view }}>
       <Header
-        style={{marginBottom: 0}}
+        style={{ marginBottom: 0 }}
         openDrawer={() => navigation.openDrawer()}
       />
-      <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
-        <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
+      <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
+        <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
           Registrar pulseira
         </Text>
         <Divider />
@@ -151,9 +156,9 @@ function BraceletRegistrationDrawerScreen({navigation}) {
         ) : (
           <>
             <Badge
-              textStyle={{fontSize: 13}}
-              containerStyle={{marginBottom: 30}}
-              badgeStyle={{height: 25}}
+              textStyle={{ fontSize: 13 }}
+              containerStyle={{ marginBottom: 30 }}
+              badgeStyle={{ height: 25 }}
               value={
                 (user?.cpf && `CPF:${user?.cpf}`) ||
                 (user?.email && `E-mail:${user?.email}`)
@@ -161,33 +166,29 @@ function BraceletRegistrationDrawerScreen({navigation}) {
               status="warning"
             />
             <SelectModal
-              label="Dia do evento"
-              placeholder=""
-              items={user.days.map(day => ({key: day, value: formatDate(day)}))}
-              value={selectedDay}
-              setValue={value => {
-                setSelectedDay(value);
-                verifyTicketAssociation(value);
-                console.log(JSON.stringify(user));
-                var dayKey = value.split('T')[0];
-                console.log('dayKey=' + dayKey);
-                var sectorByDay = user.daySectors[dayKey];
-                console.log('sectorByDay=' + sectorByDay);
-                if (sectorByDay) {
-                  setSectorDescription('Setor ' + sectorByDay);
-                }
+              label="Selecione um Ingresso"
+              placeholder="Selecione um evento"
+              items={Object.entries(user?.tickets || {}).map(([key, value]) => ({
+                key,
+                value
+              }))}
+              value={selectedEventKey}
+              setValue={eventKey => {
+                setSelectedEventKey(eventKey);
+                setSelectedEvent(user?.tickets[eventKey]);
               }}
             />
-            {sectorDescription && (
-              <Text h4 h4Style={{fontSize: 18, color: '#000', paddingLeft: 16}}>
-                {sectorDescription}
+
+            {selectedEvent && (
+              <Text h4 h4Style={{ fontSize: 18, color: '#000', paddingLeft: 16 }}>
+                {selectedEvent}
               </Text>
             )}
-            {selectedDay && !hasTicketCodeRead && (
-              <View style={{padding: 16, height: 'auto'}}>
+            {selectedEvent && !hasTicketCodeRead && (
+              <View style={{ padding: 16, height: 'auto' }}>
                 <Text
                   h4
-                  h4Style={{fontSize: 18, color: '#86939e', marginBottom: 10}}>
+                  h4Style={{ fontSize: 18, color: '#86939e', marginBottom: 10 }}>
                   Escaneie o código da pulseira:
                 </Text>
                 <Button
@@ -203,13 +204,13 @@ function BraceletRegistrationDrawerScreen({navigation}) {
                 </Button>
               </View>
             )}
-            {selectedDay && hasTicketCodeRead && (
-              <View style={{padding: 16, flex: 1}}>
+            {selectedEvent && hasTicketCodeRead && (
+              <View style={{ padding: 16, flex: 1 }}>
                 <Text
                   h4
-                  h4Style={{fontSize: 18, color: '#86939e', marginBottom: 10}}>
+                  h4Style={{ fontSize: 18, color: '#86939e', marginBottom: 10 }}>
                   Código da pulseira:{' '}
-                  <Text style={{color: THEME.cor.primary}}>{ticketCode}</Text>
+                  <Text style={{ color: THEME.cor.primary }}>{ticketCode}</Text>
                 </Text>
               </View>
             )}
@@ -223,7 +224,7 @@ function BraceletRegistrationDrawerScreen({navigation}) {
               }}>
               <Button
                 type="clear"
-                containerStyle={{marginRight: 20}}
+                containerStyle={{ marginRight: 20 }}
                 size="lg"
                 title="Cancelar"
                 onPress={resetState}

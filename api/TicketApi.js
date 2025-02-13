@@ -52,15 +52,11 @@ export const registerBraceletDeliveryByDocument = async (
       Authorization: 'Bearer ' + token,
     },
   });
-export const braceletRegister = async (operatorToken, token, day, code, reason) => {
-  const formData = new FormData();
-  formData.append('token', token);
-  formData.append('day', day);
-  formData.append('code', code);
+export const braceletRegister = async (operatorToken, token, day, code, reason, accessKey) => {
   return await axios({
     url: BASE_URL + `/api/tickets/blaceletCode`,
     method: 'PATCH',
-    data: {token, code, day, reason},
+    data: {token, code, day, reason, accessKey},
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
