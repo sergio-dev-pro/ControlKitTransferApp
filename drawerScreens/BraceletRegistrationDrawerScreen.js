@@ -45,7 +45,10 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       return alert('Usuário não registrado, registre no cadastro manual.');
 
     const userState = { ...userFounded, ...searchedFor };
+
     setUser(userState);
+
+    
   };
 
   const handleQRCodeRead = async ticketCode => {
@@ -57,12 +60,14 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setShowQrcodereader(false);
   };
 
-  const verifyTicketAssociation = async (day, token) => {
+  const verifyTicketAssociation = async (token, eventkey) => {
     const bearerToken = userToken;
     const tokenGetCpfOrEmail = user?.token ?? token;
-    const dayTicket = day;
+    const dayTicket = "2025-02-27"
+    const keyAccess = eventkey
+
     try {
-      const data = await hasBraceleteCode(tokenGetCpfOrEmail, dayTicket, bearerToken);
+      const data = await hasBraceleteCode(tokenGetCpfOrEmail, dayTicket, bearerToken, keyAccess);
       console.log('estado: ' + data.hasCode);
       setIsTicketPreScanned(data.hasCode);
     } catch (error) {
@@ -116,17 +121,22 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
   useEffect(() => {
     if (selectedEvent) {
-        const data = selectedEvent.split('-')[0]?.trim();
-        if (data) {
-            const [dia, mes, ano] = data.split('/');
-            if (dia && mes && ano) {
-                setSelectedDay(`${ano}/${mes}/${dia}`);
-            }
+      const data = selectedEvent.split('-')[0]?.trim();
+      if (data) {
+        const [dia, mes, ano] = data.split('/');
+        if (dia && mes && ano) {
+          setSelectedDay(`${ano}-${mes}-${dia}`);
         }
+      }
     } else {
-        setSelectedDay("");
+      setSelectedDay("");
     }
-}, [selectedEvent]);
+  }, [selectedEvent]);
+
+  useEffect(() => {
+    if (selectedEventKey)
+      verifyTicketAssociation(user.token, selectedEventKey);
+  }, [selectedEventKey])
 
 
   const hasTicketCodeRead = !!ticketCode;
@@ -179,11 +189,18 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
               }}
             />
 
+
+
             {selectedEvent && (
               <Text h4 h4Style={{ fontSize: 18, color: '#000', paddingLeft: 16 }}>
                 {selectedEvent}
+                {user?.registeredBlaceletTickets.includes(selectedEventKey) && (
+                  <Text style={{ color: 'red', fontWeight: 'bold' }}>{"\n"}Pulseira já entregue</Text>
+                )}
               </Text>
             )}
+
+
             {selectedEvent && !hasTicketCodeRead && (
               <View style={{ padding: 16, height: 'auto' }}>
                 <Text

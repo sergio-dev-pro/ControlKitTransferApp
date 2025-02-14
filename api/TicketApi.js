@@ -65,8 +65,8 @@ export const braceletRegister = async (operatorToken, token, day, code, reason, 
   });
 };
 
-export const hasBraceleteCode = async (token, day, userToken) => {
-  const url = `${BASE_URL}/api/tickets/hasBlaceletCode?token=${encodeURIComponent(token)}&day=${day}`;
+export const hasBraceleteCode = async (token, day, userToken, accessKey) => {
+  const url = `${BASE_URL}/api/tickets/hasBlaceletCode?token=${encodeURIComponent(token)}&day=${day}&accessKey=${accessKey}`;
 
   try {
     const response = await axios({
