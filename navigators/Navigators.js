@@ -71,7 +71,6 @@ function Navigators() {
     <>
       {userToken && selectedEventId && eventPermissions ? (
         <Drawer.Navigator
-          initialRouteName={initialRoute || 'Kits'}
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {

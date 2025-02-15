@@ -1,6 +1,6 @@
 import { Button, Divider, Text, Badge } from '@rneui/themed';
 import React, { useContext, useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { braceletRegister, hasBraceleteCode } from '../api/TicketApi';
 import Header from '../components/Header';
 import QrCodeReader from '../components/QrCodeReader';
@@ -18,6 +18,7 @@ import JustificationModal from '../components/JustificationModal';
 function BraceletRegistrationDrawerScreen({ navigation }) {
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
   const [user, setUser] = useState();
+  const [closeModal, setCloseModal] = useState(false);
   const [selectedDay, setSelectedDay] = useState();
   const [sectorDescription, setSectorDescription] = useState(null);
   const [ticketCode, setTicketCode] = useState();
@@ -155,13 +156,29 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         <Divider />
       </View>
       <View style={[GStyles.container]}>
+        {closeModal && ( <TouchableOpacity 
+        style={{
+          backgroundColor: 'black',
+          padding: 12,
+          borderRadius: 8,
+          marginTop: 10,
+        }} 
+        onPress={() => setCloseModal(false)}
+      >
+        <Text style={{
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  }}>Iniciar registro</Text>
+      </TouchableOpacity>)}
         {!user ? (
           <SearchUserModal
             title="Busque o usuário que receberá a pulseira"
             onUserFound={handleUserFound}
-            isVisible={isFocused && !user}
+            isVisible={isFocused && !user && !closeModal}
             onClose={() => {
-              navigation.navigate('Kits');
+              setCloseModal(true);
             }}
           />
         ) : (
