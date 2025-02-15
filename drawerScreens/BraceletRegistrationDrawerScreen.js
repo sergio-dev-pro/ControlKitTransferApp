@@ -23,7 +23,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [ticketCode, setTicketCode] = useState();
   const [loading, setLoading] = useState(false);
   const isFocused = useIsFocused();
-  const { userToken } = useContext(AuthContext);
+  const { userToken, selectedEventId } = useContext(AuthContext);
   const setAlertMessage = useAlert();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -41,7 +41,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setSelectedEventKey("")
   };
   const handleUserFound = (userFounded, searchedFor) => {
-    if (!userFounded.isActive)
+    console.log('selectedEventId=' + selectedEventId);
+    if (!userFounded.isActive && selectedEventId != 435)
       return alert('Usuário não registrado, registre no cadastro manual.');
 
     const userState = { ...userFounded, ...searchedFor };
