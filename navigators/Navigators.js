@@ -91,7 +91,7 @@ function Navigators() {
           )}
           {eventPermissions.hasBraceletRegistrationPermission && (
             <Drawer.Screen
-              name="Registrar pulseira"
+              name="Registrar Qr Code"
               component={BraceletRegistrationDrawerScreen}
             />
           )}
