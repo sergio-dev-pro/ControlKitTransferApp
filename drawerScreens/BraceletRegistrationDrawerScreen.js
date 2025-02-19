@@ -14,6 +14,9 @@ import { useIsFocused } from '@react-navigation/native';
 import SearchUserModal from '../components/SearchUserModal';
 import { reduceArrayToJustDifferentDates } from '../helpers/reduceCallbacks';
 import JustificationModal from '../components/JustificationModal';
+import CustomModal from '../components/CustomModal';
+import { getUserByCpfWithAuth } from '../api/UserApi';
+
 
 function BraceletRegistrationDrawerScreen({ navigation }) {
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
@@ -32,6 +35,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [reason, setReason] = useState('');
   const [selectedEvent, setSelectedEvent] = useState('')
   const [selectedEventKey, setSelectedEventKey] = useState('');
+  const [registerNewTicket, setRegisterNewTicket] = useState(false)
+  const [ guardarCpf, setGuardarCpf ] = useState('');
 
   const resetState = () => {
     setUser();
@@ -40,8 +45,25 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setSectorDescription(null);
     setSelectedEvent("")
     setSelectedEventKey("")
+    setRegisterNewTicket(false)
+    setGuardarCpf('')
   };
+
+  const resetNewSelectBracelet = () => {
+    setSelectedDay();
+    setTicketCode();
+    setSectorDescription(null);
+    setSelectedEvent("")
+    setSelectedEventKey("")
+  }
+
   const handleUserFound = (userFounded, searchedFor) => {
+
+    if(!guardarCpf)
+      setGuardarCpf(searchedFor.cpf)
+
+     setRegisterNewTicket(false)
+
     console.log('selectedEventId=' + selectedEventId);
     if (!userFounded.isActive && selectedEventId != 435)
       return alert('Usuário não registrado, registre no cadastro manual.');
@@ -50,7 +72,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
     setUser(userState);
 
-    
+
   };
 
   const handleQRCodeRead = async ticketCode => {
@@ -102,8 +124,11 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         reason,
         selectedEventKey
       );
+
+      setRegisterNewTicket(true)
+
       console.log('braceletRegister data', data);
-      resetState();
+ 
       setAlertMessage(`Registrado`, '#32cd32');
     } catch (error) {
       console.error(error.response);
@@ -140,6 +165,28 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       verifyTicketAssociation(user.token, selectedEventKey);
   }, [selectedEventKey])
 
+  console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ guardarCpf ', guardarCpf)
+
+
+  const attListTickets = async () => {
+
+
+    try {
+
+        const response = await getUserByCpfWithAuth(guardarCpf, selectedEventId, userToken);
+
+        if (response) {
+            const updatedUser = response; // Recebe o usuário atualizado
+            handleUserFound(updatedUser.data, user.cpf);
+        } else {
+            console.warn('Usuário não encontrado ou resposta inválida.');
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar lista de tickets:', error);
+    }
+};
+
+
 
   const hasTicketCodeRead = !!ticketCode;
   const hasAllDataToRegisterBracelet = selectedEvent && ticketCode;
@@ -156,22 +203,22 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         <Divider />
       </View>
       <View style={[GStyles.container]}>
-        {closeModal && ( <TouchableOpacity 
-        style={{
-          backgroundColor: 'black',
-          padding: 12,
-          borderRadius: 8,
-          marginTop: 10,
-        }} 
-        onPress={() => setCloseModal(false)}
-      >
-        <Text style={{
-    color: 'white',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  }}>Iniciar registro</Text>
-      </TouchableOpacity>)}
+        {closeModal && (<TouchableOpacity
+          style={{
+            backgroundColor: 'black',
+            padding: 12,
+            borderRadius: 8,
+            marginTop: 10,
+          }}
+          onPress={() => setCloseModal(false)}
+        >
+          <Text style={{
+            color: 'white',
+            fontSize: 16,
+            textAlign: 'center',
+            fontWeight: 'bold',
+          }}>Iniciar registro</Text>
+        </TouchableOpacity>)}
         {!user ? (
           <SearchUserModal
             title="Busque o usuário que receberá a pulseira"
@@ -289,6 +336,22 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
           onClose={() => setShowQrcodereader(false)}
         />
       )}
+
+      <CustomModal
+        visible={registerNewTicket}
+        title="Registrar nova pulseira"
+        content="Deseja registrar uma nova pulseira para o mesmo CPF?"
+        onClose={() => {
+          setRegisterNewTicket(false);
+          resetState();
+        }}
+        confirm={() => {
+          resetNewSelectBracelet()
+          attListTickets()
+        }}
+      />
+
+      
     </View>
   );
 }
