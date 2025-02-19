@@ -381,9 +381,9 @@ function KitsDrawerScreen({ navigation }) {
     setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
   };
 
-  useEffect(() => { 
-   
-  
+  useEffect(() => {
+
+
     if (authContext.selectedEventId === 10 || authContext.selectedEventId === 435) {
       setEventAllowed(true);
     }
@@ -394,7 +394,7 @@ function KitsDrawerScreen({ navigation }) {
     if (ticketFounds && ticketFounds.length > 0 && !ticketFounds[0].isValid) {
       setIsValidBoolean(true);
     }
-  }, [ticketFounds]); 
+  }, [ticketFounds]);
 
 
   let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == ticketFounds?.length;
@@ -870,7 +870,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [isValidBoolean, setIsValidBoolean] = useState(false);
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
 
-  const handleUserFound = user => {
+  const handleUserFound = (user, searchedFor) => {
+    console.log('searchedFor', searchedFor.cpf)
     console.log('@@@@@@@@user', user);
     user && setUser(user);
   };
@@ -1085,13 +1086,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
   let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == selectedTicketCodes?.length;
 
-  console.log('selectedTicketCodes' + selectedTicketCodes)
-  console.log('selectedTicketsAvailable', selectedTicketsAvailable)
-  console.log('shirtCodesRead', shirtCodesRead)
-  console.log('showResponseCamisa', showResponseCamisa)
-  console.log('kitCodes', kitCodes)
-  console.log('user', user)
-
   const hasSelectedTicketsForDay = selectedTicketCodes && showResponseCamisa && selectedTicketsAvailable.map(code => user.tickets[code]).filter(item => item.includes(showResponseCamisa.day)).length > 0
 
   const handleJustificationSubmit = justification => {
@@ -1115,6 +1109,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         <TicketCodeSelectionModal
           isVisible={user?.tickets && !selectedTicketCodes}
           tickets={Object.entries(user.tickets)}
+          user={user}  // Adicionando o user como prop
           onClose={() => setUser(undefined)}
           onConfirm={confirmTicketCodeSelection}
           isConfirming={isConfirmingTheTicketCodeSelection}
@@ -1412,6 +1407,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
 // tickets = [[code, name]...]
 const TicketCodeSelectionModal = ({
+  user,
   tickets,
   onClose,
   onConfirm,
@@ -1448,9 +1444,6 @@ const TicketCodeSelectionModal = ({
     }
   }
 
-  console.log('TicketCodeSelectionModal prop tickets', tickets);
-  console.log('TicketCodeSelectionModal selecteds', selecteds);
-
   return (
     <ReactNativeModal
       isVisible={isVisible}
@@ -1470,6 +1463,16 @@ const TicketCodeSelectionModal = ({
         <Text h4 h4Style={{ marginBottom: 8 }}>
           Selecione o dia para a entrega do kit
         </Text>
+
+        <Text style={{ marginBottom: 8 }}>
+          <Text style={{ fontWeight: 'bold' }}>Nome: {user.name ?? 'Nome não disponível'}</Text> 
+        </Text>
+        <Text style={{ marginBottom: 8 }}>
+          <Text style={{ fontWeight: 'bold' }}>Documento: {user.id ?? 'Cpf não disponível'}</Text> 
+        </Text>
+
+
+
         <View
           style={{
             flexDirection: "row",
