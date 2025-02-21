@@ -293,6 +293,9 @@ function KitsDrawerScreen({ navigation }) {
 
         await ticketOwnerSignatureRegistration(authContext.userToken, formData);
         setAlertMessage('Entrega de kit registrada', '#32cd32');
+        cancel();
+        setKitCodes([]);
+        setShowResponseCamisa(null);
       } catch (error) {
         console.error('Erro ao registrar a assinatura do kit:', error);
         setAlertMessage('Entrega não registrada! KIT NAO FOI ENTREGUE!');
@@ -301,10 +304,10 @@ function KitsDrawerScreen({ navigation }) {
       console.error('Erro geral no registro da entrega:', error);
       console.error(error.response.data.errors);
     } finally {
-      cancel();
+      //cancel();
       setIsLoading(false);
-      setKitCodes([]);
-      setShowResponseCamisa(null);
+      //setKitCodes([]);
+      //setShowResponseCamisa(null);
     }
   };
 
@@ -962,12 +965,13 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       );
       await ticketOwnerSignatureRegistration(authContext.userToken, formData);
       setAlertMessage('Entrega de kit registrada', '#32cd32');
+      onCancelDeliveryByCPF();
     } catch (error) {
       console.error('Erro durante o registro da entrega:', error);
       console.log('Detalhes do erro:', error?.response?.data || 'Sem resposta da API');
       setAlertMessage('Entrega não registrada! KIT NÃO FOI ENTREGUE!');
     } finally {
-      onCancelDeliveryByCPF();
+      //onCancelDeliveryByCPF();
       setIsLoading(false);
     }
   };

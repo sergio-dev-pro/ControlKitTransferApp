@@ -223,6 +223,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
           <SearchUserModal
             title="Busque o usuário que receberá a pulseira"
             onUserFound={handleUserFound}
+            fromBlaceletRegistration={true}
             isVisible={isFocused && !user && !closeModal}
             onClose={() => {
               setCloseModal(true);

@@ -15,14 +15,14 @@ export const getUserByCpf = async (cpf, eventId) =>
       Accept: 'application/json',
     },
   });
-export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false) =>
+export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false, fromBlaceletRegistration = false) =>
   axios({
     url:
       BASE_URL +
       '/api/users/manual/byDocument?document=' +
       cpf +
       '&eventId=' +
-      eventId + '&isKitDelivery=' + fromKitDelivery,
+      eventId + '&isKitDelivery=' + fromKitDelivery + '&fromBlaceletRegistration=' + fromBlaceletRegistration,
     method: 'GET',
     headers: {
       Accept: 'application/json',
