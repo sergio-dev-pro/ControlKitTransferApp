@@ -36,7 +36,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [selectedEvent, setSelectedEvent] = useState('')
   const [selectedEventKey, setSelectedEventKey] = useState('');
   const [registerNewTicket, setRegisterNewTicket] = useState(false)
-  const [ guardarCpf, setGuardarCpf ] = useState('');
+  const [guardarCpf, setGuardarCpf] = useState('');
 
   const resetState = () => {
     setUser();
@@ -59,10 +59,10 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
   const handleUserFound = (userFounded, searchedFor) => {
 
-    if(!guardarCpf)
+    if (!guardarCpf)
       setGuardarCpf(searchedFor.cpf)
 
-     setRegisterNewTicket(false)
+    setRegisterNewTicket(false)
 
     console.log('selectedEventId=' + selectedEventId);
     if (!userFounded.isActive && selectedEventId != 435)
@@ -71,8 +71,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     const userState = { ...userFounded, ...searchedFor };
 
     setUser(userState);
-
-
   };
 
   const handleQRCodeRead = async ticketCode => {
@@ -128,7 +126,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       setRegisterNewTicket(true)
 
       console.log('braceletRegister data', data);
- 
+
       setAlertMessage(`Registrado`, '#32cd32');
     } catch (error) {
       console.error(error.response);
@@ -169,22 +167,29 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
 
   const attListTickets = async () => {
-
-
     try {
-
-        const response = await getUserByCpfWithAuth(guardarCpf, selectedEventId, userToken);
-
-        if (response) {
-            const updatedUser = response; // Recebe o usuário atualizado
-            handleUserFound(updatedUser.data, user.cpf);
-        } else {
-            console.warn('Usuário não encontrado ou resposta inválida.');
-        }
+      const response = await getUserByCpfWithAuth(guardarCpf, selectedEventId, userToken, true);
+  
+      if (response && response.data) {
+        const updatedUser = response.data;
+        const searchedFor = { cpf: guardarCpf };
+        handleUserFound({ ...updatedUser, id: guardarCpf }, searchedFor);
+      } else {
+        console.warn('Usuário não encontrado ou resposta inválida.');
+      }
     } catch (error) {
-        console.error('Erro ao atualizar lista de tickets:', error);
+      console.error('Erro ao atualizar lista de tickets:', error);
     }
-};
+  };
+  
+
+
+  console.log('user.cpf ' + (user?.cpf || ''));
+  console.log('user.email ' + (user?.email || ''));
+  console.log('user', (user || ''))
+  
+
+
 
 
 
@@ -352,7 +357,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         }}
       />
 
-      
+
     </View>
   );
 }
