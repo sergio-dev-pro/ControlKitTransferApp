@@ -75,9 +75,7 @@ const NewFastTicket = ({navigation}) => {
           clearStates();
           setTakePhoto(false);
           setRegistered(false);
-        } else {
-          setAlertMessage('Erro ao enviar imagem, tente novamente.');
-        }
+        } 
       } catch (error) {
         console.error(error);
         setAlertMessage('Erro ao enviar imagem, tente novamente.');

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
 import { getModel } from 'react-native-device-info';
+import { Alert } from 'react-native';
 
 export const getUserByCpf = async (cpf, eventId) =>
   axios({
@@ -81,7 +82,7 @@ export const saveUserPhotoAgain = async formData => {
   } catch (error) {
     console.log('error', error);
     console.log('error error.response.data', error.response.data);
-    alert(error.response.data.errors);
+    Alert.alert(" ", error.response.data.errors);
     return null;
   }
 };
