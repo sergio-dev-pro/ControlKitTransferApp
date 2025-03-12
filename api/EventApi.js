@@ -1,5 +1,6 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
+import BASE_URL_V2 from '../constants/api2';
 
 export const getEventRequiredFields = async eventId =>
   axios({
@@ -43,14 +44,28 @@ export const getEventDays = async eventId =>
 
   export const getKitDelivery = async (code) => {
     
-      var response = await axios({
-        url: BASE_URL + `/api/events/${code}/kitDelivery`,
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json-patch+json',
-        },
-      });
-      return response.data;
-    
-  };
+    var response = await axios({
+      url: BASE_URL + `/api/events/${code}/kitDelivery`,
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json-patch+json',
+      },
+    });
+    return response.data;
+  
+};
+
+export const getEventsList = async (token) => {
+  var response = await axios({
+    url: `${BASE_URL_V2}/events`,
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json-patch+json',
+      'Authorization': 'Bearer ' + token
+    },
+  });
+  return response.data;
+
+};
