@@ -1,16 +1,16 @@
-import {View} from 'react-native';
-import React, {useState, useContext} from 'react';
+import { View } from 'react-native';
+import React, { useState, useContext } from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
-import {ScrollView} from 'react-native-gesture-handler';
+import { ScrollView } from 'react-native-gesture-handler';
 import THEME from '../style/theme';
-import {Button, Input, Text, Divider} from '@rneui/themed';
-import {cpfValidation, isValidEmail} from '../helpers/validation';
-import {getUserByCpfWithAuth, updateEmail} from '../api/UserApi';
-import {AuthContext} from '../context/AuthContext';
-import {useAlert} from '../context/AlertContext';
-import {useMaskedInputProps} from 'react-native-mask-input';
+import { Button, Input, Text, Divider } from '@rneui/themed';
+import { cpfValidation, isValidEmail } from '../helpers/validation';
+import { getUserByCpfWithAuth, updateEmail } from '../api/UserApi';
+import { AuthContext } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
+import { useMaskedInputProps } from 'react-native-mask-input';
 import jwt_decode from 'jwt-decode';
 
 const INPUT_VALUE_TYPE = {
@@ -26,7 +26,7 @@ const inputErrorMsgs = {
   },
 };
 
-const ChangeEmail = ({navigation}) => {
+const ChangeEmail = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const authContext = useContext(AuthContext);
   const [inputValue, setInputValue] = useState('');
@@ -48,7 +48,7 @@ const ChangeEmail = ({navigation}) => {
     if (!isValid) return;
     try {
       setLoading(true);
-      const {data} = await getUserByCpfWithAuth(
+      const { data } = await getUserByCpfWithAuth(
         inputValue,
         authContext.selectedEventId,
         authContext.userToken,
@@ -92,18 +92,23 @@ const ChangeEmail = ({navigation}) => {
     setLoading(true);
     try {
       const res = await updateEmail(
-        {token, email: userEmailFoundUpdated},
-        authContext.userToken,
+        { 
+          document: inputValue.replace(/\D/g, ''), 
+          email: userEmailFoundUpdated,
+          eventId: authContext.selectedEventId  // ADICIONADO
+        },
+        authContext.userToken
       );
+
       clearStates();
       alert('E-mail alterado com sucesso', '#32cd32');
     } catch (error) {
-      console.error(error);
-      if (error?.response?.data?.errors) {
-        console.error(error.response.data.errors);
-        alert(error.response.data.errors);
-      }
-    } finally {
+      console.error("Erro na requisição:", error);
+      console.error("Código de status:", error?.response?.status);
+      console.error("Detalhes do erro:", error?.response?.data); // ADICIONADO
+      alert("Erro ao atualizar e-mail: " + JSON.stringify(error?.response?.data));
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -114,13 +119,13 @@ const ChangeEmail = ({navigation}) => {
       const errorMsg = currentCPF.length
         ? inputErrorMsgs.cpf
         : inputErrorMsgs.global.empty;
-      setCPFValidation({errorMsg, isValid: false});
+      setCPFValidation({ errorMsg, isValid: false });
     };
     if (!isValid) {
       invalidCPF();
       return false;
     }
-    const valid = () => setCPFValidation({isValid: true});
+    const valid = () => setCPFValidation({ isValid: true });
     !CPFValidation.isValid && valid();
     return true;
   };
@@ -150,28 +155,28 @@ const ChangeEmail = ({navigation}) => {
   });
 
   return (
-    <View style={{...GStyles.view}}>
+    <View style={{ ...GStyles.view }}>
       <Header
-        style={{marginBottom: 0}}
+        style={{ marginBottom: 0 }}
         openDrawer={() => navigation.openDrawer()}
       />
-      <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
-        <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
+      <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
+        <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
           Alterar e-mail
         </Text>
         <Divider />
       </View>
-      <ScrollView style={[GStyles.container, {height: '100%'}]}>
+      <ScrollView style={[GStyles.container, { height: '100%' }]}>
         {userEmailFound ? (
           <>
             <Text
               h4
-              h3Style={{padding: 8, textAlign: 'center'}}
-              style={{marginBottom: 16}}>
+              h3Style={{ padding: 8, textAlign: 'center' }}
+              style={{ marginBottom: 16 }}>
               Encontrado
             </Text>
             <Input
-              style={{marginBottom: 9}}
+              style={{ marginBottom: 9 }}
               label="Atualize o e-mail"
               value={userEmailFoundUpdated}
               onChangeText={value =>
@@ -188,7 +193,7 @@ const ChangeEmail = ({navigation}) => {
               }}>
               <Button
                 type="clear"
-                containerStyle={{marginRight: 20}}
+                containerStyle={{ marginRight: 20 }}
                 size="lg"
                 title="Cancelar"
                 onPress={() => {

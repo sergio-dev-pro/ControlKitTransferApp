@@ -2,6 +2,8 @@ import axios from 'axios';
 import BASE_URL from '../constants/api';
 import { getModel } from 'react-native-device-info';
 import { Alert } from 'react-native';
+import BASE_URL_V2 from '../constants/api2';
+
 
 export const getUserByCpf = async (cpf, eventId) =>
   axios({
@@ -16,20 +18,19 @@ export const getUserByCpf = async (cpf, eventId) =>
       Accept: 'application/json',
     },
   });
-export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false, fromBlaceletRegistration = false) =>
-  axios({
+export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false, fromBlaceletRegistration = false) => {
+  const cleanCpf = cpf.replace(/\D/g, '');
+  return axios({
     url:
-      BASE_URL +
-      '/api/users/manual/byDocument?document=' +
-      cpf +
-      '&eventId=' +
-      eventId + '&isKitDelivery=' + fromKitDelivery + '&fromBlaceletRegistration=' + fromBlaceletRegistration,
+      BASE_URL_V2 + `/users/bydocument?document=${cleanCpf}&eventid=${eventId}`,
     method: 'GET',
     headers: {
       Accept: 'application/json',
       Authorization: 'Bearer ' + token,
     },
+
   });
+}
 
 export const getUserByEmail = async (email, eventId) =>
   axios({
@@ -142,16 +143,19 @@ export const completeTicketRegister = async (data, userToken) => {
   });
 };
 
-export const updateEmail = async (data, userToken) =>
-  axios({
-    url: BASE_URL + '/api/users/updateEmail',
-    method: 'PUT',
+export const updateEmail = async (data, userToken) => {
+  
+axios({  
+    url: BASE_URL_V2 + '/users/updateEmail',
+    method: 'PATCH',
     data: data,
     headers: {
       Accept: 'application/json',
       Authorization: 'Bearer ' + userToken,
     },
   });
+};
+
 
 export const completeFastTicketRegister = async (eventId, data, userToken) => {
   console.log(BASE_URL + '/api/users/fast');
@@ -160,7 +164,7 @@ export const completeFastTicketRegister = async (eventId, data, userToken) => {
     var response = await axios({
       url: BASE_URL + '/api/users/fast',
       method: 'POST',
-      data: {...data, eventId: eventId},
+      data: { ...data, eventId: eventId },
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer ' + userToken,
