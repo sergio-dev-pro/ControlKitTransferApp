@@ -67,16 +67,17 @@ export const saveUserPhoto = async formData => {
   }
 };
 
-export const saveUserPhotoAgain = async formData => {
+export const saveUserPhotoAgain = async (formData, token) => {
   formData.append('deviceInfo', getModel());
   try {
     var response = await axios({
-      url: BASE_URL + '/api/files/self?alias=meetingpointapp',
+      url: BASE_URL_V2 + '/files/updateFace?origin=meetingpointapp',
       method: 'POST',
       data: formData,
       headers: {
         Accept: 'application/json',
         'Content-Type': 'multipart/form-data',
+        Authorization: 'Bearer ' + token,
       },
     });
     return response.data;

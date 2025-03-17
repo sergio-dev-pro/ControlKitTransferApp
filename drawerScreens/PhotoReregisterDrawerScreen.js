@@ -1,22 +1,22 @@
-import {useIsFocused} from '@react-navigation/native';
-import {Button, Divider, Text} from '@rneui/themed';
-import React, {useContext, useEffect, useRef, useState} from 'react';
-import {ScrollView, View} from 'react-native';
-import {saveUserPhotoAgain} from '../api/UserApi';
+import { useIsFocused } from '@react-navigation/native';
+import { Button, Divider, Text } from '@rneui/themed';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { ScrollView, View } from 'react-native';
+import { saveUserPhotoAgain } from '../api/UserApi';
 import Header from '../components/Header';
 import SearchUserModal from '../components/SearchUserModal';
 import TakePictureModal from '../components/TakePictureModal';
-import {useAlert} from '../context/AlertContext';
-import {AuthContext} from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
+import { AuthContext } from '../context/AuthContext';
 import GStyles from '../style/global';
 import THEME from '../style/theme';
 
-function PhotoReregisterDrawerScreen({navigation}) {
+function PhotoReregisterDrawerScreen({ navigation }) {
   const [isVisible, setIsVisible] = useState(true);
   const [user, setUser] = useState();
   const isFocused = useIsFocused();
   const ref = useRef();
-  const {setUserToken} = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
   const setAlertMessage = useAlert();
   useEffect(() => {
     // O ref.current e utilizado para verificar se
@@ -27,11 +27,13 @@ function PhotoReregisterDrawerScreen({navigation}) {
 
   const [isVisibleCam, setIsVisibleCam] = useState();
   const toggleCamVisibility = () => setIsVisibleCam(is => !is);
+  const [documentUser, setDocumentUser] = useState("");
 
   const handleUserFound = userFounded => {
     if (!userFounded.isActive && !userFounded.useFacialWeb)
       return setAlertMessage('Usuário precisa realizar o cadastro inicial.');
 
+    setDocumentUser(userFounded.id)
     setUser(userFounded);
     setIsVisible(false);
   };
@@ -39,23 +41,34 @@ function PhotoReregisterDrawerScreen({navigation}) {
   const clearState = () => {
     setUser(undefined);
     setIsVisible(true);
+    setDocumentUser("")
   };
   const handleSavePhoto = async imgPath => {
     const formData = new FormData();
-    formData.append('token', user.token);
     formData.append('file', {
       uri: imgPath,
       type: 'image/jpeg',
       name: 'userImage.jpg',
     });
+    formData.append('EventId', authContext.selectedEventId);
+    formData.append('Document', documentUser);
+
     console.log('@@@@ formData', formData);
     setIsLoading(true);
-    var response = await saveUserPhotoAgain(formData);
-    if (response) {
-      clearState();
-      setAlertMessage('Foto atualizada com sucesso!', '#32cd32');
-    } else {
-      setAlertMessage('Erro ao enviar imagem, tente novamente.');
+    try {
+      var response = await saveUserPhotoAgain(formData, authContext.userToken);
+      if (response) {
+        clearState();
+        setAlertMessage('Foto atualizada com sucesso!', '#32cd32');
+      } else {
+        setAlertMessage('Erro ao enviar imagem, tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar imagem:', error); 
+        console.error('Detalhes do erro:', error.response.data);
+        alert(`Erro: ${error.response.data.message || 'Erro desconhecido'}`); 
+        alert('Erro ao conectar com o servidor');
+      }
     }
     toggleCamVisibility();
     setIsLoading(false);
@@ -63,13 +76,13 @@ function PhotoReregisterDrawerScreen({navigation}) {
 
   console.log(user);
   return (
-    <View style={{...GStyles.view}}>
+    <View style={{ ...GStyles.view }}>
       <Header
-        style={{marginBottom: 0}}
+        style={{ marginBottom: 0 }}
         openDrawer={() => navigation.openDrawer()}
       />
-      <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
-        <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
+      <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
+        <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
           Recadastrar foto
         </Text>
         <Divider />
@@ -77,7 +90,7 @@ function PhotoReregisterDrawerScreen({navigation}) {
       <ScrollView style={GStyles.container}>
         {user && (
           <>
-            <Text h4 style={{textAlign: 'center', marginBottom: 16}}>
+            <Text h4 style={{ textAlign: 'center', marginBottom: 16 }}>
               Usuário encontrado
             </Text>
             <View
@@ -91,7 +104,7 @@ function PhotoReregisterDrawerScreen({navigation}) {
             </View>
             <Button
               type="outline"
-              containerStyle={{marginBottom: 8}}
+              containerStyle={{ marginBottom: 8 }}
               onPress={clearState}>
               Voltar
             </Button>
