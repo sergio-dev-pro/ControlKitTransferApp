@@ -43,6 +43,7 @@ function PhotoReregisterDrawerScreen({ navigation }) {
     setIsVisible(true);
     setDocumentUser("")
   };
+  
   const handleSavePhoto = async imgPath => {
     const formData = new FormData();
     formData.append('file', {
@@ -52,9 +53,10 @@ function PhotoReregisterDrawerScreen({ navigation }) {
     });
     formData.append('EventId', authContext.selectedEventId);
     formData.append('Document', documentUser);
-
+  
     console.log('@@@@ formData', formData);
     setIsLoading(true);
+    
     try {
       var response = await saveUserPhotoAgain(formData, authContext.userToken);
       if (response) {
@@ -65,14 +67,16 @@ function PhotoReregisterDrawerScreen({ navigation }) {
       }
     } catch (error) {
       console.error('Erro ao enviar imagem:', error); 
-        console.error('Detalhes do erro:', error.response.data);
-        alert(`Erro: ${error.response.data.message || 'Erro desconhecido'}`); 
-        alert('Erro ao conectar com o servidor');
-      }
-    }
+      console.error('Detalhes do erro:', error.response?.data);
+      alert(`Erro: ${error.response?.data?.message || 'Erro desconhecido'}`); 
+      alert('Erro ao conectar com o servidor');
+    }  
+  
+    // Essas linhas estavam fora do escopo correto  
     toggleCamVisibility();
     setIsLoading(false);
   };
+  
 
   console.log(user);
   return (

@@ -82,14 +82,12 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setShowQrcodereader(false);
   };
 
-  const verifyTicketAssociation = async (token, eventkey) => {
+  const verifyTicketAssociation = async (eventkey) => {
     const bearerToken = userToken;
-    const tokenGetCpfOrEmail = user?.token ?? token;
-    const dayTicket = "2025-02-27"
     const keyAccess = eventkey
 
     try {
-      const data = await hasBraceleteCode(tokenGetCpfOrEmail, dayTicket, bearerToken, keyAccess);
+      const data = await hasBraceleteCode(bearerToken, keyAccess, selectedEventId);
       console.log('estado: ' + data.hasCode);
       setIsTicketPreScanned(data.hasCode);
     } catch (error) {
@@ -116,11 +114,10 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       setLoading(true);
       const { data } = await braceletRegister(
         userToken,
-        user?.token,
-        selectedDay,
         ticketCode,
         reason,
-        selectedEventKey
+        selectedEventKey,
+        selectedEventId
       );
 
       setRegisterNewTicket(true)
@@ -145,7 +142,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
 
   useEffect(() => {
-    if (selectedEvent) {
+if (selectedEvent && typeof selectedEvent === 'string') {
       const data = selectedEvent.split('-')[0]?.trim();
       if (data) {
         const [dia, mes, ano] = data.split('/');
@@ -160,16 +157,13 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
   useEffect(() => {
     if (selectedEventKey)
-      verifyTicketAssociation(user.token, selectedEventKey);
+      verifyTicketAssociation(selectedEventKey);
   }, [selectedEventKey])
-
-  console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ guardarCpf ', guardarCpf)
-
 
   const attListTickets = async () => {
     try {
       const response = await getUserByCpfWithAuth(guardarCpf, selectedEventId, userToken, false, true);
-  
+
       if (response && response.data) {
         const updatedUser = response.data;
         const searchedFor = { cpf: guardarCpf };
@@ -181,17 +175,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       console.error('Erro ao atualizar lista de tickets:', error);
     }
   };
-  
-
-
-  console.log('user.cpf ' + (user?.cpf || ''));
-  console.log('user.email ' + (user?.email || ''));
-  console.log('user', (user || ''))
-  
-
-
-
-
 
   const hasTicketCodeRead = !!ticketCode;
   const hasAllDataToRegisterBracelet = selectedEvent && ticketCode;
@@ -249,28 +232,25 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
             <SelectModal
               label="Selecione um Ingresso"
               placeholder="Selecione um evento"
-              items={Object.entries(user?.tickets || {}).map(([key, value]) => ({
-                key,
-                value
+              items={(user?.tickets || []).map(ticket => ({
+                key: ticket.accessKey, // Usando `accessKey` como identificador único
+                value: `${ticket.category} - ${ticket.day}` // Melhorando a exibição do ingresso
               }))}
               value={selectedEventKey}
               setValue={eventKey => {
                 setSelectedEventKey(eventKey);
-                setSelectedEvent(user?.tickets[eventKey]);
+                setSelectedEvent(user?.tickets.find(ticket => ticket.accessKey === eventKey));
               }}
             />
 
-
-
             {selectedEvent && (
               <Text h4 h4Style={{ fontSize: 18, color: '#000', paddingLeft: 16 }}>
-                {selectedEvent}
-                {user?.registeredBlaceletTickets.includes(selectedEventKey) && (
+                {selectedEvent.category} - {selectedEvent.day} - {selectedEvent.sector}
+                {user?.registeredBlaceletTickets?.includes(selectedEventKey) && (
                   <Text style={{ color: 'red', fontWeight: 'bold' }}>{"\n"}Pulseira já entregue</Text>
                 )}
               </Text>
             )}
-
 
             {selectedEvent && !hasTicketCodeRead && (
               <View style={{ padding: 16, height: 'auto' }}>

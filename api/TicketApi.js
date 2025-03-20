@@ -1,5 +1,7 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
+import BASE_URL_V2 from '../constants/api2';
+
 
 export const fetchTickets = async (deviceId, eventId, userToken) =>
   axios({
@@ -52,11 +54,11 @@ export const registerBraceletDeliveryByDocument = async (
       Authorization: 'Bearer ' + token,
     },
   });
-export const braceletRegister = async (operatorToken, token, day, code, reason, accessKey) => {
+export const braceletRegister = async (operatorToken, code, reason, accessKey, eventId) => {
   return await axios({
-    url: BASE_URL + `/api/tickets/blaceletCode`,
+    url: BASE_URL_V2 + `/tickets/braceletCode`,
     method: 'PATCH',
-    data: {token, code, day, reason, accessKey},
+    data: {code, reason, accessKey, eventId},
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
@@ -65,8 +67,8 @@ export const braceletRegister = async (operatorToken, token, day, code, reason, 
   });
 };
 
-export const hasBraceleteCode = async (token, day, userToken, accessKey) => {
-  const url = `${BASE_URL}/api/tickets/hasBlaceletCode?token=${encodeURIComponent(token)}&day=${day}&accessKey=${accessKey}`;
+export const hasBraceleteCode = async (userToken, accessKey, eventId) => {
+  const url = `${BASE_URL_V2}/tickets/hasBraceletCode?eventId=${eventId}&accessKey=${accessKey}`;
 
   try {
     const response = await axios({
