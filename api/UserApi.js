@@ -88,7 +88,6 @@ export const saveUserPhotoAgain = async (formData, token) => {
       console.log("Status da resposta:", error.response.status);
       console.log("Headers da resposta:", error.response.headers);
       console.log("Dados do erro na resposta:", error.response.data);
-      Alert.alert("Erro", JSON.stringify(error.response.data.errors));
     } else {
       console.log("Erro sem resposta do servidor:", error.message);
     }
