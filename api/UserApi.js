@@ -68,23 +68,30 @@ export const saveUserPhoto = async formData => {
 };
 
 export const saveUserPhotoAgain = async (formData, token) => {
-  formData.append('deviceInfo', getModel());
   try {
-    var response = await axios({
-      url: BASE_URL_V2 + '/files/updateFace?origin=meetingpointapp',
-      method: 'POST',
+   await axios({
+      url: BASE_URL_V2 + "/files/updateFace?origin=meetingpointapp",
+      method: "POST",
       data: formData,
       headers: {
-        Accept: 'application/json',
-        'Content-Type': 'multipart/form-data',
-        Authorization: 'Bearer ' + token,
+        Accept: "application/json",
+        "Content-Type": "multipart/form-data",
+        Authorization: "Bearer " + token,
       },
     });
-    return response.data;
+   
+    return true
+
   } catch (error) {
-    console.log('error', error);
-    console.log('error error.response.data', error.response.data);
-    Alert.alert(" ", error.response.data.errors);
+    console.log("Erro na requisição:", error);
+    if (error.response) {
+      console.log("Status da resposta:", error.response.status);
+      console.log("Headers da resposta:", error.response.headers);
+      console.log("Dados do erro na resposta:", error.response.data);
+      Alert.alert("Erro", JSON.stringify(error.response.data.errors));
+    } else {
+      console.log("Erro sem resposta do servidor:", error.message);
+    }
     return null;
   }
 };
@@ -145,8 +152,8 @@ export const completeTicketRegister = async (data, userToken) => {
 };
 
 export const updateEmail = async (data, userToken) => {
-  
-axios({  
+
+  axios({
     url: BASE_URL_V2 + '/users/updateEmail',
     method: 'PATCH',
     data: data,

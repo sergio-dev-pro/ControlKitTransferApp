@@ -44,38 +44,36 @@ function PhotoReregisterDrawerScreen({ navigation }) {
     setDocumentUser("")
   };
   
-  const handleSavePhoto = async imgPath => {
-    const formData = new FormData();
-    formData.append('file', {
-      uri: imgPath,
-      type: 'image/jpeg',
-      name: 'userImage.jpg',
-    });
-    formData.append('EventId', authContext.selectedEventId);
-    formData.append('Document', documentUser);
+  const handleSavePhoto = async (imgPath) => {
   
-    console.log('@@@@ formData', formData);
+    const formData = new FormData();
+    formData.append("file", {
+      uri: imgPath,
+      type: "image/jpeg",
+      name: "userImage.jpg",
+    });
+    formData.append("eventId", authContext.selectedEventId);
+    formData.append("document", documentUser);
+
     setIsLoading(true);
-    
+  
     try {
       var response = await saveUserPhotoAgain(formData, authContext.userToken);
+  
       if (response) {
         clearState();
-        setAlertMessage('Foto atualizada com sucesso!', '#32cd32');
+        setAlertMessage("Foto atualizada com sucesso!", "#32cd32");
       } else {
-        setAlertMessage('Erro ao enviar imagem, tente novamente.');
+        setAlertMessage("Erro ao enviar imagem, tente novamente.");
       }
     } catch (error) {
-      console.error('Erro ao enviar imagem:', error); 
-      console.error('Detalhes do erro:', error.response?.data);
-      alert(`Erro: ${error.response?.data?.message || 'Erro desconhecido'}`); 
-      alert('Erro ao conectar com o servidor');
-    }  
+      console.log("Erro no handleSavePhoto:", error);
+    }
   
-    // Essas linhas estavam fora do escopo correto  
     toggleCamVisibility();
     setIsLoading(false);
   };
+  
   
 
   console.log(user);
