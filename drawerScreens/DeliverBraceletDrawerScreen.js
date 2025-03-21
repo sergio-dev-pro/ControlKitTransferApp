@@ -76,58 +76,42 @@ function DeliverBraceletDrawerScreen({navigation}) {
     }
   }, [reason]);
 
-  const handleQRCodeRead = async ticketCode => {
-    console.log('ticketCode =============> ', ticketCode)
-    console.log('savedTicketCode =============> ', savedTicketCode)
-
+  const handleQRCodeRead = async (ticketCode) => {
     if (!savedTicketCode) {
-      console.log('ENTROU savedTicketCode =============> ', savedTicketCode)
       setSavedTicketCode(ticketCode);
     }
-
-    const isCodeWithHashtag = ticketCode.includes('#');
-    const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
-
+  
     setShowQrcodereader(false);
+  
+    console.log("Token:", authContext.userToken);
+    console.log("Evento:", authContext.selectedEventId);
+    console.log("Código do Ticket:", ticketCode);
+  
     try {
       setLoading(true);
-      const {data: ticket} = await registerBraceletDelivery(
-        code,
+  
+      const success = await registerBraceletDelivery(
         authContext.userToken,
         reason,
+        authContext.selectedEventId,
+        ticketCode
       );
-      if (ticket.kitDelivered && !reason) {
-        setDeliveryMethod('QRCode');
-        setDocument(null);
-        setEventDay(null);
-        setJustificationMessage(
-          `A pulseira de ${ticket.name} para o dia ${formatDate(
-            ticket.day,
-          )} já foi entregue.`,
-        );
-        setIsModalVisible(true);
+  
+      if (success) {
+        setAlertMessage("Entrega registrada com sucesso!", "#32CD32");
         return;
       }
-
-      setDocument(null);
-      setEventDay(null);
-      setSavedTicketCode(null);
-      setAlertMessage(
-        `Entrega de pulseira de ${ticket.name} registrada com sucesso para o setor ${ticket.sectorName}.`,
-        '#32cd32',
-      );
+  
+      setAlertMessage("Entrega não registrada. Verifique os dados e tente novamente.", "#dc143c");
     } catch (error) {
-      console.error(error.response);
-      console.log('error by api: ' + error?.response?.data);
-      if (error?.response?.data?.errors) {
-        setAlertMessage(error.response.data.errors, '#dc143c');
-        return null;
+      console.error("Erro ao registrar entrega:", error.response?.data || error.message);
+  
+      let errorMessage = "Erro ao registrar a entrega da pulseira.";
+      if (error.response) {
+        errorMessage += ` Detalhes: ${error.response.data?.message || "Erro desconhecido."}`;
       }
-      setAlertMessage(
-        'Entrega não registrada, problema ao enviar registro de entrega de pulseira.',
-        '#dc143c',
-      );
-      return null;
+  
+      setAlertMessage(errorMessage, "#dc143c");
     } finally {
       setLoading(false);
     }
@@ -217,8 +201,12 @@ function DeliverBraceletDrawerScreen({navigation}) {
   };
 
   const handleUserFound = user => {
-    console.log('@@@@@@@@user.tickets =================>', user.tickets);
-    user && setUserTickets(user.tickets);
+    console.log('@@@@@@@@user.tickets =================>', user);
+    if (user?.tickets) {
+      setUserTickets(user.tickets);
+    } else {
+      setUserTickets([]); // Ou null, dependendo do comportamento desejado
+    }
     setShowSearchModalByCPF(false);
   };
 
@@ -282,7 +270,6 @@ function DeliverBraceletDrawerScreen({navigation}) {
       setLoading(false);
     }
   };
-  
 
   return (
     <View style={{...GStyles.view}}>
@@ -326,7 +313,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
         {userTickets && (
           <TicketCodeSelectionModal
             isVisible
-            tickets={Object.entries(userTickets)}
+            tickets={userTickets}
             onClose={() => setUserTickets(undefined)}
             onConfirm={confirmTicketCodeSelection}
             isConfirming={loading}
@@ -394,21 +381,22 @@ const TicketCodeSelectionModal = ({
         <Text h4 h4Style={{marginBottom: 20}}>
           Selecione o dia para a entrega da pulseira
         </Text>
-        {tickets.map(([code, name]) => {
+        {tickets.map((ticket) => {
+          const code = ticket.code; // Apenas para manter a legibilidade
           return (
             <View
-              style={{flexDirection: 'row', alignItems: 'center'}}
+              style={{ flexDirection: 'row', alignItems: 'center' }}
               key={code}>
               <CheckBox
-                containerStyle={{padding: 0}}
+                containerStyle={{ padding: 0 }}
                 checked={selecteds.includes(code)}
                 onPress={() => toggleCheckbox(code)}
                 iconType="material-community"
                 checkedIcon="checkbox-outline"
-                uncheckedIcon={'checkbox-blank-outline'}
+                uncheckedIcon="checkbox-blank-outline"
               />
-              <Text h5 style={{fontSize: 15}}>
-                {name}
+              <Text h5 style={{ fontSize: 15 }}>
+                {ticket.day} - {ticket.sector} - {ticket.category}
               </Text>
             </View>
           );

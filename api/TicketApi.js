@@ -25,16 +25,30 @@ export const registerTicket = async (code, token) =>
     },
   });
 
-export const registerBraceletDelivery = async (code, token, reason) =>
-  await axios({
-    url: BASE_URL + `/api/tickets/${code}/blaceletDelivery?reason=${reason}`,
-    method: 'PATCH',
-    headers: {
-      Accept: 'text/plain',
-      'Content-Type': 'application/json-patch+json',
-      Authorization: 'Bearer ' + token,
-    },
-  });
+  export const registerBraceletDelivery = async (token, reason, eventId, accessKey) => {
+    try {
+      const response = await axios({
+        url: BASE_URL_V2 + `/tickets/deliveryBracelet`,
+        method: 'PATCH',
+        data: { reason, eventId, accessKey },
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      // Retorna true se a requisição for bem-sucedida (status 2xx)
+      return true;
+    } catch (error) {
+      console.error("Erro na requisição:", error.response?.data || error.message);
+      throw error; // Propaga o erro para ser tratado na função chamadora
+    }
+  };
+  
+
+  
+
 
 export const registerBraceletDeliveryByDocument = async (
   document,
