@@ -140,7 +140,7 @@ function DeliverBraceletDrawerScreen({ navigation }) {
 
       console.log('Ticket returned:', ticket);
 
-      if (ticket.kitDelivered && !reason) {
+      if (ticket.delivered && !reason) {
         setDeliveryMethod('Document');
         setJustificationMessage(
           `A pulseira de ${ticket.name} para o dia ${formatDate(
@@ -198,6 +198,7 @@ function DeliverBraceletDrawerScreen({ navigation }) {
     setShowQrcodereader(false);
     setSavedTicketCode(null);
     setReason('');
+    setUserDocument(null)
   };
 
   const handleUserFound = user => {
@@ -212,9 +213,6 @@ function DeliverBraceletDrawerScreen({ navigation }) {
   };
 
   const confirmTicketCodeSelection = async (ticketCodes) => {
-
-    console.log('ticketCodes: ' + ticketCodes)
-
     try {
       setLoading(true);
       setOperationCancelled(false);
@@ -230,7 +228,7 @@ function DeliverBraceletDrawerScreen({ navigation }) {
             userDocument
           );
 
-          if (ticket.kitDelivered && !reason) {
+          if (ticket.delivered && !reason) {
             setJustificationMessage(
               `A pulseira de ${ticket.name} para o dia ${formatDate(ticket.day)} já foi entregue.`
             );
@@ -257,71 +255,9 @@ function DeliverBraceletDrawerScreen({ navigation }) {
         setUserTickets(undefined);
       }
       setLoading(false);
+      setUserDocument(null)
     }
   };
-
-
-  const confirmTicketCodeSelectio2 = async ticketCodes => {
-    try {
-      setLoading(true);
-      setOperationCancelled(false);
-      await new Promise((resolve, reject) => {
-        ticketCodes.forEach(async (code, index) => {
-          if (operationCancelled) {
-
-            return; 
-          }
-          try {
-            
-            console.log("try register blacelet delivery to " + code + " and reason = " + reason);
-
-            const { data: ticket } = await registerBraceletDelivery(
-              code,
-              authContext.userToken,
-              reason,
-            );
-  
-            if (ticket.kitDelivered && !reason) {
-              setJustificationMessage(
-                `A pulseira de ${ticket.name} para o dia ${formatDate(
-                  ticket.day,
-                )} já foi entregue.`,
-              );
-              setTicketCodesReuse(ticketCodes);
-              setIsModalVisible(true);
-              return;
-            }
-            
-            Alert.alert(
-              '',
-              `Entrega da pulseira para ${ticket.name}, dia ${formatDate(
-                ticket.day,
-              )}, setor ${ticket.sectorName}, foi registrada com sucesso.`,
-            );
-  
-            if (index === ticketCodes.length - 1) {
-              setReason('');
-              resolve();
-            }
-          } catch (error) {
-            console.log('error -------------> ', error);
-            reject(error);
-          }
-        });
-      });
-    } catch (error) {
-      console.log('error =============> ', error);
-      setAlertMessage('Erro ao registrar entrega da pulseira');
-    } finally {
-     
-      if (!isModalVisible && !operationCancelled) {
-        setUserTickets(undefined); // Fecha o modal de seleção de ingressos se a operação não for cancelada
-      }
-
-      setLoading(false);
-    }
-  };
-
 
   return (
     <View style={{ ...GStyles.view }}>
