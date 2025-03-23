@@ -1,26 +1,26 @@
-import {Button, CheckBox, Divider, Text} from '@rneui/themed';
-import React, {useContext, useEffect, useState} from 'react';
-import {Alert, View} from 'react-native';
+import { Button, CheckBox, Divider, Text } from '@rneui/themed';
+import React, { useContext, useEffect, useState } from 'react';
+import { Alert, View } from 'react-native';
 import {
   registerBraceletDelivery,
   registerBraceletDeliveryByDocument,
 } from '../api/TicketApi';
 import Header from '../components/Header';
 import QrCodeReader from '../components/QrCodeReader';
-import {useAlert} from '../context/AlertContext';
-import {AuthContext} from '../context/AuthContext';
-import {formatDate} from '../helpers/format';
-import {isDateGreaterThanOrEqualToToday} from '../helpers/validation';
+import { useAlert } from '../context/AlertContext';
+import { AuthContext } from '../context/AuthContext';
+import { formatDate } from '../helpers/format';
+import { isDateGreaterThanOrEqualToToday } from '../helpers/validation';
 import GStyles from '../style/global';
 import THEME from '../style/theme';
-import {Input} from '@rneui/themed';
-import {getEventDays} from '../api/EventApi';
+import { Input } from '@rneui/themed';
+import { getEventDays } from '../api/EventApi';
 import SelectModal from '../components/SelectModal';
 import JustificationModal from '../components/JustificationModal';
 import SearchUserModal from '../components/SearchUserModal';
 import ReactNativeModal from 'react-native-modal';
 
-function DeliverBraceletDrawerScreen({navigation}) {
+function DeliverBraceletDrawerScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [eventDay, setEventDay] = useState(null);
   const [days, setDays] = useState([]);
@@ -40,6 +40,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
   const [savedTicketCode, setSavedTicketCode] = useState('');
   const [ticketCodesReuse, setTicketCodesReuse] = useState([]);
   const [operationCancelled, setOperationCancelled] = useState(false);
+  const [userDocument, setUserDocument] = useState(null);
 
   useEffect(() => {
     // (async () => {
@@ -57,9 +58,8 @@ function DeliverBraceletDrawerScreen({navigation}) {
   }, []);
 
   useEffect(() => {
-    console.log('useEffect change reason... reason=' + reason +  ' and justificationSubmitted=' + justificationSubmitted)
-    if(loading)
-    {
+    console.log('useEffect change reason... reason=' + reason + ' and justificationSubmitted=' + justificationSubmitted)
+    if (loading) {
       setLoading(false);
     }
     if (justificationSubmitted && reason) {
@@ -80,37 +80,37 @@ function DeliverBraceletDrawerScreen({navigation}) {
     if (!savedTicketCode) {
       setSavedTicketCode(ticketCode);
     }
-  
+
     setShowQrcodereader(false);
-  
+
     console.log("Token:", authContext.userToken);
     console.log("Evento:", authContext.selectedEventId);
     console.log("Código do Ticket:", ticketCode);
-  
+
     try {
       setLoading(true);
-  
+
       const success = await registerBraceletDelivery(
         authContext.userToken,
         reason,
         authContext.selectedEventId,
         ticketCode
       );
-  
+
       if (success) {
         setAlertMessage("Entrega registrada com sucesso!", "#32CD32");
         return;
       }
-  
+
       setAlertMessage("Entrega não registrada. Verifique os dados e tente novamente.", "#dc143c");
     } catch (error) {
       console.error("Erro ao registrar entrega:", error.response?.data || error.message);
-  
+
       let errorMessage = "Erro ao registrar a entrega da pulseira.";
       if (error.response) {
         errorMessage += ` Detalhes: ${error.response.data?.message || "Erro desconhecido."}`;
       }
-  
+
       setAlertMessage(errorMessage, "#dc143c");
     } finally {
       setLoading(false);
@@ -130,7 +130,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
 
     try {
       setLoading(true);
-      const {data: ticket} = await registerBraceletDeliveryByDocument(
+      const { data: ticket } = await registerBraceletDeliveryByDocument(
         document,
         eventDay,
         authContext.selectedEventId,
@@ -178,7 +178,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
   for (var i in days) {
     var dayElements = days[i].split('T')[0].split('-');
     var day = dayElements[2] + '/' + dayElements[1] + '/' + dayElements[0];
-    itemsDay.push({key: day, value: day});
+    itemsDay.push({ key: day, value: day });
   }
 
   const handleJustificationSubmit = justification => {
@@ -204,13 +204,64 @@ function DeliverBraceletDrawerScreen({navigation}) {
     console.log('@@@@@@@@user.tickets =================>', user);
     if (user?.tickets) {
       setUserTickets(user.tickets);
+      setUserDocument(user.id)
     } else {
       setUserTickets([]); // Ou null, dependendo do comportamento desejado
     }
     setShowSearchModalByCPF(false);
   };
 
-  const confirmTicketCodeSelection = async ticketCodes => {
+  const confirmTicketCodeSelection = async (ticketCodes) => {
+
+    console.log('ticketCodes: ' + ticketCodes)
+
+    try {
+      setLoading(true);
+      setOperationCancelled(false);
+
+      const requests = ticketCodes.map(async () => {
+        if (operationCancelled) return;
+
+        try {
+          const { data: ticket } = await registerBraceletDeliveryByDocument(
+            authContext.userToken,
+            reason,
+            authContext.selectedEventId,
+            userDocument
+          );
+
+          if (ticket.kitDelivered && !reason) {
+            setJustificationMessage(
+              `A pulseira de ${ticket.name} para o dia ${formatDate(ticket.day)} já foi entregue.`
+            );
+            setTicketCodesReuse(ticketCodes);
+            setIsModalVisible(true);
+            return;
+          }
+          Alert.alert(`Entrega de pulseira registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32')
+        } catch (error) {
+          console.log('Erro ao registrar entrega:', error);
+          setAlertMessage('Erro ao registrar entrega da pulseira');
+        }
+      });
+
+      await Promise.all(requests); // Aguarda todas as requisições finalizarem
+
+      setReason('');
+
+    } catch (error) {
+      console.log('Erro inesperado:', error);
+      setAlertMessage('Erro ao registrar entrega da pulseira');
+    } finally {
+      if (!isModalVisible && !operationCancelled) {
+        setUserTickets(undefined);
+      }
+      setLoading(false);
+    }
+  };
+
+
+  const confirmTicketCodeSelectio2 = async ticketCodes => {
     try {
       setLoading(true);
       setOperationCancelled(false);
@@ -271,14 +322,15 @@ function DeliverBraceletDrawerScreen({navigation}) {
     }
   };
 
+
   return (
-    <View style={{...GStyles.view}}>
+    <View style={{ ...GStyles.view }}>
       <Header
-        style={{marginBottom: 0}}
+        style={{ marginBottom: 0 }}
         openDrawer={() => navigation.openDrawer()}
       />
-      <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
-        <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
+      <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
+        <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
           Entrega de pulseiras
         </Text>
         <Divider />
@@ -292,7 +344,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
           Ler código do ingresso
         </Button>
         <Button
-          containerStyle={{marginTop: 10}}
+          containerStyle={{ marginTop: 10 }}
           type="outline"
           onPress={() => {
             setShowSearchModalByCPF(true);
@@ -367,7 +419,7 @@ const TicketCodeSelectionModal = ({
     <ReactNativeModal
       isVisible={isVisible}
       backdropOpacity={0.1}
-      style={{alignItems: 'center'}}
+      style={{ alignItems: 'center' }}
       onBackdropPress={onClose}>
       {/* {tickets} */}
       <View
@@ -378,11 +430,11 @@ const TicketCodeSelectionModal = ({
           height: 'auto',
           width: `95%`,
         }}>
-        <Text h4 h4Style={{marginBottom: 20}}>
+        <Text h4 h4Style={{ marginBottom: 20 }}>
           Selecione o dia para a entrega da pulseira
         </Text>
         {tickets.map((ticket) => {
-          const code = ticket.code; // Apenas para manter a legibilidade
+          const code = ticket.accessKey;
           return (
             <View
               style={{ flexDirection: 'row', alignItems: 'center' }}
@@ -414,7 +466,7 @@ const TicketCodeSelectionModal = ({
             type="solid"
             loading={isConfirming}
             size="lg"
-            containerStyle={{marginLeft: 16}}
+            containerStyle={{ marginLeft: 16 }}
             title="Confirmar"
             onPress={handleConfirm}
           />
