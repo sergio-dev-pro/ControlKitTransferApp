@@ -41,21 +41,27 @@ export const registerBraceletDelivery = async (token, reason, eventId, accessKey
     return true;
   } catch (error) {
     console.error("Erro na requisição:", error.response?.data || error.message);
-    throw error; 
+    throw error;
   }
 };
 
-export const registerBraceletDeliveryByDocument = async (token, reason, eventId, document) =>
-  await axios({
+export const registerBraceletDeliveryByDocument = async (token, reason, eventId, document) => {
+
+  console.log('CHEGOUUUUUUUUUUUUUUUUUUUU: ' + reason)
+
+   const response = await axios({
     url: BASE_URL_V2 + `/tickets/deliveryBraceletByDocument`,
     method: 'PATCH',
-    data: { reason, eventId, document},
+    data: { reason, eventId, document },
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
       Authorization: 'Bearer ' + token,
     },
   });
+
+  return response;
+}
 export const braceletRegister = async (operatorToken, code, reason, accessKey, eventId) => {
   return await axios({
     url: BASE_URL_V2 + `/tickets/braceletCode`,
