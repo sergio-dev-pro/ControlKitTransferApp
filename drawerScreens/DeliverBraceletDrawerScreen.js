@@ -60,15 +60,13 @@ function DeliverBraceletDrawerScreen({ navigation }) {
 
   useEffect(() => {
     if (justificationSubmitted && reason) {
-      setJustificationSubmitted(false); // Reset para evitar reexecuções
-  
-      // Verifica se há códigos de ingressos para reutilizar ou se um código de ticket foi salvo
+      setJustificationSubmitted(false); 
       if (ticketCodesReuse.length > 0) {
         console.log('Chamando confirmTicketCodeSelection com justificativa: ', reason);
-        confirmTicketCodeSelection(ticketCodesReuse);  // Chama a função de confirmação de seleção de ticket
+        confirmTicketCodeSelection(ticketCodesReuse); 
       } else if (savedTicketCode) {
         console.log('Chamando handleQRCodeRead com justificativa: ', reason);
-        handleQRCodeRead(savedTicketCode);  // Chama a função de leitura de QR Code
+        handleQRCodeRead(savedTicketCode);  
       }
     }
   }, [justificationSubmitted, reason, ticketCodesReuse, savedTicketCode]);
@@ -143,7 +141,7 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       setUserTickets(user.tickets);
       setUserDocument(user.id)
     } else {
-      setUserTickets([]); // Ou null, dependendo do comportamento desejado
+      setUserTickets([]); 
     }
     setShowSearchModalByCPF(false);
   };
@@ -154,7 +152,6 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       setOperationCancelled(false);
   
       if (userTickets) {
-        // Verifica se algum ingresso já teve pulseira entregue
         const alreadyDelivered = userTickets.filter(ticket =>
           ticketCodes.includes(ticket.accessKey) && ticket.braceletDelivered
         );
@@ -173,28 +170,24 @@ function DeliverBraceletDrawerScreen({ navigation }) {
           }
       
           setJustificationMessage(message);
-          setTicketCodesReuse(ticketCodes); // Armazena os códigos de ingresso para reutilizar após justificativa
-          setIsModalVisible(true);  // Exibe o modal de justificativa
-          return; // Impede a execução do código de entrega enquanto a justificativa é fornecida
+          setTicketCodesReuse(ticketCodes); 
+          setIsModalVisible(true);  
+          return; 
         }
       }
   
-      // Processo de entrega continua após justificativa
       const requests = ticketCodes.map(async (code, index) => {
         if (operationCancelled) {
           console.log(`❌ Operação cancelada antes de processar ticket ${index + 1}`);
           return;
         }
   
-        try {
-          console.log(`🔄 Enviando requisição para o ticket ${index + 1} (Código: ${code})...`);
-  
+        try {  
           const response = await registerBraceletDeliveryByDocument(
             authContext.userToken,
-            reason || null,  // Passa a razão se fornecida
+            reason,  
             authContext.selectedEventId,
             userDocument,
-            code  // Passa o código do ticket
           );
   
           if (response) {
@@ -218,14 +211,13 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       });
   
       await Promise.all(requests);
-  
-      // Limpa `reason` apenas se todas as entregas forem concluídas
+
       setReason('');
   
-      // Limpa `userDocument` apenas quando todas as entregas forem realizadas e a justificativa foi submetida corretamente
+    
       if (!isModalVisible && !operationCancelled) {
         setUserTickets(undefined);
-        setUserDocument(null);  // Limpa o CPF somente após a entrega
+        setUserDocument(null);
       }
   
     } catch (error) {

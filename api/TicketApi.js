@@ -46,9 +46,6 @@ export const registerBraceletDelivery = async (token, reason, eventId, accessKey
 };
 
 export const registerBraceletDeliveryByDocument = async (token, reason, eventId, document) => {
-
-  console.log('CHEGOUUUUUUUUUUUUUUUUUUUU: ' + reason)
-
    const response = await axios({
     url: BASE_URL_V2 + `/tickets/deliveryBraceletByDocument`,
     method: 'PATCH',
