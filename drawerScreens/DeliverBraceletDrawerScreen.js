@@ -188,13 +188,14 @@ function DeliverBraceletDrawerScreen({ navigation }) {
             reason,  
             authContext.selectedEventId,
             userDocument,
+            ticketCodes
           );
   
           if (response) {
             console.log(`✅ Entrega registrada para ticket ${index + 1}:`, response.data);
   
             const { data: ticket } = response;
-            setAlertMessage(`Entrega registrada com sucesso para o setor ${ticket.sector}.`, '#32cd32');
+            setAlertMessage(`Entrega registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32');
           }
   
         } catch (error) {

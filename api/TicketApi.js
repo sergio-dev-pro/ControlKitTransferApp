@@ -45,11 +45,16 @@ export const registerBraceletDelivery = async (token, reason, eventId, accessKey
   }
 };
 
-export const registerBraceletDeliveryByDocument = async (token, reason, eventId, document) => {
+export const registerBraceletDeliveryByDocument = async (token, reason, eventId, document, accessKeys) => {
+      
+  const data2 = { reason, eventId, document, accessKeys};
+
+  console.log('Payload + ', data2)
+
    const response = await axios({
     url: BASE_URL_V2 + `/tickets/deliveryBraceletByDocument`,
     method: 'PATCH',
-    data: { reason, eventId, document },
+    data: { reason, eventId, document, accessKey},
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
