@@ -1,6 +1,7 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
 import { getModel } from 'react-native-device-info';
+import { Alert } from 'react-native';
 
 export const getUserByCpf = async (cpf, eventId) =>
   axios({
@@ -15,14 +16,14 @@ export const getUserByCpf = async (cpf, eventId) =>
       Accept: 'application/json',
     },
   });
-export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false) =>
+export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false, fromBlaceletRegistration = false) =>
   axios({
     url:
       BASE_URL +
       '/api/users/manual/byDocument?document=' +
       cpf +
       '&eventId=' +
-      eventId + '&isKitDelivery=' + fromKitDelivery,
+      eventId + '&isKitDelivery=' + fromKitDelivery + '&fromBlaceletRegistration=' + fromBlaceletRegistration,
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -81,7 +82,7 @@ export const saveUserPhotoAgain = async formData => {
   } catch (error) {
     console.log('error', error);
     console.log('error error.response.data', error.response.data);
-    alert(error.response.data.errors);
+    Alert.alert(" ", error.response.data.errors);
     return null;
   }
 };

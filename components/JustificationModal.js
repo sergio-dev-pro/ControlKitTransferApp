@@ -28,7 +28,9 @@ export default function JustificationModal({ modalVisible, setModalVisible, onSu
   };
 
   const handleCancel = () => {
-    onCancel();
+    if (onCancel) {
+      onCancel();
+    }
     setModalVisible(false);
   };
 
@@ -49,13 +51,14 @@ export default function JustificationModal({ modalVisible, setModalVisible, onSu
         />
 
         <View style={styles.viewButtons}>
+          <Button title="Cancelar" onPress={handleCancel} />
           <Button
             title="Salvar"
             onPress={handleSave}
             containerStyle={{ marginBottom: 10 }}
             disabled={!isSaveEnabled} // Desabilita o botão se isSaveEnabled for false
           />
-          <Button title="Cancelar" onPress={handleCancel} />
+
         </View>
       </View>
     </Modal>

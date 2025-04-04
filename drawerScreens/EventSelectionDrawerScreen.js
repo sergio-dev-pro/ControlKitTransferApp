@@ -9,16 +9,47 @@ import Header from '../components/Header';
 import Loading from '../components/Loading';
 import THEME from '../style/theme';
 
+const getRouteNameByPermission = permissions => {
+  switch (true) {
+    case permissions.hasKitDeliveryPermission:
+      return 'Kits';
+    case permissions.hasBraceletDeliveryPermission:
+      return 'Entregar pulseira';
+    case permissions.hasBraceletRegistrationPermission:
+      return 'Registrar pulseira';
+    case permissions.hasManualRegistrationPermission:
+      return 'Cadastro manual';
+    case permissions.hasManualBoxOfficeRegistrationPermission:
+      return 'Cadastro - Bilheteria';
+    case permissions.hasItinerariesPermission:
+      return 'Itinerários';
+    case permissions.hasPhotoReregisterPermission:
+      return 'Recadastrar foto';
+    case permissions.canCreateTicket:
+      return 'Cadastro rápido';
+    case permissions.canChangeUserEmail:
+      return 'Alterar e-mail';
+    default:
+      return 'Kits';
+  }
+};
+
 function EventSelectionDrawerScreen({navigation}) {
   const {
     setSelectedEventId,
     selectedEventId,
     events,
     isSearchingEventSettings,
+    permissions,
   } = useContext(AuthContext);
   const handleEventSelection = async eventId => {
     eventId !== selectedEventId && (await setSelectedEventId(eventId));
-    navigation.navigate('Kits');
+    const eventPermissions =
+      permissions &&
+      permissions.find(permission => permission.eventId == eventId);
+    if (eventPermissions)
+      navigation.navigate(getRouteNameByPermission(eventPermissions));
+    else navigation.navigate('Kits');
   };
 
   return (

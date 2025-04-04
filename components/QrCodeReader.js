@@ -35,7 +35,7 @@ const QrCodeReader = ({onRead, onClose}) => {
       setHasPermission(status === 'authorized');
     })();
   }, []);
-  console.log(barcodes);
+  // console.log(barcodes);
   return (
     device != null &&
     hasPermission && (

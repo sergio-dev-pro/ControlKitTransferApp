@@ -107,6 +107,7 @@ export function AuthProvider({children}) {
         selectedEventId: parseInt(event?.id),
         requiredForms: event?.requiredForms,
         events,
+        permissions: decodedToken.Permissions ? JSON.parse(decodedToken.Permissions) : null,
       });
     }
     setIsAuthenticating(false);
@@ -178,6 +179,7 @@ export function AuthProvider({children}) {
         isAuthenticated: true,
         events,
         selectedEventId,
+        permissions:  JSON.parse(decodedToken.Permissions),
         hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true", 
         hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true", 
         hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true", 

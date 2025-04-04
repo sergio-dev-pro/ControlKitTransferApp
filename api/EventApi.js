@@ -40,3 +40,17 @@ export const getEventDays = async eventId =>
       'Content-Type': 'application/json-patch+json',
     },
   });
+
+  export const getKitDelivery = async (code) => {
+    
+      var response = await axios({
+        url: BASE_URL + `/api/events/${code}/kitDelivery`,
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json-patch+json',
+        },
+      });
+      return response.data;
+    
+  };
