@@ -68,32 +68,21 @@ export const saveUserPhoto = async formData => {
 };
 
 export const saveUserPhotoAgain = async (formData, token) => {
-  try {
-   await axios({
-      url: BASE_URL_V2 + "/files/updateFace?origin=meetingpointapp",
-      method: "POST",
-      data: formData,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "multipart/form-data",
-        Authorization: "Bearer " + token,
-      },
-    });
-   
-    return true
+  const response = await axios({
+    url: BASE_URL_V2 + "/files/updateFace?origin=meetingpointapp",
+    method: "POST",
+    data: formData,
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "multipart/form-data",
+      Authorization: "Bearer " + token,
+    },
+  });
 
-  } catch (error) {
-    console.log("Erro na requisição:", error);
-    if (error.response) {
-      console.log("Status da resposta:", error.response.status);
-      console.log("Headers da resposta:", error.response.headers);
-      console.log("Dados do erro na resposta:", error.response.data);
-    } else {
-      console.log("Erro sem resposta do servidor:", error.message);
-    }
-    return null;
-  }
+  return true;
 };
+
+
 
 export const guestPreRegister = async formData => {
   try {
@@ -165,20 +154,20 @@ export const updateEmail = async (data, userToken) => {
 
 
 export const completeFastTicketRegister = async (eventId, data, userToken) => {
-  console.log(BASE_URL + '/api/users/fast');
   console.log('payload=' + JSON.stringify(data));
   try {
+    console.log('ENTROUUUUUUU')
     var response = await axios({
-      url: BASE_URL + '/api/users/fast',
+      url: BASE_URL_V2 + '/tickets/fast',
       method: 'POST',
-      data: { ...data, eventId: eventId },
+      data: {eventId: eventId, ...data  },
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer ' + userToken,
       },
     });
     console.log('response returned=' + JSON.stringify(response.data));
-    return response.data;
+    return true;
   } catch (error) {
     console.log('error', error);
     console.log('error error.response.data', error.response.data);

@@ -14,7 +14,7 @@ export const getEventRequiredFields = async eventId =>
 
   export const getSponsors = async (eventId, token) =>
   await axios({
-    url: BASE_URL + `/api/events/${eventId}/sponsors`,
+    url: BASE_URL_V2 + `/events/${eventId}/sponsors`,
     method: 'GET',
     headers: {
       Accept: 'text/plain',
@@ -24,7 +24,7 @@ export const getEventRequiredFields = async eventId =>
 
 export const getEventDays = async eventId =>
   axios({
-    url: BASE_URL + `/api/events/${eventId}/days`,
+    url: BASE_URL_V2 + `/events/${eventId}/days`,
     method: 'GET',
     headers: {
       Accept: 'text/plain',
@@ -34,7 +34,7 @@ export const getEventDays = async eventId =>
 
   export const getEventSectors = async eventId =>
   await axios({
-    url: BASE_URL + `/api/events/${eventId}/sectors`,
+    url: BASE_URL_V2 + `/events/${eventId}/sectors`,
     method: 'GET',
     headers: {
       Accept: 'text/plain',

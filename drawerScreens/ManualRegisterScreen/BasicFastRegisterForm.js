@@ -122,7 +122,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
       return alert('Selecione o setor.');
 
     onUserFormCompleted({
-      user: {day: user.day, document: user.cpf, name: user.name, sectorId: sectorId, sponsorId: sponsorId}
+      user: {day: user.day, document: user.cpf, Firstname: user.name, Lastname: user.name, sectorId: sectorId, sponsorId: sponsorId}
     });
   };
 

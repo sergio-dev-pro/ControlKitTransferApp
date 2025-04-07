@@ -18,7 +18,7 @@ const NewFastTicket = ({navigation}) => {
   const [days, setDays] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [sponsors, setSponsors] = useState([]);
-  const [tempToken, setTempToken] = useState(null);
+  const [tempToken, setTempToken] = useState(false);
   const [takePhoto, setTakePhoto] = useState(false);
   const [registered, setRegistered] = useState(false);
   // TODO: setado temporariamente
@@ -30,6 +30,9 @@ const NewFastTicket = ({navigation}) => {
   const authContext = useContext(AuthContext);
 
   const setAlertMessage = useAlert();
+
+  const[document, setDocument] = useState('')
+
 
   useEffect(() => {
     (async () => {
@@ -54,36 +57,54 @@ const NewFastTicket = ({navigation}) => {
   const handleUserFormCompleted = data => {
     console.log(`@@@@@ data`, data);
     setUserData(data.user);
+  
+    // Remove pontos e traços do CPF
+    const cleanedCpf = data.user.document.replace(/[.-]/g, '');
+    setDocument(cleanedCpf);
   };
+  
 
-  const savePhoto = async picturePath => {
+  const savePhoto = async (picturePath) => {
+    if (!picturePath) return;
+  
+    const formData = new FormData();
+    formData.append('file', {
+      uri: picturePath,
+      type: 'image/jpeg',
+      name: 'userImage.jpg',
+    });
+    formData.append("eventId", authContext.selectedEventId);
+    formData.append("document", document);
+  
+    try {
+      setLoading(true);
+  
+      // Chamada da API
+      const response = await saveUserPhotoAgain(formData, authContext.userToken);
+  
+      // Sucesso
+      setAlertMessage('Foto salva com sucesso!');
+      clearStates();
+      setTakePhoto(false);
+      setRegistered(false);
+  
+    } catch (error) {
+      // Log para debug
+      console.error('Erro ao enviar foto:', error);
+  
+      // Tenta extrair a mensagem da API
+      const apiMessage = error?.response?.data?.message;
+      const fallbackMessage = 'Erro ao enviar imagem, tente novamente.';
+      const finalMessage = apiMessage || fallbackMessage;
 
-    if (picturePath) {
-      const formData = new FormData();
-      formData.append('token', tempToken);
-      formData.append('file', {
-        uri: picturePath,
-        type: 'image/jpeg',
-        name: 'userImage.jpg',
-      });
-      console.log('@@@@ formData', formData);
-      try {
-        setLoading(true);
-        var response = await saveUserPhotoAgain(formData);
-        if (response) {
-          setAlertMessage('Foto salva com sucesso!');
-          clearStates();
-          setTakePhoto(false);
-          setRegistered(false);
-        } 
-      } catch (error) {
-        console.error(error);
-        setAlertMessage('Erro ao enviar imagem, tente novamente.');
-      } finally {
-        setLoading(false);
-      }
+      setAlertMessage(finalMessage);
+      
+    } finally {
+      setLoading(false);
     }
   };
+  
+  
 
   const clearStates = () => {
     setUserData(undefined);
@@ -93,20 +114,23 @@ const NewFastTicket = ({navigation}) => {
     try {
       setLoading(true);
       const data = {
-        ...userData
+        ...userData, 
       };
       console.log(
         'NewTicket completeRegister',
         JSON.stringify(data),
+        'Event id:' +
+        authContext.selectedEventId,
+        'Auth token: ' + 
         authContext.userToken,
       );
       var result = await completeFastTicketRegister(authContext.selectedEventId, data, authContext.userToken);
       
       
-      if(result?.token)
+      if(result)
       {
         setAlertMessage('Ingresso cadastrado com sucesso!');
-        setTempToken(result?.token);
+        setTempToken(result);
         setTakePhoto(true);
         setRegistered(true);
         console.log('Ingresso cadastrado com sucesso!');
