@@ -68,7 +68,7 @@ export const saveUserPhoto = async formData => {
 };
 
 export const saveUserPhotoAgain = async (formData, token) => {
-  const response = await axios({
+  await axios({
     url: BASE_URL_V2 + "/files/updateFace?origin=meetingpointapp",
     method: "POST",
     data: formData,
@@ -79,7 +79,7 @@ export const saveUserPhotoAgain = async (formData, token) => {
     },
   });
 
-  return true;
+  return true
 };
 
 
