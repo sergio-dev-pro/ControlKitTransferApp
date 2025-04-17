@@ -125,29 +125,9 @@ function KitsDrawerScreen({ navigation }) {
     }
   };
 
-  // useEffect(() => {
-  //   setInterval(() => {
-  //     console.log('Kits sincroonizando a cada 30 seg...');
-  //     syncTickets();
-  //   }, 30000);
-  // }, []);
-
-  //const isFirstSyncRef = useRef(false);
-  // useEffect(() => {
-  //   if (isConnected !== null) {
-  //     isFirstSyncRef.current = true;
-  //     if (isFirstSyncRef.current) {
-  //       isConnected &&
-  //         (async () => {
-  //           setSyncronizingTicket(true);
-  //           await syncTickets();
-  //           setSyncronizingTicket(false);
-  //         })();
-  //     } else isConnected && syncTickets();
-  //   }
-  // }, [isConnected]);
 
   const handleQRCodeRead = async ticketCode => {
+
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
 
@@ -159,37 +139,19 @@ function KitsDrawerScreen({ navigation }) {
     }
 
     setShowQrcodereader(false);
-    {/* 
-    if (!isConnected) {
-       try {
-         setLoading(false);
-        const response = await realmApi.registerTicketOffline(code);
-         setTicketFounds(prevTicketFounds => [...prevTicketFounds, response]);
-         // setAlertMessage('Registro de entrega de kit realizado.');
-       } catch (error) {
-         console.error(error);
-         setAlertMessage(error.message);
-       } finally {
-         setLoading(false);
-       }
-       return;
-     }
-       */}
+   
     try {
       setLoading(true);
-      const { data: ticket } = await registerTicket(code, authContext.userToken);
-      if (ticket.kitDelivered) {
+      const { data: ticket } = await registerTicket(
+        authContext.selectedEventId,
+        [code],
+        authContext.userToken
+      );
+
+      if (ticket.delivered) {
         setHasKitAlreadyDelivered(true);
         setShowModalOfReasonForKitDelivery(true);
       }
-      {/*
-       if (!isDateGreaterThanOrEqualToToday(ticket.day))
-         return setAlertMessage(
-           `O dia para esse ingresso ${formatDate(
-             ticket.day,
-           )} já passou! Nao é possível contabilizar a entrega para esse dia.`,
-         );
-        */}
       const newTicketFound = {
         ...ticket,
         code,
@@ -255,6 +217,8 @@ function KitsDrawerScreen({ navigation }) {
           type: 'image/jpg',
           name: 'documentImage.jpg',
         });
+        formData.append('EventId', authContext.selectedEventId)
+        formData.append('Document', ticketFounds[0]?.document)
 
         if (mustSelectShirtSize) {
           const shirtSizeByCode = {};
@@ -284,6 +248,8 @@ function KitsDrawerScreen({ navigation }) {
           type: 'image/png',
           name: 'signatureImage.png',
         });
+        formData.append('EventId', authContext.selectedEventId)
+        formData.append('Document', ticketFounds[0]?.document)
 
         if (reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
 
@@ -310,7 +276,6 @@ function KitsDrawerScreen({ navigation }) {
       //setShowResponseCamisa(null);
     }
   };
-
 
 
   const all = realmApi.getAllTickets().reduce((a, b) => {
@@ -406,6 +371,7 @@ function KitsDrawerScreen({ navigation }) {
     setIncompleteRegistrationReason(justification);
     setIsValidBoolean(false);
   };
+
 
 
   return (
@@ -525,7 +491,7 @@ function KitsDrawerScreen({ navigation }) {
                     {ticketFound?.sectorName && (
                       <View
                         style={{
-                          flexDirection: 'column-reverse',
+                          flexDirection: 'column',
                           justifyContent: 'space-between',
                           marginBottom: 8,
                         }}>
@@ -929,12 +895,19 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           name: 'documentImage.jpg',
         });
 
+        formData.append('EventId', authContext.selectedEventId)
+        formData.append('Document', user.id)
+
+        console.log('FormData para registrar documento:', formData);
+
         if (mustSelectShirtSize) {
           formData.append('codesShirtSize', JSON.stringify(ticketCodeAndShirtSize));
         }
 
         await ticketOwnerDocumentRegistration(authContext.userToken, formData);
+        console.log('Documento registrado com sucesso.');
       } catch (error) {
+        console.error('Erro ao registrar documento:', error);
         throw `Chamada para registrar documento, payload = ${JSON.stringify({
           formData,
         })} ${ticketOwnerDocumentRegistration}${error}`;
@@ -943,13 +916,14 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       const formData = new FormData();
       const getQrcodeReads = () => selectedTicketCodes.map(code => shirtCodesRead[code]?.code || 'Código não encontrado');
       formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
-      // formData.append('kitCodes', JSON.stringify(kitCodes));
       formData.append('codes', JSON.stringify(selectedTicketCodes));
       formData.append('file', {
         uri: 'data:image/png;base64,' + signature?.encoded + ';',
         type: 'image/png',
         name: 'signatureImage.png',
       });
+      formData.append('EventId', authContext.selectedEventId)
+      formData.append('Document', user.id)
 
       if (hasKitAlreadyDelivered) {
         formData.append('reason', reasonForKitDelivery);
@@ -959,11 +933,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         formData.append('reasonInvalidUser', incompleteRegistrationReason);
       }
 
-      console.log(
-        '__________________ticketOwnerSignatureRegistration',
-        formData,
-      );
+      console.log('Enviando dados para registrar a assinatura do kit...');
       await ticketOwnerSignatureRegistration(authContext.userToken, formData);
+      console.log('Assinatura registrada com sucesso.');
       setAlertMessage('Entrega de kit registrada', '#32cd32');
       onCancelDeliveryByCPF();
     } catch (error) {
@@ -971,66 +943,72 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       console.log('Detalhes do erro:', error?.response?.data || 'Sem resposta da API');
       setAlertMessage('Entrega não registrada! KIT NÃO FOI ENTREGUE!');
     } finally {
-      //onCancelDeliveryByCPF();
       setIsLoading(false);
     }
   };
 
-  const confirmTicketCodeSelection = async codes => {
+
+  const confirmTicketCodeSelection = async (codes) => {
     try {
+      // Recupera a propriedade braceletDelivered e accessKey para cada ingresso
+      const accessKeys = codes
+        .map(index => user.tickets?.[index]?.accessKey)
+        .filter(Boolean);
+
       setIsConfirmingTheTicketCodeSelection(true);
-      // Verifica se tem algum ingresso com entrega de kit realizada
-      const hasKitDelivered = await new Promise((resolve, reject) => {
-        codes.forEach(async (code, index) => {
-          try {
-            const isCodeWithHashtag = code.includes('#');
-            const { data: ticket } = await registerTicket(
-              isCodeWithHashtag ? code.split('#')[0] : code,
-              authContext.userToken,
-            );
-            if (ticket.kitDelivered) resolve(true);
-          } catch (error) {
-            reject(error);
-          } finally {
-            // é a ultima chamada para verificar se o kit ja foi entregue?
-            if (codes.length - 1 === index) resolve(false);
-          }
-        });
-      });
+
+      let hasKitDelivered = false;
+
+      if (accessKeys.length === 0) {
+        console.warn("Nenhuma accessKey válida foi encontrada.");
+        setAlertMessage('Não foi possível localizar os ingressos selecionados.');
+        return;
+      }
+
+      try {
+        const { data: ticket } = await registerTicket(
+          authContext.selectedEventId,
+          accessKeys,
+          authContext.userToken
+        );
+
+        if (ticket.delivered) {
+          hasKitDelivered = true;
+        }
+      } catch (error) {
+        console.error("Erro no registerTicket:", error);
+        setAlertMessage('Erro ao verificar se o kit já foi entregue para o ingresso.');
+        throw error;
+      }
+
       setHasKitAlreadyDelivered(hasKitDelivered);
       setShowModalOfReasonForKitDelivery(hasKitDelivered);
       setSelectedTicketCodes(codes);
 
-      if (isValidBoolean) {
-
-      }
-
     } catch (error) {
-      setAlertMessage(
-        'Erro ao verificar se o kit já foi entregue para o ingresso.',
-      );
+      console.error("Erro inesperado na função confirmTicketCodeSelection:", error);
+      setAlertMessage('Erro ao verificar se o kit já foi entregue para o ingresso.');
     } finally {
+      console.log("Finalizando verificação dos tickets");
       setIsConfirmingTheTicketCodeSelection(false);
     }
   };
-  {/* 
-  console.log('@@@@@@@@ticketCodeAndShirtSize', ticketCodeAndShirtSize);
-  console.log('@@@@@@@@must', mustSelectShirtSize);
-  console.log('@@@@@@@@hasKitAlreadyDelivered', hasKitAlreadyDelivered);
-  console.log('@@@@@@@@reasonForKitDelivery', reasonForKitDelivery);
-  console.log('@@@@@@@@selectedTicketCodes', selectedTicketCodes);
-  */}
+
 
   const ticketRecurrence =
     selectedTicketCodes &&
     Object.entries(
       selectedTicketCodes
         .map(code => user.tickets[code])
-        .reduce((acc, text) => {
-          acc[text] = (acc[text] || 0) + 1;
+        .reduce((acc, ticket) => {
+          const setor = ticket.sector || 'Setor não informado';
+          const dia = ticket.day || 'Dia não informado';
+          const chave = `${setor} - ${dia}`;
+          acc[chave] = (acc[chave] || 0) + 1;
           return acc;
-        }, {}),
+        }, {})
     );
+
 
   const handleQRCodeCamisa = async (ticketCode) => {
     if (!ticketCode) {
@@ -1097,6 +1075,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setIsValidBoolean(false);
   };
 
+
   return (
     <View style={{ flex: 1 }}>
       <SearchUserModal
@@ -1148,7 +1127,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
             renderItem={({ item, index }) => (
               <Card containerStyle={{ alignItems: 'center' }} key={item}>
                 <Text style={{ fontSize: 15, fontWeight: '700' }}>
-                  {user.tickets[item]} {/* Exibe o ingresso */}
+                  {user.tickets[item].sector} - {user.tickets[item].day}
                 </Text>
                 {user.shirtSizes && user.shirtSizes[item] && (
                   <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>Tamanho da camisa: {user.shirtSizes[item]}</Text>
@@ -1329,15 +1308,29 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           <FlatList
             style={{ marginBottom: 5 }}
             data={ticketRecurrence}
-            renderItem={({ item: [name, number] }) => (
-              <View style={{ flexDirection: 'row' }}>
-                <Text style={{ paddingRight: 5, fontSize: 15, fontWeight: '900' }}>
-                  {number} {`ingresso${number > 1 ? 's' : ''}`}, {name}
+            ListHeaderComponent={() => (
+              <Text
+                style={{
+                  paddingBottom: 10,
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                }}>
+                Total: {selectedTicketCodes.length} ingresso{selectedTicketCodes.length > 1 ? 's' : ''}
+              </Text>
+            )}
+            renderItem={({ item: [group, quantity] }) => (
+              <View style={{ flexDirection: 'row', marginBottom: 5 }}>
+                <Text style={{ fontSize: 15, fontWeight: '900' }}>
+                  {quantity} ingresso{quantity > 1 ? 's' : ''} - {group}
                 </Text>
               </View>
             )}
             keyExtractor={item => item[0]}
           />
+
+
+
           <Button
             type="outline"
             containerStyle={{ marginBottom: 16 }}
@@ -1448,6 +1441,9 @@ const TicketCodeSelectionModal = ({
     }
   }
 
+
+  console.log('tickets: ', tickets)
+
   return (
     <ReactNativeModal
       isVisible={isVisible}
@@ -1469,10 +1465,10 @@ const TicketCodeSelectionModal = ({
         </Text>
 
         <Text style={{ marginBottom: 8 }}>
-          <Text style={{ fontWeight: 'bold' }}>Nome: {user.name ?? 'Nome não disponível'}</Text> 
+          <Text style={{ fontWeight: 'bold' }}>Nome: {user.name ?? 'Nome não disponível'}</Text>
         </Text>
         <Text style={{ marginBottom: 8 }}>
-          <Text style={{ fontWeight: 'bold' }}>Documento: {user.id ?? 'Cpf não disponível'}</Text> 
+          <Text style={{ fontWeight: 'bold' }}>Documento: {user.id ?? 'Cpf não disponível'}</Text>
         </Text>
 
 
@@ -1505,11 +1501,9 @@ const TicketCodeSelectionModal = ({
           />
         </View>
         <FlatList
-          data={tickets}
-          renderItem={({ item: [code, name], index }) => (
-            <View
-              style={{ flexDirection: 'row', alignItems: 'center' }}
-              key={code}>
+          data={tickets} // tickets: array de [code, ticketData]
+          renderItem={({ item: [code, ticketData], index }) => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }} key={code}>
               <Text
                 style={{
                   fontSize: 16,
@@ -1527,15 +1521,17 @@ const TicketCodeSelectionModal = ({
                 onPress={() => toggleCheckbox(code)}
                 iconType="material-community"
                 checkedIcon="checkbox-outline"
-                uncheckedIcon={'checkbox-blank-outline'}
+                uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {name}
+                {ticketData.day} - {ticketData.sector} - {ticketData.category}
+                {ticketData.braceletDelivered ? " (ENTREGUE)" : ""}
               </Text>
             </View>
           )}
           keyExtractor={item => item[0]}
         />
+
         <View
           style={{
             width: '100%',

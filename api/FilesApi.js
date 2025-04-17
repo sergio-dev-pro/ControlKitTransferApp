@@ -1,9 +1,10 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
+import BASE_URL_V2 from '../constants/api2';
 
-export const ticketOwnerDocumentRegistration = (token, formData) =>
-  axios({
-    url: BASE_URL + `/api/files/v3/documents`,
+export const ticketOwnerDocumentRegistration = (token, formData) => {
+  return axios({
+    url: BASE_URL_V2 + `/files/signatures/documents`,
     method: 'POST',
     data: formData,
     headers: {
@@ -12,17 +13,22 @@ export const ticketOwnerDocumentRegistration = (token, formData) =>
       Authorization: 'Bearer ' + token,
     },
   });
-  export const ticketOwnerSignatureRegistration = async (token, formData) => {
-      await axios({
-      url: BASE_URL + `/api/files/v2/signatures`,
-      method: 'POST',
-      data: formData,
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'multipart/form-data',
-        Authorization: 'Bearer ' + token,
-      },
-    });
-    return true;
-  };
+};
+
+
+export const ticketOwnerSignatureRegistration = async (token, formData) => {
+  await axios({
+    url: BASE_URL_V2 + `/files/signatures`,
+    method: 'POST',
+    data: formData,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'multipart/form-data',
+      Authorization: 'Bearer ' + token,
+    },
+  });
+
+  return true;
+};
+
   

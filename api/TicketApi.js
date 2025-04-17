@@ -14,16 +14,20 @@ export const fetchTickets = async (deviceId, eventId, userToken) =>
     },
   });
 
-export const registerTicket = async (code, token) =>
-  await axios({
-    url: BASE_URL + `/api/tickets/${code}/kitDelivery`,
-    method: 'PATCH',
-    headers: {
-      Accept: 'text/plain',
-      'Content-Type': 'application/json-patch+json',
-      Authorization: 'Bearer ' + token,
-    },
-  });
+  export const registerTicket = async (eventId, accessKeys, token) => {
+    const payload = { eventId, accessKeys };
+    return await axios({
+      url: BASE_URL_V2 + `/tickets/kits`,
+      method: 'PATCH',
+      data: payload,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json-patch+json',
+        Authorization: 'Bearer ' + token,
+      },
+    });
+  };
+
 
 export const registerBraceletDelivery = async (token, reason, eventId, accessKey) => {
   try {
@@ -46,15 +50,15 @@ export const registerBraceletDelivery = async (token, reason, eventId, accessKey
 };
 
 export const registerBraceletDeliveryByDocument = async (token, reason, eventId, document, accessKeys) => {
-      
-  const data2 = { reason, eventId, document, accessKeys};
+
+  const data2 = { reason, eventId, document, accessKeys };
 
   console.log('Payload + ', data2)
 
-   const response = await axios({
+  const response = await axios({
     url: BASE_URL_V2 + `/tickets/deliveryBraceletByDocument`,
     method: 'PATCH',
-    data: { reason, eventId, document, accessKey},
+    data: { reason, eventId, document, accessKey },
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',

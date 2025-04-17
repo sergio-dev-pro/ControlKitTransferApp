@@ -72,19 +72,39 @@ const SearchUserModal = ({
       else searchedFor.cpf = inputValue;
       onUserFound({...user, id: inputValue}, searchedFor);
     } catch (error) {
-      console.error(error);
-      console.error(error.response.data.errors);
-      if (error?.request?.status == 404) {
-        alert('Usuário não econtrado.');
+      console.error('Erro geral:', error);
+    
+      if (error.message === 'Network Error') {
+        alert('Erro de rede. Verifique sua conexão com a internet ou tente novamente mais tarde.');
         return;
       }
-      if (error?.response?.data?.errors) {
-        console.error(error.response.data.errors);
-        alert(error.response.data.errors);
+    
+      if (!error.response) {
+        alert('Não foi possível se conectar ao servidor. Tente novamente.');
         return;
       }
-      alert('Erro ao procurar usuário');
-    } finally {
+    
+      const status = error.response.status;
+    
+      if (status === 404) {
+        alert('Usuário não encontrado.');
+        return;
+      }
+    
+      if (status === 400 || error?.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const errorMessages = Array.isArray(errors)
+          ? errors.join('\n')
+          : typeof errors === 'string'
+          ? errors
+          : JSON.stringify(errors);
+        alert(errorMessages);
+        return;
+      }
+    
+      alert(`Erro inesperado (status ${status}). Tente novamente.`);
+    }    
+     finally {
       setLoading(false);
     }
   };
