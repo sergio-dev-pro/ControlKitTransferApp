@@ -154,9 +154,7 @@ export const updateEmail = async (data, userToken) => {
 
 
 export const completeFastTicketRegister = async (eventId, data, userToken) => {
-  console.log('payload=' + JSON.stringify(data));
   try {
-    console.log('ENTROUUUUUUU')
     var response = await axios({
       url: BASE_URL_V2 + '/tickets/fast',
       method: 'POST',
