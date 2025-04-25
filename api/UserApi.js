@@ -82,8 +82,6 @@ export const saveUserPhotoAgain = async (formData, token) => {
   return true
 };
 
-
-
 export const guestPreRegister = async formData => {
   try {
     var response = await axios({
@@ -103,6 +101,7 @@ export const guestPreRegister = async formData => {
     return null;
   }
 };
+
 export const newUserPreRegister = async (formData, token) =>
   await axios({
     url: BASE_URL + '/api/files/new/self',

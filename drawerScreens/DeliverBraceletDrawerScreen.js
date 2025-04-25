@@ -60,13 +60,13 @@ function DeliverBraceletDrawerScreen({ navigation }) {
 
   useEffect(() => {
     if (justificationSubmitted && reason) {
-      setJustificationSubmitted(false); 
+      setJustificationSubmitted(false);
       if (ticketCodesReuse.length > 0) {
         console.log('Chamando confirmTicketCodeSelection com justificativa: ', reason);
-        confirmTicketCodeSelection(ticketCodesReuse); 
+        confirmTicketCodeSelection(ticketCodesReuse);
       } else if (savedTicketCode) {
         console.log('Chamando handleQRCodeRead com justificativa: ', reason);
-        handleQRCodeRead(savedTicketCode);  
+        handleQRCodeRead(savedTicketCode);
       }
     }
   }, [justificationSubmitted, reason, ticketCodesReuse, savedTicketCode]);
@@ -141,7 +141,7 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       setUserTickets(user.tickets);
       setUserDocument(user.id)
     } else {
-      setUserTickets([]); 
+      setUserTickets([]);
     }
     setShowSearchModalByCPF(false);
   };
@@ -150,15 +150,15 @@ function DeliverBraceletDrawerScreen({ navigation }) {
     try {
       setLoading(true);
       setOperationCancelled(false);
-  
+
       if (userTickets) {
         const alreadyDelivered = userTickets.filter(ticket =>
           ticketCodes.includes(ticket.accessKey) && ticket.braceletDelivered
         );
-      
+
         if (alreadyDelivered.length > 0 && !reason) {
           let message = '';
-          
+
           if (alreadyDelivered.length === 1) {
             const ticket = alreadyDelivered[0];
             message = `A pulseira para o setor ${ticket.sector} no dia ${ticket.day} já foi entregue.`;
@@ -168,59 +168,59 @@ function DeliverBraceletDrawerScreen({ navigation }) {
               message += `\n- Setor: ${ticket.sector}, Dia: ${ticket.day}`;
             });
           }
-      
+
           setJustificationMessage(message);
-          setTicketCodesReuse(ticketCodes); 
-          setIsModalVisible(true);  
-          return; 
+          setTicketCodesReuse(ticketCodes);
+          setIsModalVisible(true);
+          return;
         }
       }
-  
+
       const requests = ticketCodes.map(async (code, index) => {
         if (operationCancelled) {
           console.log(`❌ Operação cancelada antes de processar ticket ${index + 1}`);
           return;
         }
-  
-        try {  
+
+        try {
           const response = await registerBraceletDeliveryByDocument(
             authContext.userToken,
-            reason,  
+            reason,
             authContext.selectedEventId,
             userDocument,
             ticketCodes
           );
-  
+
           if (response) {
             console.log(`✅ Entrega registrada para ticket ${index + 1}:`, response.data);
-  
+
             const { data: ticket } = response;
             setAlertMessage(`Entrega registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32');
           }
-  
+
         } catch (error) {
           console.error(`❌ Erro ao registrar entrega do ticket ${index + 1}:`, error);
-  
+
           if (error.response) {
             console.error("🔴 Resposta do servidor:", error.response.data);
           } else {
             console.error("⚠️ Erro sem resposta do servidor:", error.message);
           }
-  
+
           setAlertMessage("Erro ao registrar entrega da pulseira", "#dc143c");
         }
       });
-  
+
       await Promise.all(requests);
 
       setReason('');
-  
-    
+
+
       if (!isModalVisible && !operationCancelled) {
         setUserTickets(undefined);
         setUserDocument(null);
       }
-  
+
     } catch (error) {
       console.error("🔥 Erro inesperado:", error);
       setAlertMessage("Erro ao registrar entrega da pulseira");
@@ -228,8 +228,8 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       setLoading(false);
     }
   };
-  
-  
+
+
   console.log('userDocument: ' + userDocument)
 
   return (
@@ -357,7 +357,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15 }}>
-                {ticket.day} - {ticket.sector} - {ticket.category} {ticket.braceletDelivered ? " (ENTREGUE)" : ""}
+                {[ ticket.sector || '',  ticket.category || '', ticket.day || '', ticket.braceletDelivered ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
               </Text>
             </View>
           );

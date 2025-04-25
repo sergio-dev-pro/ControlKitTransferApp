@@ -1502,7 +1502,7 @@ const TicketCodeSelectionModal = ({
         </View>
         <FlatList
           data={tickets} // tickets: array de [code, ticketData]
-          renderItem={({ item: [code, ticketData], index }) => (
+          renderItem={({ item: [code, ticket], index }) => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }} key={code}>
               <Text
                 style={{
@@ -1524,8 +1524,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {ticketData.day} - {ticketData.sector} - {ticketData.category}
-                {ticketData.braceletDelivered ? " (ENTREGUE)" : ""}
+                {[ ticket.sector || '',  ticket.category || '', ticket.day || '', ticket.braceletDelivered ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
               </Text>
             </View>
           )}

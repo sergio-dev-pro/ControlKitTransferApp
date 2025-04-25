@@ -142,7 +142,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
 
   useEffect(() => {
-if (selectedEvent && typeof selectedEvent === 'string') {
+    if (selectedEvent && typeof selectedEvent === 'string') {
       const data = selectedEvent.split('-')[0]?.trim();
       if (data) {
         const [dia, mes, ano] = data.split('/');
@@ -234,7 +234,8 @@ if (selectedEvent && typeof selectedEvent === 'string') {
               placeholder="Selecione um evento"
               items={(user?.tickets || []).map(ticket => ({
                 key: ticket.accessKey, // Usando `accessKey` como identificador único
-                value: `${ticket.category} - ${ticket.day}` // Melhorando a exibição do ingresso
+                value: [ticket.sector || '',  ticket.category || '', ticket.day || ''].filter(Boolean).join(' - ')
+                
               }))}
               value={selectedEventKey}
               setValue={eventKey => {
