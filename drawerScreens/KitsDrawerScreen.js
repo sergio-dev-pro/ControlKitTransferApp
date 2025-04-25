@@ -187,6 +187,13 @@ function KitsDrawerScreen({ navigation }) {
 
   };
 
+  const logFormData = (formData) => {
+    console.log('Conteúdo do FormData:');
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+  };
+
   const registerDelivery = async () => {
     if (mustSelectShirtSize) {
       const ticktesWithSelectedShirtSize = ticketFounds.filter(
@@ -218,7 +225,7 @@ function KitsDrawerScreen({ navigation }) {
           name: 'documentImage.jpg',
         });
         formData.append('EventId', authContext.selectedEventId)
-        formData.append('Document', ticketFounds[0]?.document)
+        formData.append('Document', ticketFounds[0]?.document.replace(/[.\-]/g, ''))
 
         if (mustSelectShirtSize) {
           const shirtSizeByCode = {};
@@ -249,7 +256,7 @@ function KitsDrawerScreen({ navigation }) {
           name: 'signatureImage.png',
         });
         formData.append('EventId', authContext.selectedEventId)
-        formData.append('Document', ticketFounds[0]?.document)
+        formData.append('Document', ticketFounds[0]?.document.replace(/[.\-]/g, ''))
 
         if (reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
 
@@ -896,7 +903,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         });
 
         formData.append('EventId', authContext.selectedEventId)
-        formData.append('Document', user.id)
+        formData.append('Document', user.id.replace(/[.\-]/g, ''))
 
         console.log('FormData para registrar documento:', formData);
 
@@ -923,7 +930,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         name: 'signatureImage.png',
       });
       formData.append('EventId', authContext.selectedEventId)
-      formData.append('Document', user.id)
+      formData.append('Document', user.id.replace(/[.\-]/g, ''))
 
       if (hasKitAlreadyDelivered) {
         formData.append('reason', reasonForKitDelivery);

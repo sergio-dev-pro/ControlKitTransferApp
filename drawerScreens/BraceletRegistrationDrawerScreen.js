@@ -234,8 +234,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
               placeholder="Selecione um evento"
               items={(user?.tickets || []).map(ticket => ({
                 key: ticket.accessKey, // Usando `accessKey` como identificador único
-                value: [ticket.sector || '',  ticket.category || '', ticket.day || ''].filter(Boolean).join(' - ')
-                
+                value: [ticket.sector || '', ticket.category || '', ticket.day || ''].filter(Boolean).join(' - ')
               }))}
               value={selectedEventKey}
               setValue={eventKey => {
@@ -246,9 +245,14 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
             {selectedEvent && (
               <Text h4 h4Style={{ fontSize: 18, color: '#000', paddingLeft: 16 }}>
-                {selectedEvent.category} - {selectedEvent.day} - {selectedEvent.sector}
+                {[selectedEvent.category, selectedEvent.day, selectedEvent.sector]
+                  .filter(Boolean)
+                  .join(' - ')}
+
                 {user?.registeredBlaceletTickets?.includes(selectedEventKey) && (
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>{"\n"}Pulseira já entregue</Text>
+                  <Text style={{ color: 'red', fontWeight: 'bold' }}>
+                    {"\n"}Pulseira já entregue
+                  </Text>
                 )}
               </Text>
             )}

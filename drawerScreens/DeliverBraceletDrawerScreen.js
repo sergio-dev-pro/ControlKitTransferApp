@@ -187,7 +187,7 @@ function DeliverBraceletDrawerScreen({ navigation }) {
             authContext.userToken,
             reason,
             authContext.selectedEventId,
-            userDocument,
+            userDocument.replace(/[.\-]/g, ''),
             ticketCodes
           );
 
@@ -228,9 +228,6 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       setLoading(false);
     }
   };
-
-
-  console.log('userDocument: ' + userDocument)
 
   return (
     <View style={{ ...GStyles.view }}>
