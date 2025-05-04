@@ -67,7 +67,8 @@ function PhotoReregisterDrawerScreen({ navigation }) {
         setAlertMessage("Erro ao enviar imagem, tente novamente.");
       }
     } catch (error) {
-      console.log("Erro no handleSavePhoto:", error);
+      setAlertMessage(error.response.data.message)
+      console.error("Erro no handleSavePhoto:", error.response.data);
     }
   
     toggleCamVisibility();
