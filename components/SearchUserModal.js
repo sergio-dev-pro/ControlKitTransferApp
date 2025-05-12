@@ -1,12 +1,12 @@
-import {useIsFocused} from '@react-navigation/native';
-import {Button, Input, Text} from '@rneui/themed';
-import {useContext, useEffect, useRef, useState} from 'react';
-import {Modal, View} from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import { Button, Input, Text } from '@rneui/themed';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { Modal, View } from 'react-native';
 import ReactNativeModal from 'react-native-modal';
-import {getUserByCpf, getUserByCpfWithAuth, getUserByEmail} from '../api/UserApi';
-import {useAlert} from '../context/AlertContext';
-import {AuthContext} from '../context/AuthContext';
-import {cpfValidation, isValidEmail} from '../helpers/validation';
+import { getUserByCpf, getUserByCpfWithAuth, getUserByEmail } from '../api/UserApi';
+import { useAlert } from '../context/AlertContext';
+import { AuthContext } from '../context/AuthContext';
+import { cpfValidation, isValidEmail } from '../helpers/validation';
 
 const INPUT_VALUE_TYPE = {
   email: 'email',
@@ -21,7 +21,8 @@ const SearchUserModal = ({
   placeholderText = 'Busque por e-mail ou CPF ou passaporte',
   onUserIsActive,
   fromKitDelivery = false,
-  fromBlaceletRegistration = false
+  fromBlaceletRegistration = false,
+  cpfValueNotFound
 }) => {
   const [loading, setLoading] = useState(false);
   // TODO: Setado temporariamente
@@ -64,47 +65,49 @@ const SearchUserModal = ({
     try {
       setLoading(true);
       const isEmailSearch = validatedInputValueType === INPUT_VALUE_TYPE.email;
-      const {data: user} = isEmailSearch
+      const { data: user } = isEmailSearch
         ? await getUserByEmail(inputValue, authContext.selectedEventId)
         : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken, fromKitDelivery, fromBlaceletRegistration);
       const searchedFor = {};
       if (isEmailSearch) searchedFor.email = inputValue;
       else searchedFor.cpf = inputValue;
-      onUserFound({...user, id: inputValue}, searchedFor);
+      onUserFound({ ...user, id: inputValue }, searchedFor);
     } catch (error) {
+
+      const status = error.response.status;
+
+      if (status === 404) {
+        alert('Usuário não encontrado.');
+        cpfValueNotFound(inputValue)
+        return;
+      }
+
       console.error('Erro geral:', error);
-    
+
       if (error.message === 'Network Error') {
         alert('Erro de rede. Verifique sua conexão com a internet ou tente novamente mais tarde.');
         return;
       }
-    
+
       if (!error.response) {
         alert('Não foi possível se conectar ao servidor. Tente novamente.');
         return;
       }
-    
-      const status = error.response.status;
-    
-      if (status === 404) {
-        alert('Usuário não encontrado.');
-        return;
-      }
-    
+
       if (status === 400 || error?.response?.data?.errors) {
         const errors = error.response.data.errors;
         const errorMessages = Array.isArray(errors)
           ? errors.join('\n')
           : typeof errors === 'string'
-          ? errors
-          : JSON.stringify(errors);
+            ? errors
+            : JSON.stringify(errors);
         alert(errorMessages);
         return;
       }
-    
+
       alert(`Erro inesperado (status ${status}). Tente novamente.`);
-    }    
-     finally {
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -113,7 +116,7 @@ const SearchUserModal = ({
     <ReactNativeModal
       isVisible={isVisible}
       backdropOpacity={0.1}
-      style={{alignItems: 'center'}}
+      style={{ alignItems: 'center' }}
       onBackdropPress={onClose}>
       <View
         style={{
@@ -123,7 +126,7 @@ const SearchUserModal = ({
           height: 'auto',
           width: `95%`,
         }}>
-        <Text h4 h4Style={{marginBottom: 10}}>
+        <Text h4 h4Style={{ marginBottom: 10 }}>
           {title}
         </Text>
         <Input
@@ -145,7 +148,7 @@ const SearchUserModal = ({
             type="solid"
             loading={loading}
             size="lg"
-            containerStyle={{marginLeft: 16}}
+            containerStyle={{ marginLeft: 16 }}
             title="Buscar"
             onPress={handleSearch}
             on

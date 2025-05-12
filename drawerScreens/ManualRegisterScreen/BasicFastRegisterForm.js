@@ -13,10 +13,11 @@ const inputErrorMsgs = {
   },
 };
 
-const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSectors, sponsors, onReturn, onCancel}) => {
+const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSectors, sponsors, onReturn, onCancel, initialDocument, initialFirstName, initialLastName}) => {
   const [user, setUser] = useState({
-    name: '',
-    cpf: '', // usado para amazenar cpf ou passport
+    name: initialFirstName,
+    cpf: initialDocument, // usado para amazenar cpf ou passport
+    lastname: initialLastName
   });
   const [CPFValidation, setCPFValidation] = useState({
     isValid: true,
@@ -35,7 +36,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
     errorMsg: '',
   });
 
-  const {name, cpf} = user;
+  const {name, lastname, cpf} = user;
 
   const maskedCPFInputProps = useMaskedInputProps({
     value: cpf,
@@ -122,7 +123,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
       return alert('Selecione o setor.');
 
     onUserFormCompleted({
-      user: {day: user.day, document: user.cpf, Firstname: user.name, Lastname: user.name, sectorId: sectorId, sponsorId: sponsorId}
+      user: {day: user.day, document: user.cpf, Firstname: user.name, Lastname: user.lastname, sectorId: sectorId, sponsorId: sponsorId}
     });
   };
 
@@ -155,6 +156,18 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
         }}
         onChangeText={name => {
           setUser(prevState => ({...prevState, name}));
+        }}
+        errorMessage={!nameValidation.isValid ? nameValidation.errorMsg : ''}
+      />
+
+      <Input
+        label="Sobrenome"
+        value={lastname}
+        onBlur={() => {
+          validName(lastname);
+        }}
+        onChangeText={lastname => {
+          setUser(prevState => ({...prevState, lastname}));
         }}
         errorMessage={!nameValidation.isValid ? nameValidation.errorMsg : ''}
       />

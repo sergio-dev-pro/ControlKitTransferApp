@@ -1,20 +1,22 @@
-import {View} from 'react-native';
-import React, {useContext, useEffect, useLayoutEffect, useState} from 'react';
+import { View } from 'react-native';
+import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
-import {Button, Divider, Text} from '@rneui/themed';
-import {getEventDays, getEventSectors, getSponsors} from '../api/EventApi';
-import {AuthContext} from '../context/AuthContext';
+import { Button, Divider, Text } from '@rneui/themed';
+import { getEventDays, getEventSectors, getSponsors } from '../api/EventApi';
+import { AuthContext } from '../context/AuthContext';
 import Loading from '../components/Loading';
 import BasicFastRegisterForm from './ManualRegisterScreen/BasicFastRegisterForm';
-import {completeFastTicketRegister, saveUserPhotoAgain} from '../api/UserApi';
-import {useAlert} from '../context/AlertContext';
-import {ScrollView} from 'react-native-gesture-handler';
+import { completeFastTicketRegister, saveUserPhotoAgain } from '../api/UserApi';
+import { useAlert } from '../context/AlertContext';
+import { ScrollView } from 'react-native-gesture-handler';
 import THEME from '../style/theme';
 import TakePictureScreen from './ManualRegisterScreen/TakePictureScreen';
 import { RegisterStateContext } from './ManualRegisterScreen/registerContext';
+import SearchUserModal from '../components/SearchUserModal';
+import { useFocusEffect } from '@react-navigation/native';
 
-const NewFastTicket = ({navigation}) => {
+const NewFastTicket = ({ navigation }) => {
   const [days, setDays] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [sponsors, setSponsors] = useState([]);
@@ -31,20 +33,26 @@ const NewFastTicket = ({navigation}) => {
 
   const setAlertMessage = useAlert();
 
-  const[document, setDocument] = useState('')
+  const [document, setDocument] = useState('')
+  const [searchUserTicket, setSearchUserTicket] = useState(false)
+  const [showSearchModalByCPF, setShowSearchModalByCPF] = useState(false);
+  const [createNewFastTicket, setCreateNewFastTicket] = useState(false)
+  const [cpfValue, setCpfValue] = useState('')
+  const [valueInitialFirstName, setValueInitialFirstName] = useState('')
+  const [valueInitialLastname, setValueInitialLastname] = useState('')
 
 
   useEffect(() => {
     (async () => {
       try {
-        console.log("selectedEventId="+authContext.selectedEventId);
-        const {data: days} = await getEventDays(authContext.selectedEventId);
+        console.log("selectedEventId=" + authContext.selectedEventId);
+        const { data: days } = await getEventDays(authContext.selectedEventId);
         setDays(days);
 
-        const {data: sectors} = await getEventSectors(authContext.selectedEventId);
+        const { data: sectors } = await getEventSectors(authContext.selectedEventId);
         setSectors(sectors);
 
-        const {data: sponsors} = await getSponsors(authContext.selectedEventId, authContext.userToken);
+        const { data: sponsors } = await getSponsors(authContext.selectedEventId, authContext.userToken);
         setSponsors(sponsors)
       } catch (error) {
         console.error(error);
@@ -57,16 +65,15 @@ const NewFastTicket = ({navigation}) => {
   const handleUserFormCompleted = data => {
     console.log(`@@@@@ data`, data);
     setUserData(data.user);
-  
+
     // Remove pontos e traços do CPF
     const cleanedCpf = data.user.document.replace(/[.-]/g, '');
     setDocument(cleanedCpf);
   };
-  
 
   const savePhoto = async (picturePath) => {
     if (!picturePath) return;
-  
+
     const formData = new FormData();
     formData.append('file', {
       uri: picturePath,
@@ -75,36 +82,34 @@ const NewFastTicket = ({navigation}) => {
     });
     formData.append("eventId", authContext.selectedEventId);
     formData.append("document", document);
-  
+
     try {
       setLoading(true);
-  
+
       // Chamada da API
       const response = await saveUserPhotoAgain(formData, authContext.userToken);
-  
+
       // Sucesso
       setAlertMessage('Foto salva com sucesso!');
       clearStates();
       setTakePhoto(false);
       setRegistered(false);
-  
+
     } catch (error) {
       // Log para debug
       console.error('Erro ao enviar foto:', error);
-  
+
       // Tenta extrair a mensagem da API
       const apiMessage = error?.response?.data?.message;
       const fallbackMessage = 'Erro ao enviar imagem, tente novamente.';
       const finalMessage = apiMessage || fallbackMessage;
 
       setAlertMessage(finalMessage);
-      
+
     } finally {
       setLoading(false);
     }
   };
-  
-  
 
   const clearStates = () => {
     setUserData(undefined);
@@ -114,21 +119,24 @@ const NewFastTicket = ({navigation}) => {
     try {
       setLoading(true);
       const data = {
-        ...userData, 
+        ...userData,
       };
       console.log(
         'NewTicket completeRegister',
         JSON.stringify(data),
         'Event id:' +
         authContext.selectedEventId,
-        'Auth token: ' + 
+        'Auth token: ' +
         authContext.userToken,
       );
+
+      console.log('data: ' + data)
+      console.log('data: ', data)
+
       var result = await completeFastTicketRegister(authContext.selectedEventId, data, authContext.userToken);
-      
-      
-      if(result)
-      {
+
+
+      if (result) {
         setAlertMessage('Ingresso cadastrado com sucesso!');
         setTempToken(result);
         setTakePhoto(true);
@@ -141,91 +149,169 @@ const NewFastTicket = ({navigation}) => {
       alert('Erro ao cadastrar ingresso!');
     } finally {
       setLoading(false);
+      setSearchUserTicket(false);
+      setShowSearchModalByCPF(false);
+      setCreateNewFastTicket(false);
     }
   };
 
-  console.log('takeFoto='+ takePhoto)
+  console.log('takeFoto=' + takePhoto)
 
   const canFinishRegistration = !!userData;
+
+
+  const handleUserFound = user => {
+
+    console.log(user)
+
+    if (user.tickets && user.tickets.length > 0) {
+      console.log('Tickets encontrados:', user);
+    } else {
+      const nameParts = user.name?.split(' ') || [];
+      const firstName = nameParts[0] || '';
+      const lastname = nameParts.slice(1).join(' ') || '';
+      setValueInitialFirstName(firstName)
+      setValueInitialLastname(lastname)
+      setCpfValue(user.id)
+      setCreateNewFastTicket(true);
+      setShowSearchModalByCPF(false);
+      setSearchUserTicket(true);
+
+    }
+  };
+
+  const handleCpfNotFound = (cpf) => {
+    setCpfValue(cpf)
+    setCreateNewFastTicket(true);
+    setShowSearchModalByCPF(false);
+    setSearchUserTicket(true);
+  };
+
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setSearchUserTicket(false);
+      setShowSearchModalByCPF(false);
+      setCreateNewFastTicket(false);
+      setUserData(undefined);
+      setTakePhoto(false);
+      setRegistered(false);
+    }, [])
+  );
+
+
+  console.log(searchUserTicket)
+
   return (
     <RegisterStateContext.Provider
-        value={{
-          cancelPhoto: () => {
-            setTakePhoto(false);
-          },
-          savePhoto,
-          isSavingPhoto: loading,
-        }}>
-    <View style={{...GStyles.view}}>
-      <Header
-        style={{marginBottom: 0}}
-        openDrawer={() => navigation.openDrawer()}
-      />
-      <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
-        <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
-          Cadastro rápido
-        </Text>
-        <Divider />
+      value={{
+        cancelPhoto: () => {
+          setTakePhoto(false);
+        },
+        savePhoto,
+        isSavingPhoto: loading,
+      }}>
+      <View style={{ ...GStyles.view }}>
+        <Header
+          style={{ marginBottom: 0 }}
+          openDrawer={() => navigation.openDrawer()}
+        />
+        <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
+          <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
+            Cadastro rápido
+          </Text>
+          <Divider />
+        </View>
+
+        <ScrollView style={[GStyles.container, { height: '100%' }]}>
+
+          {!searchUserTicket && !registered && (
+            <Button
+              containerStyle={{ marginTop: 10 }}
+              type="outline"
+              onPress={() => {
+                setShowSearchModalByCPF(true);
+              }}>
+              Buscar por CPF
+            </Button>
+          )}
+
+          {showSearchModalByCPF && (
+            <SearchUserModal
+              title="Buscar"
+              onUserFound={handleUserFound}
+              placeholderText="Busque pelo CPF"
+              isVisible={showSearchModalByCPF}
+              onClose={() => {
+                setShowSearchModalByCPF(false);
+              }}
+              cpfValueNotFound={handleCpfNotFound} // CASO NÃO EXISTA 
+
+            />
+          )}
+
+          {days.length > 0 && sectors.length > 0 && createNewFastTicket && (
+            <>
+              {!userData && !takePhoto && (
+                <BasicFastRegisterForm
+                  onUserFormCompleted={handleUserFormCompleted}
+                  availableDays={days}
+                  availableSectors={sectors}
+                  sponsors={sponsors}
+                  initialDocument={cpfValue}
+                  initialFirstName={valueInitialFirstName}
+                  initialLastName={valueInitialLastname}
+                />
+              )}
+            </>
+          )}
+
+          {canFinishRegistration && !takePhoto && !registered && (
+            <>
+              <Button
+                type="solid"
+                size="lg"
+                containerStyle={{ marginTop: 20 }}
+                onPress={completeRegister}>
+                Finalizar cadastro
+              </Button>
+              <Button
+                containerStyle={{ marginTop: 10 }}
+                type="outline"
+                onPress={() => {
+                  clearStates();
+                  setRegistered(false);
+                }}>
+                Cancelar
+              </Button>
+            </>
+          )}
+          {registered && !takePhoto && (
+            <>
+              <Button
+                type="solid"
+                size="lg"
+                containerStyle={{ marginTop: 20 }}
+                onPress={() => {
+                  setTakePhoto(true);
+                }}>
+                Cadastrar foto
+              </Button>
+              <Button
+                containerStyle={{ marginTop: 10 }}
+                type="outline"
+                onPress={() => {
+                  clearStates();
+                  setRegistered(false);
+                }}>
+                Cancelar
+              </Button>
+            </>
+          )}
+        </ScrollView>
+        {takePhoto && tempToken && <TakePictureScreen />}
+        <Loading isActive={loading} />
       </View>
-      <ScrollView style={[GStyles.container, {height: '100%'}]}>
-        {days.length > 0 && sectors.length > 0 && (
-          <>
-            {!userData && !takePhoto && (
-              <BasicFastRegisterForm
-                onUserFormCompleted={handleUserFormCompleted}
-                availableDays={days}
-                availableSectors={sectors}
-                sponsors={sponsors}
-              />
-            )}
-          </>
-        )}
-        {canFinishRegistration && !takePhoto && !registered && (
-          <>
-            <Button
-              type="solid"
-              size="lg"
-              containerStyle={{marginTop: 20}}
-              onPress={completeRegister}>
-              Finalizar cadastro
-            </Button>
-            <Button
-              containerStyle={{marginTop: 10}}
-              type="outline"
-              onPress={() => {  
-                clearStates();
-                setRegistered(false);
-              }}>
-              Cancelar
-            </Button>
-          </>
-        )}
-        {registered && !takePhoto && (
-          <>
-            <Button
-              type="solid"
-              size="lg"
-              containerStyle={{marginTop: 20}}
-              onPress={() => {
-                setTakePhoto(true);
-              }}>
-              Cadastrar foto
-            </Button>
-            <Button
-              containerStyle={{marginTop: 10}}
-              type="outline"
-              onPress={() => {
-                clearStates();
-                setRegistered(false);
-              }}>
-              Cancelar
-            </Button>
-          </>
-        )}
-      </ScrollView>
-      {takePhoto && tempToken && <TakePictureScreen />}
-      <Loading isActive={loading} />
-    </View>
     </RegisterStateContext.Provider>
   );
 };
