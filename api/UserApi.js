@@ -157,7 +157,7 @@ export const completeFastTicketRegister = async (eventId, data, userToken) => {
     var response = await axios({
       url: BASE_URL_V2 + '/tickets/fast',
       method: 'POST',
-      data: {eventId: eventId, ...data  },
+      data: { eventId: eventId, ...data },
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer ' + userToken,
@@ -172,3 +172,16 @@ export const completeFastTicketRegister = async (eventId, data, userToken) => {
     return null;
   }
 };
+
+export const completeManualRegisterByTickets = async (data, userToken) => {
+  return axios({
+    url: BASE_URL_V2 + '/users/manual',
+    method: 'PUT',
+    data,
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+};
+

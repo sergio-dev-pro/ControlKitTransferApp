@@ -1,10 +1,10 @@
 import * as React from 'react';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {createDrawerNavigator} from '@react-navigation/drawer';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 
 import LoginScreen from '../screens/LoginScreen';
 import EventSelectionScreen from '../screens/EventSelectionScreen';
-import {AuthContext} from '../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import KitsDrawerScreen from '../drawerScreens/KitsDrawerScreen';
 import EventSelectionDrawerScreen from '../drawerScreens/EventSelectionDrawerScreen';
 import ManualRegisterScreen from '../drawerScreens/ManualRegisterScreen';
@@ -16,6 +16,7 @@ import DeliverBraceletDrawerScreen from '../drawerScreens/DeliverBraceletDrawerS
 import NewFastTicket from '../drawerScreens/NewFastTicket';
 import BraceletRegistrationDrawerScreen from '../drawerScreens/BraceletRegistrationDrawerScreen';
 import TicketOfficeManualRegisterScreen from '../drawerScreens/ManualRegisterScreen/TicketOfficeManualRegisterScreen';
+import ManualRegisterByTickets from '../drawerScreens/ManualRegisterScreen/ManualRegisterByTickets';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -101,6 +102,7 @@ function Navigators() {
               component={ManualRegisterScreen}
             />
           )}
+
           {eventPermissions.hasManualBoxOfficeRegistrationPermission && (
             <Drawer.Screen
               name="Cadastro - Bilheteria"
@@ -131,21 +133,24 @@ function Navigators() {
           {eventPermissions.canChangeUserEmail && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
           )}
+          <Drawer.Screen
+            name="ManualRegisterByTickets"
+            component={ManualRegisterByTickets}
+            options={{ drawerItemStyle: { display: 'none' } }}
+          />
         </Drawer.Navigator>
       ) : (
         <Stack.Navigator>
-          <Stack.Group screenOptions={{headerShown: false}}>
+          <Stack.Group screenOptions={{ headerShown: false }}>
             {userToken ? (
-              <Stack.Screen
-                name="Mudar evento"
-                component={EventSelectionScreen}
-                options={{headerShown: false}}
-              />
+              <>
+                <Stack.Screen name="Mudar evento" component={EventSelectionScreen} />
+              </>
             ) : (
               <Stack.Screen
                 name="Login"
                 component={LoginScreen}
-                options={{headerShown: false}}
+                options={{ headerShown: false }}
               />
             )}
           </Stack.Group>

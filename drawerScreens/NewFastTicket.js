@@ -165,7 +165,7 @@ const NewFastTicket = ({ navigation }) => {
     console.log(user)
 
     if (user.tickets && user.tickets.length > 0) {
-      console.log('Tickets encontrados:', user);
+      navigation.navigate('ManualRegisterByTickets', { user, cpf: user.id });
     } else {
       const nameParts = user.name?.split(' ') || [];
       const firstName = nameParts[0] || '';
