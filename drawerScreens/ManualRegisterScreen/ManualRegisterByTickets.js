@@ -51,6 +51,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     internationalNumber: '',
   });
   const [guestAccessKeys, setGuestAccessKeys] = useState([]);
+  const [usedGuestAccessKeys, setUsedGuestAccessKeys] = useState([]);
 
 
 
@@ -171,6 +172,11 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     }
 
     if (step === 3) {
+      if (eventKeysGuests.length === 0) {
+        Alert.alert('', 'Selecione ao menos um ingresso para o convidado.');
+        return;
+      }
+
       setStep(4);
       return;
     }
@@ -241,6 +247,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     };
 
     setGuests(prev => [...prev, newGuest]);
+    setUsedGuestAccessKeys(prev => [...prev, ...guestAccessKeys]);
 
     // Limpar campos
     setGuestDocument('');
@@ -259,6 +266,13 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     if (goBackToStep3) setStep(3);
   };
 
+
+  const nonHolderTicketsCount = user.tickets.filter(t => !t.isHolder).length;
+  const entregaLiberada = nonHolderTicketsCount === usedGuestAccessKeys.length ? true : false;
+
+  console.log(nonHolderTicketsCount)
+  console.log(usedGuestAccessKeys.length)
+  console.log(entregaLiberada)
 
 
   return (
@@ -367,10 +381,13 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
               Cadastrar Convidado
             </Text>
             <FlatList
-              data={user.tickets.filter(t => !t.isHolder).map(t => [t.accessKey, t])}
-              keyExtractor={item => item[0]}
-              renderItem={({ item, index }) => {
-                const [code, ticket] = item;
+              data={user.tickets.filter(t => !t.isHolder)}
+              keyExtractor={item => item.accessKey}
+              renderItem={({ item: ticket, index }) => {
+                const code = ticket.accessKey;
+                const isUsed = usedGuestAccessKeys.includes(code);
+                const isChecked = eventKeysGuests.includes(code);
+
                 return (
                   <View
                     key={code}
@@ -380,22 +397,27 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
                     <CheckBox
                       size={24}
                       containerStyle={{ padding: 0, marginRight: 10 }}
-                      checked={eventKeysGuests.includes(code)}
-                      onPress={() => handleToggleTicket(code)}
+                      checked={isChecked}
+                      onPress={() => !isUsed && handleToggleTicket(code)}
                       iconType="material-community"
                       checkedIcon="checkbox-outline"
                       uncheckedIcon="checkbox-blank-outline"
+                      disabled={isUsed}
                     />
-                    <Text style={{ flex: 1 }}>
+                    <Text style={{ flex: 1, color: isUsed ? '#aaa' : '#000' }}>
                       {[ticket.sector, ticket.category, ticket.day, ticket.braceletDelivered ? 'ENTREGUE' : null]
                         .filter(Boolean)
                         .join(' - ')}
                     </Text>
+
                   </View>
                 );
               }}
             />
-            <Button title="Próximo" onPress={continueRegistryTickets} />
+
+            {!entregaLiberada && (
+              <Button title="Próximo" onPress={continueRegistryTickets} />
+            )}
           </>
         )}
 
@@ -444,10 +466,6 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
             />
 
             <Button title="Adicionar novo convidado" onPress={() => addGuest(true)} />
-
-
-
-
           </ScrollView>
         )}
 
@@ -467,7 +485,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
           />
         )}
 
-        {(step === 3 || (step === 4 && guests.length > 0 && !guestDocument)) && (
+        {(step == 3 || step == 4) && entregaLiberada && (
           <Button title="Finalizar cadastro" onPress={handleFinishRegistration} />
         )}
 
