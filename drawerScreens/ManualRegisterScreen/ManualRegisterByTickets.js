@@ -3,6 +3,7 @@ import {
   View,
   ScrollView,
   FlatList,
+  Alert,
 } from 'react-native';
 import {
   Button,
@@ -37,26 +38,61 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
 
   const authContext = useContext(AuthContext);
   const setAlertMessage = useAlert();
+  const [eventKeysGuests, setEventKeysGuests] = useState([]);
+  const [guests, setGuests] = useState([]);
+  const [guestDocument, setGuestDocument] = useState('');
+  const [guestFirstname, setGuestFirstname] = useState('');
+  const [guestLastname, setGuestLastname] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState({
+    countryCode: '',
+    dialCode: '',
+    nationalNumber: '',
+    internationalNumber: '',
+  });
+  const [guestAccessKeys, setGuestAccessKeys] = useState([]);
+
+
+
+  const handleClear = () => {
+    setSelectedEventKeys([]);
+    setCountryCode('');
+    setDialCode('');
+    setNationalNumber('');
+    setStep(1);  // <-- resetar para o passo 1
+    navigation.navigate('Cadastro rápido');
+    setGuests([])
+  };
+
 
   useEffect(() => {
     setUser(initialUser);
   }, [initialUser]);
 
+
+  const cpfOnChange = step === 2 ? setCpf : setGuestDocument;
+  const cpfValueOnChange = step === 2 ? cpf : guestDocument;
+
   const maskedCPFInputProps = useMaskedInputProps({
-    value: cpf,
-    onChangeText: setCpf,
+    value: cpfValueOnChange,
+    onChangeText: cpfOnChange,
     mask: [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/],
   });
 
   const handleToggleTicket = code => {
-    setSelectedEventKeys(prev =>
+    setEventKeysGuests(prev =>
       prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
     );
   };
 
+  useEffect(() => {
+    setGuestAccessKeys(eventKeysGuests);
+  }, [eventKeysGuests]);
+
+
   const handleNextStep = () => {
     if (selectedEventKeys.length === 0) {
-      alert('', 'Selecione ao menos um ingresso.');
+      Alert.alert('', 'Selecione ao menos um ingresso.');
       return;
     }
     setStep(2);
@@ -67,7 +103,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     const cleanCpf = cpf.replace(/[^\d]/g, '');
 
     if (!cpfValidation(cleanCpf)) {
-      alert('', 'CPF inválido. Verifique o número digitado.');
+      Alert.alert('', 'CPF inválido. Verifique o número digitado.');
       return;
     }
 
@@ -76,7 +112,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
       dialCode.length < 1 || dialCode.length > 4 ||
       nationalNumber.length < 6 || nationalNumber.length > 12
     ) {
-      alert('Preencha um número de telefone válido.');
+      Alert.alert('', 'Preencha um número de telefone válido.');
       return;
     }
 
@@ -95,11 +131,8 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     };
 
     try {
-      const response = await completeManualRegisterByTickets(payload, authContext.userToken);
+      await completeManualRegisterByTickets(payload, authContext.userToken);
       setAlertMessage('Cadastro finalizado com sucesso!');
-      console.log('✅ Status:', response.status);
-      console.log('📦 Dados:', response);
-      // Voltar para step 1 após sucesso
     } catch (error) {
       console.error('❌ Erro no cadastro:', error);
       if (error.response?.data?.errors) {
@@ -115,14 +148,117 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     console.log('Payload JSON enviado:', JSON.stringify(payload, null, 2));
   };
 
-  const handleClear = () => {
-    setSelectedEventKeys([]);
-    setCountryCode('');
-    setDialCode('');
-    setNationalNumber('');
-    setStep(1);  // <-- resetar para o passo 1
-    navigation.navigate('Cadastro rápido');
+
+  const continueRegistryTickets = () => {
+    if (step === 2) {
+      const cleanCpf = cpf.replace(/[^\d]/g, '');
+      if (!cpfValidation(cleanCpf)) {
+        Alert.alert('', 'CPF inválido. Verifique o número digitado.');
+        return;
+      }
+
+      if (
+        countryCode.length < 1 || countryCode.length > 3 ||
+        dialCode.length < 1 || dialCode.length > 4 ||
+        nationalNumber.length < 6 || nationalNumber.length > 12
+      ) {
+        Alert.alert('', 'Preencha um número de telefone válido.');
+        return;
+      }
+
+      setStep(3);
+      return;
+    }
+
+    if (step === 3) {
+      setStep(4);
+      return;
+    }
   };
+
+
+  const handleFinishRegistration = () => {
+    if (guestDocument) {
+      addGuest(true); // adiciona o último antes de salvar
+    }
+
+    const payload = {
+      eventId: authContext.selectedEventId,
+      document: cpf.replace(/[^\d]/g, ''),
+      phone: {
+        countryCode,
+        dialCode,
+        nationalNumber,
+        internationalNumber: `+${countryCode}${dialCode}${nationalNumber}`,
+      },
+      accessKeys: selectedEventKeys,
+      guests,
+    };
+
+    console.log('📦 Payload final para envio:', JSON.stringify(payload, null, 2));
+  };
+
+
+  const addGuest = (goBackToStep3 = false) => {
+    const cleanCpf = guestDocument.replace(/[^\d]/g, '');
+
+    /*
+    if (!cpfValidation(cleanCpf)) {
+      Alert.alert('', 'CPF do convidado inválido.');
+      return;
+    }
+      */
+
+    if (!guestFirstname || !guestLastname) {
+      Alert.alert('', 'Preencha o nome e sobrenome do convidado.');
+      return;
+    }
+
+    if (
+      guestPhone.countryCode.length < 1 || guestPhone.countryCode.length > 3 ||
+      guestPhone.dialCode.length < 1 || guestPhone.dialCode.length > 4 ||
+      guestPhone.nationalNumber.length < 6 || guestPhone.nationalNumber.length > 12
+    ) {
+      Alert.alert('', 'Preencha um número de telefone válido para o convidado.');
+      return;
+    }
+
+    if (guestAccessKeys.length === 0) {
+      Alert.alert('', 'Selecione ao menos um ingresso para o convidado.');
+      return;
+    }
+
+    const newGuest = {
+      document: cleanCpf,
+      firstname: guestFirstname,
+      lastname: guestLastname,
+      email: guestEmail,
+      phone: {
+        ...guestPhone,
+        internationalNumber: `+${guestPhone.countryCode}${guestPhone.dialCode}${guestPhone.nationalNumber}`,
+      },
+      accessKeys: guestAccessKeys,
+    };
+
+    setGuests(prev => [...prev, newGuest]);
+
+    // Limpar campos
+    setGuestDocument('');
+    setGuestFirstname('');
+    setGuestLastname('');
+    setGuestEmail('');
+    setGuestPhone({
+      countryCode: '',
+      dialCode: '',
+      nationalNumber: '',
+      internationalNumber: '',
+    });
+    setGuestAccessKeys([]);
+    setEventKeysGuests([]);
+
+    if (goBackToStep3) setStep(3);
+  };
+
 
 
   return (
@@ -173,6 +309,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
                       iconType="material-community"
                       checkedIcon="checkbox-outline"
                       uncheckedIcon="checkbox-blank-outline"
+                      disabled={true}
                     />
                     <Text style={{ flex: 1 }}>
                       {[ticket.sector, ticket.category, ticket.day, ticket.braceletDelivered ? 'ENTREGUE' : null]
@@ -220,8 +357,104 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
               value={nationalNumber}
               onChangeText={text => setNationalNumber(text.replace(/[^\d]/g, ''))}
             />
-            <Button title="Finalizar Cadastro" onPress={handleCompleteRegister} />
+            <Button title="Continuar Cadastro" onPress={continueRegistryTickets} />
           </>
+        )}
+
+        {step === 3 && (
+          <>
+            <Text style={{ padding: 8, textAlign: 'center', fontSize: 16, fontWeight: 'bold' }}>
+              Cadastrar Convidado
+            </Text>
+            <FlatList
+              data={user.tickets.filter(t => !t.isHolder).map(t => [t.accessKey, t])}
+              keyExtractor={item => item[0]}
+              renderItem={({ item, index }) => {
+                const [code, ticket] = item;
+                return (
+                  <View
+                    key={code}
+                    style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
+                  >
+                    <Text style={{ fontWeight: 'bold', marginRight: 10 }}>{index + 1}.</Text>
+                    <CheckBox
+                      size={24}
+                      containerStyle={{ padding: 0, marginRight: 10 }}
+                      checked={eventKeysGuests.includes(code)}
+                      onPress={() => handleToggleTicket(code)}
+                      iconType="material-community"
+                      checkedIcon="checkbox-outline"
+                      uncheckedIcon="checkbox-blank-outline"
+                    />
+                    <Text style={{ flex: 1 }}>
+                      {[ticket.sector, ticket.category, ticket.day, ticket.braceletDelivered ? 'ENTREGUE' : null]
+                        .filter(Boolean)
+                        .join(' - ')}
+                    </Text>
+                  </View>
+                );
+              }}
+            />
+            <Button title="Próximo" onPress={continueRegistryTickets} />
+          </>
+        )}
+
+        {step === 4 && (
+          <ScrollView contentContainerStyle={{ gap: 16 }}>
+            <Input
+              label="CPF"
+              keyboardType="numeric"
+              {...maskedCPFInputProps}
+            />
+
+            <Input placeholder="Nome" value={guestFirstname} onChangeText={setGuestFirstname} />
+            <Input placeholder="Sobrenome" value={guestLastname} onChangeText={setGuestLastname} />
+            <Input placeholder="Email" value={guestEmail} onChangeText={setGuestEmail} />
+
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Input
+                label="Código do País"
+                placeholder="Ex: 55"
+                keyboardType="numeric"
+                containerStyle={{ flex: 1 }}
+                value={guestPhone.countryCode}
+                onChangeText={(text) =>
+                  setGuestPhone(prev => ({ ...prev, countryCode: text.replace(/[^\d]/g, '') }))
+                }
+              />
+
+              <Input
+                label="DDD"
+                placeholder="Ex: 11"
+                keyboardType="numeric"
+                containerStyle={{ flex: 1 }}
+                value={guestPhone.dialCode}
+                onChangeText={(text) =>
+                  setGuestPhone(prev => ({ ...prev, dialCode: text.replace(/[^\d]/g, '') }))
+                }
+              />
+            </View>
+            <Input
+              label="Número"
+              placeholder="Ex: 912345678"
+              keyboardType="numeric"
+              value={guestPhone.nationalNumber} onChangeText={(text) =>
+                setGuestPhone(prev => ({ ...prev, nationalNumber: text.replace(/[^\d]/g, '') }))
+              }
+            />
+
+            <Button title="Adicionar novo convidado" onPress={() => addGuest(true)} />
+
+
+
+
+          </ScrollView>
+        )}
+
+        {step === 5 && (
+          <Text style={{ padding: 8, textAlign: 'center', fontSize: 16, fontWeight: 'bold' }}>
+            Tirar Fotos
+          </Text>
         )}
 
         {/* Botão Cancelar (aparece em step 1 e 2) */}
@@ -233,6 +466,11 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
             onPress={handleClear}
           />
         )}
+
+        {(step === 3 || (step === 4 && guests.length > 0 && !guestDocument)) && (
+          <Button title="Finalizar cadastro" onPress={handleFinishRegistration} />
+        )}
+
       </View>
     </View>
   );
