@@ -53,8 +53,6 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
   const [guestAccessKeys, setGuestAccessKeys] = useState([]);
   const [usedGuestAccessKeys, setUsedGuestAccessKeys] = useState([]);
 
-
-
   const handleClear = () => {
     setSelectedEventKeys([]);
     setCountryCode('');
@@ -63,6 +61,19 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     setStep(1);  // <-- resetar para o passo 1
     navigation.navigate('Cadastro rápido');
     setGuests([])
+    setEventKeysGuests([])
+    setGuestDocument('')
+    setGuestFirstname('')
+    setGuestLastname('')
+    setGuestEmail('')
+    setGuestAccessKeys([]);
+    setUsedGuestAccessKeys([]);
+    setGuestPhone({
+      countryCode: '',
+      dialCode: '',
+      nationalNumber: '',
+      internationalNumber: '',
+    });
   };
 
 
@@ -80,10 +91,13 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     mask: [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/],
   });
 
-  const handleToggleTicket = code => {
-    setEventKeysGuests(prev =>
-      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
-    );
+  const handleToggleTicket = (code, setor) => {
+
+    if (code) {
+      setEventKeysGuests(prev =>
+        prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+      );
+    }
   };
 
   useEffect(() => {
@@ -98,57 +112,6 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     }
     setStep(2);
   };
-
-  const handleCompleteRegister = async () => {
-
-    const cleanCpf = cpf.replace(/[^\d]/g, '');
-
-    if (!cpfValidation(cleanCpf)) {
-      Alert.alert('', 'CPF inválido. Verifique o número digitado.');
-      return;
-    }
-
-    if (
-      countryCode.length < 1 || countryCode.length > 3 ||
-      dialCode.length < 1 || dialCode.length > 4 ||
-      nationalNumber.length < 6 || nationalNumber.length > 12
-    ) {
-      Alert.alert('', 'Preencha um número de telefone válido.');
-      return;
-    }
-
-    setLoading(true);
-
-    const payload = {
-      eventId: authContext.selectedEventId,
-      document: cpf.replace(/[^\d]/g, ''),
-      phone: {
-        countryCode,
-        dialCode,
-        nationalNumber,
-        internationalNumber: `+${countryCode}${dialCode}${nationalNumber}`,
-      },
-      accessKeys: selectedEventKeys,
-    };
-
-    try {
-      await completeManualRegisterByTickets(payload, authContext.userToken);
-      setAlertMessage('Cadastro finalizado com sucesso!');
-    } catch (error) {
-      console.error('❌ Erro no cadastro:', error);
-      if (error.response?.data?.errors) {
-        alert(error.response.data.errors);
-      } else {
-        alert('Erro inesperado ao cadastrar. Tente novamente.');
-      }
-    } finally {
-      handleClear()
-      setLoading(false);
-    }
-
-    console.log('Payload JSON enviado:', JSON.stringify(payload, null, 2));
-  };
-
 
   const continueRegistryTickets = () => {
     if (step === 2) {
@@ -183,7 +146,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
   };
 
 
-  const handleFinishRegistration = () => {
+  const handleFinishRegistration = async () => {
     if (guestDocument) {
       addGuest(true); // adiciona o último antes de salvar
     }
@@ -201,19 +164,34 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
       guests,
     };
 
-    console.log('📦 Payload final para envio:', JSON.stringify(payload, null, 2));
+    try {
+      await completeManualRegisterByTickets(payload, authContext.userToken);
+      setAlertMessage('Cadastro finalizado com sucesso!');
+    } catch (error) {
+      console.error('❌ Erro no cadastro:', error);
+      if (error.response?.data?.errors) {
+        alert(error.response.data.errors);
+      } else {
+        alert('Erro inesperado ao cadastrar. Tente novamente.');
+      }
+    } finally {
+      handleClear()
+      setLoading(false);
+    }
+
+    console.log('Payload JSON enviado:', JSON.stringify(payload, null, 2));
   };
 
 
   const addGuest = (goBackToStep3 = false) => {
     const cleanCpf = guestDocument.replace(/[^\d]/g, '');
 
-    /*
+
     if (!cpfValidation(cleanCpf)) {
       Alert.alert('', 'CPF do convidado inválido.');
       return;
     }
-      */
+
 
     if (!guestFirstname || !guestLastname) {
       Alert.alert('', 'Preencha o nome e sobrenome do convidado.');
@@ -270,10 +248,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
   const nonHolderTicketsCount = user.tickets.filter(t => !t.isHolder).length;
   const entregaLiberada = nonHolderTicketsCount === usedGuestAccessKeys.length ? true : false;
 
-  console.log(nonHolderTicketsCount)
-  console.log(usedGuestAccessKeys.length)
-  console.log(entregaLiberada)
-
+  console.log('user', user)
 
   return (
     <View style={GStyles.view}>
@@ -387,29 +362,31 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
                 const code = ticket.accessKey;
                 const isUsed = usedGuestAccessKeys.includes(code);
                 const isChecked = eventKeysGuests.includes(code);
-
                 return (
                   <View
                     key={code}
                     style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
                   >
                     <Text style={{ fontWeight: 'bold', marginRight: 10 }}>{index + 1}.</Text>
-                    <CheckBox
-                      size={24}
-                      containerStyle={{ padding: 0, marginRight: 10 }}
-                      checked={isChecked}
-                      onPress={() => !isUsed && handleToggleTicket(code)}
-                      iconType="material-community"
-                      checkedIcon="checkbox-outline"
-                      uncheckedIcon="checkbox-blank-outline"
-                      disabled={isUsed}
-                    />
-                    <Text style={{ flex: 1, color: isUsed ? '#aaa' : '#000' }}>
-                      {[ticket.sector, ticket.category, ticket.day, ticket.braceletDelivered ? 'ENTREGUE' : null]
-                        .filter(Boolean)
-                        .join(' - ')}
-                    </Text>
-
+                    {!isUsed ? (
+                      <>
+                        <CheckBox
+                          size={24}
+                          containerStyle={{ padding: 0, marginRight: 10 }}
+                          checked={isChecked}
+                          onPress={() => handleToggleTicket(code)}
+                          iconType="material-community"
+                          checkedIcon="checkbox-outline"
+                          uncheckedIcon="checkbox-blank-outline"
+                          disabled={isUsed}
+                        />
+                        <Text style={{ flex: 1, color: isUsed ? '#aaa' : '#000' }}>
+                          {[ticket.sector, ticket.category, ticket.day, ticket.braceletDelivered ? 'ENTREGUE' : null]
+                            .filter(Boolean)
+                            .join(' - ')}
+                        </Text>
+                      </>
+                    ) : null}
                   </View>
                 );
               }}
@@ -423,6 +400,9 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
 
         {step === 4 && (
           <ScrollView contentContainerStyle={{ gap: 16 }}>
+            <Text style={{ padding: 8, textAlign: 'center', fontSize: 16, fontWeight: 'bold' }}>
+              Cadastrar Convidado
+            </Text>
             <Input
               label="CPF"
               keyboardType="numeric"
@@ -465,28 +445,86 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
               }
             />
 
-            <Button title="Adicionar novo convidado" onPress={() => addGuest(true)} />
+            <Button title="Adicionar convidado" onPress={() => addGuest(true)} />
           </ScrollView>
         )}
 
         {step === 5 && (
-          <Text style={{ padding: 8, textAlign: 'center', fontSize: 16, fontWeight: 'bold' }}>
-            Tirar Fotos
-          </Text>
+          <ScrollView>
+            <Text style={{ padding: 8, textAlign: 'center', fontSize: 16, fontWeight: 'bold' }}>
+              Resumo dos Ingressos
+            </Text>
+
+            <View style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10 }}>
+              <Text style={{ padding: 8, textAlign: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                Usuário Principal
+              </Text>
+              <Text>
+                <Text style={{ fontWeight: 'bold' }}>Nome:</Text>  {user.name}
+              </Text>
+              <Text><Text style={{ fontWeight: 'bold' }}>Documento:</Text> {user.id}</Text>
+              <Text><Text style={{ fontWeight: 'bold' }}>Quantidade de ingressos:</Text> {user.tickets.filter(t => t.isHolder).length}</Text>
+            </View>
+
+            {guests.map((x, idx) => {
+              const daySectorMap = x.accessKeys.reduce((acc, key) => {
+                console.log('acc', key)
+                const ticket = user.tickets.find(t => t.accessKey === key);
+                if (!ticket) return acc;
+
+                const day = ticket.day || 'Dia não informado';
+                const sector = ticket.sector || 'Setor não informado';
+
+                if (!acc[day]) acc[day] = {};
+                acc[day][sector] = (acc[day][sector] || 0) + 1;
+
+                return acc;
+              }, {});
+
+              return (
+                <View
+                  key={idx}
+                  style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, marginTop: 10 }}
+                >
+                  <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                    Ingresso transferido para: {x.firstname} {x.lastname}
+                  </Text>
+                  <Text>CPF: {x.document}</Text>
+                  <Text>Email: {x.email}</Text>
+                  <Text>Telefone: +{x.phone.countryCode}{x.phone.dialCode}{x.phone.nationalNumber}</Text>
+
+                  <Text style={{ marginTop: 8, fontWeight: 'bold' }}>Ingressos:</Text>
+                  {Object.entries(daySectorMap).map(([day, sectors]) => (
+                    <View key={day} style={{ marginTop: 6 }}>
+                      <Text style={{ fontWeight: '600' }}>Dia: {day}</Text>
+                      {Object.entries(sectors).map(([sector, count]) => (
+                        <Text key={sector}>• {sector}: {count} ingresso(s)</Text>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              );
+            })}
+
+          </ScrollView>
+
+
         )}
 
         {/* Botão Cancelar (aparece em step 1 e 2) */}
-        {(step === 1 || step === 2) && (
-          <Button
-            title="Cancelar"
-            type="outline"
-            containerStyle={{ marginTop: 10 }}
-            onPress={handleClear}
-          />
-        )}
+
+        <Button
+          title="Cancelar"
+          type="outline"
+          containerStyle={{ marginTop: 10 }}
+          onPress={handleClear}
+        />
+
 
         {(step == 3 || step == 4) && entregaLiberada && (
-          <Button title="Finalizar cadastro" onPress={handleFinishRegistration} />
+
+          <Button title="Resumo dos tickets" onPress={() => setStep(5)} />
+          //<Button title="Finalizar cadastro" onPress={handleFinishRegistration} />
         )}
 
       </View>
