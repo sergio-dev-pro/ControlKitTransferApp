@@ -174,13 +174,13 @@ export const completeFastTicketRegister = async (eventId, data, userToken) => {
 };
 
 export const completeManualRegisterByTickets = async (data, userToken) => {
-  return axios({
+ axios({
     url: BASE_URL_V2 + '/users/manual',
     method: 'PUT',
     data,
     headers: {
       Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken,
+      Authorization: 'Bearer ' + userToken
     },
   });
 };

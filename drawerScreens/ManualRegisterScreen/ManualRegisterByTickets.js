@@ -18,10 +18,11 @@ import Header from '../../components/Header';
 import Loading from '../../components/Loading';
 import GStyles from '../../style/global';
 import THEME from '../../style/theme';
-import { completeManualRegisterByTickets } from '../../api/UserApi';
+import { completeManualRegisterByTickets, saveUserPhotoAgain } from '../../api/UserApi';
 import { AuthContext } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
 import { cpfValidation } from '../../helpers/validation';
+import TakePictureModal from '../../components/TakePictureModal';
 
 const ManualRegisterByTickets = ({ navigation, route }) => {
   const { user: initialUser, cpf: initialCpf } = route.params;
@@ -52,6 +53,13 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
   });
   const [guestAccessKeys, setGuestAccessKeys] = useState([]);
   const [usedGuestAccessKeys, setUsedGuestAccessKeys] = useState([]);
+
+  const [isVisibleCam, setIsVisibleCam] = useState();
+  const toggleCamVisibility = () => setIsVisibleCam(is => !is);
+  const [isLoading, setIsLoading] = useState();
+  const [documents, setDocuments] = useState([])
+  const [currentDocument, setCurrentDocument] = useState('')
+  const [cpfEntrgue, setCpfEntrgue] = useState([]);
 
   const handleClear = () => {
     setSelectedEventKeys([]);
@@ -148,7 +156,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
 
   const handleFinishRegistration = async () => {
     if (guestDocument) {
-      addGuest(true); // adiciona o último antes de salvar
+      addGuest(true);
     }
 
     const payload = {
@@ -164,28 +172,30 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
       guests,
     };
 
+    console.log('📦 Payload enviado:', JSON.stringify(payload, null, 2));
+
     try {
+      setLoading(true);
+
       await completeManualRegisterByTickets(payload, authContext.userToken);
       setAlertMessage('Cadastro finalizado com sucesso!');
+      setStep(6);
     } catch (error) {
-      console.error('❌ Erro no cadastro:', error);
+      console.error('❌ Erro no cadastro:', error?.response?.data || error.message);
       if (error.response?.data?.errors) {
         alert(error.response.data.errors);
       } else {
         alert('Erro inesperado ao cadastrar. Tente novamente.');
       }
     } finally {
-      handleClear()
       setLoading(false);
     }
-
-    console.log('Payload JSON enviado:', JSON.stringify(payload, null, 2));
   };
+
 
 
   const addGuest = (goBackToStep3 = false) => {
     const cleanCpf = guestDocument.replace(/[^\d]/g, '');
-
 
     if (!cpfValidation(cleanCpf)) {
       Alert.alert('', 'CPF do convidado inválido.');
@@ -244,11 +254,81 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
     if (goBackToStep3) setStep(3);
   };
 
+  const handleSavePhoto = async (imgPath) => {
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri: imgPath,
+      type: "image/jpeg",
+      name: "userImage.jpg",
+    });
+    formData.append("eventId", authContext.selectedEventId);
+    formData.append("document", currentDocument);
+
+    console.log("eventId", authContext.selectedEventId)
+    console.log('currentDocument', currentDocument)
+
+    setIsLoading(true);
+
+    try {
+      var response = await saveUserPhotoAgain(formData, authContext.userToken);
+
+      if (response) {
+        setCpfEntrgue(prev => [...prev, currentDocument]);
+        setAlertMessage("Foto atualizada com sucesso!", "#32cd32");
+      } else {
+        setAlertMessage("Erro ao enviar imagem, tente novamente.");
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        setAlertMessage(error.response.data.message);
+        console.error("Erro no handleSavePhoto:", error.response.data);
+      } else {
+        setAlertMessage("Erro inesperado ao enviar imagem.");
+        console.error("Erro no handleSavePhoto:", error.message || error);
+      }
+
+    }
+
+    toggleCamVisibility();
+    setIsLoading(false);
+  };
+
 
   const nonHolderTicketsCount = user.tickets.filter(t => !t.isHolder).length;
   const entregaLiberada = nonHolderTicketsCount === usedGuestAccessKeys.length ? true : false;
 
-  console.log('user', user)
+
+  useEffect(() => {
+    const listaPessoas = [];
+
+    // Adiciona o usuário principal
+    if (user?.name && cpf) {
+      listaPessoas.push({
+        nome: user.name,
+        cpf: cpf.replace(/[^\d]/g, '')
+      });
+    }
+
+    // Adiciona todos os convidados já cadastrados
+    guests.forEach(g => {
+      listaPessoas.push({
+        nome: `${g.firstname} ${g.lastname}`,
+        cpf: g.document.replace(/[^\d]/g, '')
+      });
+    });
+
+    // Adiciona o convidado em edição (caso ainda não tenha sido adicionado)
+    if (guestFirstname && guestLastname && guestDocument) {
+      listaPessoas.push({
+        nome: `${guestFirstname} ${guestLastname}`,
+        cpf: guestDocument.replace(/[^\d]/g, '')
+      });
+    }
+
+    setDocuments(listaPessoas);
+  }, [user, cpf, guests, guestFirstname, guestLastname, guestDocument]);
+
 
   return (
     <View style={GStyles.view}>
@@ -367,9 +447,10 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
                     key={code}
                     style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
                   >
-                    <Text style={{ fontWeight: 'bold', marginRight: 10 }}>{index + 1}.</Text>
                     {!isUsed ? (
                       <>
+                        <Text style={{ fontWeight: 'bold', marginRight: 10 }}>{index + 1}.</Text>
+
                         <CheckBox
                           size={24}
                           containerStyle={{ padding: 0, marginRight: 10 }}
@@ -378,13 +459,13 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
                           iconType="material-community"
                           checkedIcon="checkbox-outline"
                           uncheckedIcon="checkbox-blank-outline"
-                          disabled={isUsed}
-                        />
+                          disabled={isUsed} />
                         <Text style={{ flex: 1, color: isUsed ? '#aaa' : '#000' }}>
                           {[ticket.sector, ticket.category, ticket.day, ticket.braceletDelivered ? 'ENTREGUE' : null]
                             .filter(Boolean)
                             .join(' - ')}
                         </Text>
+
                       </>
                     ) : null}
                   </View>
@@ -446,6 +527,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
             />
 
             <Button title="Adicionar convidado" onPress={() => addGuest(true)} />
+            <Button title="Cancelar" type="outline" containerStyle={{ marginTop: 10 }} onPress={handleClear} />
           </ScrollView>
         )}
 
@@ -468,7 +550,6 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
 
             {guests.map((x, idx) => {
               const daySectorMap = x.accessKeys.reduce((acc, key) => {
-                console.log('acc', key)
                 const ticket = user.tickets.find(t => t.accessKey === key);
                 if (!ticket) return acc;
 
@@ -505,30 +586,56 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
                 </View>
               );
             })}
-
           </ScrollView>
-
-
         )}
 
-        {/* Botão Cancelar (aparece em step 1 e 2) */}
-
-        <Button
-          title="Cancelar"
-          type="outline"
-          containerStyle={{ marginTop: 10 }}
-          onPress={handleClear}
-        />
-
-
         {(step == 3 || step == 4) && entregaLiberada && (
-
           <Button title="Resumo dos tickets" onPress={() => setStep(5)} />
-          //<Button title="Finalizar cadastro" onPress={handleFinishRegistration} />
+        )}
+
+        {entregaLiberada && step === 5 && (
+          <View style={{ marginTop: 10 }}>
+            <Button title="Finalizar cadastro" onPress={(handleFinishRegistration)} containerStyle={{ marginBottom: 5 }} />
+            <Button title="Cancelar" type="outline" onPress={handleClear} />
+          </View>
+        )}
+
+        {step === 6 && (
+          <View>
+            {documents.map((pessoa, idx) => (
+              <View key={idx}>
+                <Text>• {pessoa.nome} - {pessoa.cpf}</Text>
+
+                {cpfEntrgue.includes(pessoa.cpf) ? (
+                  <Text style={{ color: 'green' }}>Foto já entregue</Text>
+                ) : (
+                  <Button
+                    onPress={() => {
+                      setCurrentDocument(pessoa.cpf);
+                      toggleCamVisibility();
+                    }}
+                    containerStyle={{ marginBottom: 5 }}
+                  >
+                    Tirar nova foto
+                  </Button>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
+
+        {entregaLiberada && (
+          <TakePictureModal
+            isVisible={isVisibleCam}
+            cancelPhoto={toggleCamVisibility}
+            savePhoto={handleSavePhoto}
+            isSavingPhoto={isLoading}
+          />
         )}
 
       </View>
-    </View>
+    </View >
   );
 };
 
