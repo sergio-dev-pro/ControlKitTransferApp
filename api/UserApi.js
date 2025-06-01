@@ -32,17 +32,18 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery 
   });
 }
 
-export const getUserByEmail = async (email, eventId) =>
+export const getUserByEmail = async (email, eventId, token) =>
   axios({
     url:
-      BASE_URL +
-      '/api/users/manual/byEmail?email=' +
+      BASE_URL_V2 +
+      '/users/byemail?email=' +
       email +
       '&eventId=' +
       eventId,
     method: 'GET',
     headers: {
       Accept: 'application/json',
+      Authorization: 'Bearer ' + token
     },
   });
 

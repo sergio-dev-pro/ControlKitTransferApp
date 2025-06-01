@@ -2,9 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {createContext, useEffect, useState} from 'react';
 import jwt_decode from 'jwt-decode';
 import axios from 'axios';
-import BASE_URL from '../constants/api';
+import { BASE_URL, BASE_URL_V2 } from '../constants/api';
 import {useAlert} from './AlertContext';
 import {getEventRequiredFields} from '../api/EventApi';
+import BASE_URL_V2 from '../constants/api2';
 
 export const AuthContext = createContext();
 
@@ -149,7 +150,7 @@ export function AuthProvider({children}) {
   const authenticateUser = async loginData => {
     setIsAuthenticating(true);
     try {
-      const url = BASE_URL + '/api/users/loginOperator';
+      const url = BASE_URL_V2 + '/users/login';
       const {data: token} = await axios({
         url,
         method: 'POST',
