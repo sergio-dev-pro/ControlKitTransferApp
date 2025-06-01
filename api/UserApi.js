@@ -36,7 +36,7 @@ export const getUserByEmail = async (email, eventId, token) =>
   axios({
     url:
       BASE_URL_V2 +
-      '/api/users/manual/byEmail?email=' +
+      '/users/byemail?email=' +
       email +
       '&eventId=' +
       eventId,
