@@ -66,7 +66,7 @@ const SearchUserModal = ({
       setLoading(true);
       const isEmailSearch = validatedInputValueType === INPUT_VALUE_TYPE.email;
       const { data: user } = isEmailSearch
-        ? await getUserByEmail(inputValue, authContext.selectedEventId)
+        ? await getUserByEmail(inputValue, authContext.selectedEventId, authContext.userToken)
         : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken, fromKitDelivery, fromBlaceletRegistration);
       const searchedFor = {};
       if (isEmailSearch) searchedFor.email = inputValue;

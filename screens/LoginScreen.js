@@ -95,13 +95,10 @@ const LoginScreen = ({navigation}) => {
             Entrar
           </Text>
           <Input
-            onBlur={() => {
-              validEmail(email);
-            }}
             ref={emailInput}
-            keyboardType="email-address"
+            keyboardType="numeric"
             onChangeText={handleEmailChange}
-            placeholder="Digite seu email"
+            placeholder="Digite seu CPF"
             errorMessage={
               !emailValidation.isValid ? emailValidation.errorMsg : ''
             }
