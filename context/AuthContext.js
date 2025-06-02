@@ -160,7 +160,7 @@ export function AuthProvider({children}) {
           'Content-Type': 'application/json-patch+json',
         },
       });
-      var token = dataResponse.accessToken;
+      var token = dataResponse.data.accessToken;
       // save token in async storage.
       await AsyncStorage.setItem('userToken', token);
       // decode token to get events.
