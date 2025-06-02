@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {createContext, useEffect, useState} from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import jwt_decode from 'jwt-decode';
 import axios from 'axios';
-import { BASE_URL, BASE_URL_V2 } from '../constants/api';
-import {useAlert} from './AlertContext';
-import {getEventRequiredFields} from '../api/EventApi';
+import { BASE_URL } from '../constants/api';
+import { useAlert } from './AlertContext';
+import { getEventRequiredFields } from '../api/EventApi';
 import BASE_URL_V2 from '../constants/api2';
 
 export const AuthContext = createContext();
@@ -26,7 +26,7 @@ const getRequiredForms = requiredFields => {
       validation: () => {
         console.log('validing form');
       },
-      formConfig: {birthDateIsRequired, genreIsRequired},
+      formConfig: { birthDateIsRequired, genreIsRequired },
     },
   ];
   const hasSizesForm =
@@ -66,11 +66,11 @@ const initialState = {
   userToken: null,
   selectedEventId: null,
   isAuthenticated: false,
-  events: null, 
+  events: null,
   requiredForms: null,
 };
 
-export function AuthProvider({children}) {
+export function AuthProvider({ children }) {
   const [authState, setAuthState] = useState(initialState);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [isSearchingEventSettings, setIsSearchingEventSettings] =
@@ -88,26 +88,26 @@ export function AuthProvider({children}) {
       const event = JSON.parse(eventInJsonFormat);
       var decodedToken = jwt_decode(token);
       console.log('@@@decodedToken', decodedToken);
-      const events = JSON.parse(decodedToken.Events);
+     // const events = decodedToken?.Events ? JSON.parse(decodedToken.Events) : [];
       setAuthState({
         userToken: token,
-        hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true", 
-        hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true", 
-        hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true", 
-        hasItinerariesPermission: decodedToken?.hasItinerariesPermission === "true", 
-        hasKitDeliveryPermission: decodedToken?.hasKitDeliveryPermission === "true", 
-        hasManualBoxOfficeRegistrationPermission: decodedToken?.hasManualBoxOfficeRegistrationPermission === "true", 
-        hasManualRegistrationPermission: decodedToken?.hasManualRegistrationPermission === "true", 
-        hasNewTicketPermission: decodedToken?.hasNewTicketPermission === "true", 
-        hasPhotoReregisterPermission: decodedToken?.hasPhotoReregisterPermission === "true", 
+        hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true",
+        hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true",
+        hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true",
+        hasItinerariesPermission: decodedToken?.hasItinerariesPermission === "true",
+        hasKitDeliveryPermission: decodedToken?.hasKitDeliveryPermission === "true",
+        hasManualBoxOfficeRegistrationPermission: decodedToken?.hasManualBoxOfficeRegistrationPermission === "true",
+        hasManualRegistrationPermission: decodedToken?.hasManualRegistrationPermission === "true",
+        hasNewTicketPermission: decodedToken?.hasNewTicketPermission === "true",
+        hasPhotoReregisterPermission: decodedToken?.hasPhotoReregisterPermission === "true",
         canCreateTicket: decodedToken.CanCreateTicket,
         canChangeEmail: decodedToken.CanChangeEmail,
         // // TODO: setado temporariamente para testar, excluir linha a baixo.
         // token: 'ZiU3aYBWAg1LPl+061DrVA==',
         isAuthenticated: true,
         selectedEventId: parseInt(event?.id),
-        requiredForms: event?.requiredForms,
-        events,
+        //requiredForms: event?.requiredForms,
+       // events,
         permissions: decodedToken.Permissions ? JSON.parse(decodedToken.Permissions) : null,
       });
     }
@@ -116,23 +116,22 @@ export function AuthProvider({children}) {
 
   const setSelectedEventId = async id => {
     try {
-      console.log('selectedEventIdNow='+ id)
+      console.log('selectedEventIdNow=' + id)
       setIsSearchingEventSettings(true);
-      const {data: requiredFieldsForUserRegistration} =
-        await getEventRequiredFields(id);
+      //const { data: requiredFieldsForUserRegistration } = await getEventRequiredFields(id);
 
       await AsyncStorage.setItem(
         'event',
         JSON.stringify({
           id: id.toString(),
-          requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
+          //requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
         }),
       );
       setIsSearchingEventSettings(false);
       setAuthState(prevState => ({
         ...prevState,
         selectedEventId: id,
-        requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
+        //requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
       }));
     } catch (e) {
       console.log(e.response?.data?.errors)
@@ -179,17 +178,17 @@ export function AuthProvider({children}) {
       let authStateChanges = {
         userToken: token,
         isAuthenticated: true,
-        events,
+        //events,
         selectedEventId,
-        permissions:  JSON.parse(decodedToken.Permissions),
-        hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true", 
-        hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true", 
-        hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true", 
-        hasItinerariesPermission: decodedToken?.hasItinerariesPermission === "true", 
-        hasKitDeliveryPermission: decodedToken?.hasKitDeliveryPermission === "true", 
-        hasManualBoxOfficeRegistrationPermission: decodedToken?.hasManualBoxOfficeRegistrationPermission === "true", 
-        hasManualRegistrationPermission: decodedToken?.hasManualRegistrationPermission === "true", 
-        hasNewTicketPermission: decodedToken?.hasNewTicketPermission === "true", 
+        permissions: JSON.parse(decodedToken.Permissions),
+        hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true",
+        hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true",
+        hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true",
+        hasItinerariesPermission: decodedToken?.hasItinerariesPermission === "true",
+        hasKitDeliveryPermission: decodedToken?.hasKitDeliveryPermission === "true",
+        hasManualBoxOfficeRegistrationPermission: decodedToken?.hasManualBoxOfficeRegistrationPermission === "true",
+        hasManualRegistrationPermission: decodedToken?.hasManualRegistrationPermission === "true",
+        hasNewTicketPermission: decodedToken?.hasNewTicketPermission === "true",
         hasPhotoReregisterPermission: decodedToken?.hasPhotoReregisterPermission === "true",
         canCreateTicket: decodedToken.CanCreateTicket === 'True',
         canChangeEmail: decodedToken.CanChangeEmail === 'True',

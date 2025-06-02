@@ -298,6 +298,8 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
   const nonHolderTicketsCount = user.tickets.filter(t => !t.isHolder).length;
   const entregaLiberada = nonHolderTicketsCount === usedGuestAccessKeys.length ? true : false;
 
+  const fotosFinalizadas = cpfEntrgue.length === documents.length ? true : false
+
 
   useEffect(() => {
     const listaPessoas = [];
@@ -328,6 +330,8 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
 
     setDocuments(listaPessoas);
   }, [user, cpf, guests, guestFirstname, guestLastname, guestDocument]);
+
+
 
 
   return (
@@ -621,6 +625,13 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
                 )}
               </View>
             ))}
+
+            {fotosFinalizadas && (
+              <View style={{ marginTop: 10 }}>
+                <Button title="Finalizar" type="outline" onPress={handleClear} />
+
+              </View>
+            )}
           </View>
         )}
 

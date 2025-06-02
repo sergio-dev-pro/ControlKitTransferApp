@@ -155,15 +155,11 @@ const NewFastTicket = ({ navigation }) => {
     }
   };
 
-  console.log('takeFoto=' + takePhoto)
-
   const canFinishRegistration = !!userData;
 
-
   const handleUserFound = user => {
-
     console.log(user)
-
+    
     if (user.tickets && user.tickets.length > 0) {
       navigation.navigate('ManualRegisterByTickets', { user, cpf: user.id });
     } else {
@@ -181,6 +177,7 @@ const NewFastTicket = ({ navigation }) => {
   };
 
   const handleCpfNotFound = (cpf) => {
+    console.log('ENTROU')
     setCpfValue(cpf)
     setCreateNewFastTicket(true);
     setShowSearchModalByCPF(false);
@@ -198,9 +195,6 @@ const NewFastTicket = ({ navigation }) => {
       setRegistered(false);
     }, [])
   );
-
-
-  console.log(searchUserTicket)
 
   return (
     <RegisterStateContext.Provider
@@ -246,73 +240,70 @@ const NewFastTicket = ({ navigation }) => {
                 setShowSearchModalByCPF(false);
               }}
               cpfValueNotFound={handleCpfNotFound} // CASO NÃO EXISTA 
-
             />
           )}
 
-          {days.length > 0 && sectors.length > 0 && createNewFastTicket && (
-            <>
-              {!userData && !takePhoto && (
-                <BasicFastRegisterForm
-                  onUserFormCompleted={handleUserFormCompleted}
-                  availableDays={days}
-                  availableSectors={sectors}
-                  sponsors={sponsors}
-                  initialDocument={cpfValue}
-                  initialFirstName={valueInitialFirstName}
-                  initialLastName={valueInitialLastname}
-                />
-              )}
-            </>
+          {!userData && !takePhoto && createNewFastTicket && (
+            <BasicFastRegisterForm
+              onUserFormCompleted={handleUserFormCompleted}
+              availableDays={days}
+              availableSectors={sectors}
+              sponsors={sponsors}
+              initialDocument={cpfValue}
+              initialFirstName={valueInitialFirstName}
+              initialLastName={valueInitialLastname}
+            />
           )}
+    
 
-          {canFinishRegistration && !takePhoto && !registered && (
-            <>
-              <Button
-                type="solid"
-                size="lg"
-                containerStyle={{ marginTop: 20 }}
-                onPress={completeRegister}>
-                Finalizar cadastro
-              </Button>
-              <Button
-                containerStyle={{ marginTop: 10 }}
-                type="outline"
-                onPress={() => {
-                  clearStates();
-                  setRegistered(false);
-                }}>
-                Cancelar
-              </Button>
-            </>
-          )}
-          {registered && !takePhoto && (
-            <>
-              <Button
-                type="solid"
-                size="lg"
-                containerStyle={{ marginTop: 20 }}
-                onPress={() => {
-                  setTakePhoto(true);
-                }}>
-                Cadastrar foto
-              </Button>
-              <Button
-                containerStyle={{ marginTop: 10 }}
-                type="outline"
-                onPress={() => {
-                  clearStates();
-                  setRegistered(false);
-                }}>
-                Cancelar
-              </Button>
-            </>
-          )}
-        </ScrollView>
-        {takePhoto && tempToken && <TakePictureScreen />}
-        <Loading isActive={loading} />
-      </View>
-    </RegisterStateContext.Provider>
+
+        {canFinishRegistration && !takePhoto && !registered && (
+          <>
+            <Button
+              type="solid"
+              size="lg"
+              containerStyle={{ marginTop: 20 }}
+              onPress={completeRegister}>
+              Finalizar cadastro
+            </Button>
+            <Button
+              containerStyle={{ marginTop: 10 }}
+              type="outline"
+              onPress={() => {
+                clearStates();
+                setRegistered(false);
+              }}>
+              Cancelar
+            </Button>
+          </>
+        )}
+        {registered && !takePhoto && (
+          <>
+            <Button
+              type="solid"
+              size="lg"
+              containerStyle={{ marginTop: 20 }}
+              onPress={() => {
+                setTakePhoto(true);
+              }}>
+              Cadastrar foto
+            </Button>
+            <Button
+              containerStyle={{ marginTop: 10 }}
+              type="outline"
+              onPress={() => {
+                clearStates();
+                setRegistered(false);
+              }}>
+              Cancelar
+            </Button>
+          </>
+        )}
+      </ScrollView>
+      {takePhoto && tempToken && <TakePictureScreen />}
+      <Loading isActive={loading} />
+    </View>
+    </RegisterStateContext.Provider >
   );
 };
 
