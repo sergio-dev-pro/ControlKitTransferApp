@@ -117,7 +117,7 @@ const LoginScreen = ({navigation}) => {
             title="ENTRAR"
             disabled={isLoginButtonDisabled}
             loading={auth.isAuthenticating}
-            onPress={() => auth.authenticateUser({email, password})}
+            onPress={() => auth.authenticateUser({document: email, password})}
             containerStyle={{width: '100%', paddingHorizontal: 10}}
           />
         </View>
