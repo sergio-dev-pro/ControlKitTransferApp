@@ -166,16 +166,16 @@ export function AuthProvider({children}) {
       // decode token to get events.
       var decodedToken = jwt_decode(token);
       console.log('decodedToken=' + JSON.stringify(decodedToken));
-      const events = JSON.parse(decodedToken.Events);
+      //const events = JSON.parse(decodedToken.Events);
       // Se tiver apenas um evento, nao precisa ir para tela de selecao.
-      const selectedEventId = events.length === 1 ? events[0].id : null;
+      const selectedEventId = null;
 
-      const eventRequiredFields = selectedEventId
-        ? await getEventRequiredFields(selectedEventId)
-        : null;
-      const requiredForms = eventRequiredFields
-        ? getRequiredForms(eventRequiredFields.data)
-        : null;
+      // const eventRequiredFields = selectedEventId
+      //   ? await getEventRequiredFields(selectedEventId)
+      //   : null;
+      // const requiredForms = eventRequiredFields
+      //   ? getRequiredForms(eventRequiredFields.data)
+      //   : null;
       let authStateChanges = {
         userToken: token,
         isAuthenticated: true,
@@ -194,27 +194,27 @@ export function AuthProvider({children}) {
         canCreateTicket: decodedToken.CanCreateTicket === 'True',
         canChangeEmail: decodedToken.CanChangeEmail === 'True',
       };
-      if (requiredForms) {
-        authStateChanges.requiredForms = requiredForms;
-        try {
-          await AsyncStorage.setItem(
-            'event',
-            JSON.stringify({
-              id: selectedEventId.toString(),
-              requiredForms,
-            }),
-          );
-        } catch (error) {
-          console.error(error);
-        }
-      }
+      // if (requiredForms) {
+      //   authStateChanges.requiredForms = requiredForms;
+      //   try {
+      //     await AsyncStorage.setItem(
+      //       'event',
+      //       JSON.stringify({
+      //         id: selectedEventId.toString(),
+      //         requiredForms,
+      //       }),
+      //     );
+      //   } catch (error) {
+      //     console.error(error);
+      //   }
+      // }
       setAuthState(prevState => ({
         ...prevState,
         ...authStateChanges,
       }));
     } catch (error) {
       console.log(error);
-      setAlertMessage(error.response.data.errors);
+      setAlertMessage(error.response.data.message);
       return null;
     } finally {
       setIsAuthenticating(false);
