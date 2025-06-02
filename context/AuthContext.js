@@ -151,7 +151,7 @@ export function AuthProvider({children}) {
     setIsAuthenticating(true);
     try {
       const url = BASE_URL_V2 + '/users/login';
-      const {data: token} = await axios({
+      const dataResponse = await axios({
         url,
         method: 'POST',
         data: loginData,
@@ -160,6 +160,7 @@ export function AuthProvider({children}) {
           'Content-Type': 'application/json-patch+json',
         },
       });
+      var token = dataResponse.accessToken;
       // save token in async storage.
       await AsyncStorage.setItem('userToken', token);
       // decode token to get events.
