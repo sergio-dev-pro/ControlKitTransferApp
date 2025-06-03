@@ -60,6 +60,7 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
   const [documents, setDocuments] = useState([])
   const [currentDocument, setCurrentDocument] = useState('')
   const [cpfEntrgue, setCpfEntrgue] = useState([]);
+  const regex = /^[\w.-]+@[\w.-]+\.\w+$/; //validar email
 
   const handleClear = () => {
     setSelectedEventKeys([]);
@@ -208,6 +209,11 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
       return;
     }
 
+    if (!regex.test(guestEmail)) {
+      Alert.alert('', 'Digite um e-mail válido.');
+      return;
+    }
+
     if (
       guestPhone.countryCode.length < 1 || guestPhone.countryCode.length > 3 ||
       guestPhone.dialCode.length < 1 || guestPhone.dialCode.length > 4 ||
@@ -255,6 +261,8 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
   };
 
   const handleSavePhoto = async (imgPath) => {
+
+    console.log('imgPath', imgPath)
 
     const formData = new FormData();
     formData.append("file", {
@@ -394,6 +402,8 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
               }}
             />
             <Button title="Próximo" onPress={handleNextStep} />
+            <Button title="Cancelar" type="outline" containerStyle={{ marginTop: 10 }} onPress={handleClear} />
+
           </>
         )}
 
@@ -431,6 +441,9 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
               onChangeText={text => setNationalNumber(text.replace(/[^\d]/g, ''))}
             />
             <Button title="Continuar Cadastro" onPress={continueRegistryTickets} />
+            <Button title="Cancelar" type="outline" containerStyle={{ marginTop: 10 }} onPress={handleClear} />
+
+
           </>
         )}
 
@@ -478,7 +491,10 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
             />
 
             {!entregaLiberada && (
-              <Button title="Próximo" onPress={continueRegistryTickets} />
+              <>
+                <Button title="Próximo" onPress={continueRegistryTickets} />
+              </>
+
             )}
           </>
         )}
@@ -531,7 +547,6 @@ const ManualRegisterByTickets = ({ navigation, route }) => {
             />
 
             <Button title="Adicionar convidado" onPress={() => addGuest(true)} />
-            <Button title="Cancelar" type="outline" containerStyle={{ marginTop: 10 }} onPress={handleClear} />
           </ScrollView>
         )}
 

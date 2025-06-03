@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,13 +7,13 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import {Camera, useCameraDevices} from 'react-native-vision-camera';
+import { Camera, useCameraDevices } from 'react-native-vision-camera';
 
 import Loading from './Loading';
-import {Button, Icon} from '@rneui/themed';
+import { Button, Icon } from '@rneui/themed';
 import ReactNativeModal from 'react-native-modal';
 import THEME from '../style/theme';
-import {useAlert} from '../context/AlertContext';
+import { useAlert } from '../context/AlertContext';
 
 export default function TakePictureModal({
   cancelPhoto,
@@ -43,7 +43,7 @@ export default function TakePictureModal({
         Alert.alert(
           '',
           'Precisamos do acesso a camera para finalizar o cadastro.',
-          [{text: 'Ok', onPress: askCameraPermission}],
+          [{ text: 'Ok', onPress: askCameraPermission }],
         );
     }
   }, [cameraPermissionStatus]);
@@ -51,6 +51,13 @@ export default function TakePictureModal({
   useEffect(() => {
     picture && setIsInitializedCamera(false);
   }, [picture]);
+
+  useEffect(() => {
+    if (isVisible) {
+      setPicture(null); // limpa a foto anterior ao reabrir o modal
+    }
+  }, [isVisible]);
+
 
   const toggleLoading = () => setLoading(prevState => !prevState);
 
@@ -116,14 +123,14 @@ export default function TakePictureModal({
                   cancelPhoto();
                 }}
                 type="clear"
-                style={[styles.camButton, {width: '40%'}]}>
+                style={[styles.camButton, { width: '40%' }]}>
                 Voltar
               </Button>
               <Button
                 type="solid"
                 loading={isSavingPhoto}
                 onPress={() => savePhoto(picturePath)}
-                style={[styles.camButton, {width: '40%'}]}>
+                style={[styles.camButton, { width: '40%' }]}>
                 Salvar
               </Button>
             </View>
@@ -141,13 +148,13 @@ export default function TakePictureModal({
             {isTakingPhoto ? (
               <Loading size="large" />
             ) : (
-              <View style={{flex: 1, justifyContent: 'space-between'}}>
-                <View style={{width: '100%', justifyContent: 'flex-start'}}>
+              <View style={{ flex: 1, justifyContent: 'space-between' }}>
+                <View style={{ width: '100%', justifyContent: 'flex-start' }}>
                   <Button
                     onPress={cancelPhoto}
                     type="clear"
                     size="lg"
-                    containerStyle={[styles.camButton, {width: 50}]}>
+                    containerStyle={[styles.camButton, { width: 50 }]}>
                     <Icon
                       type="antdesign"
                       name="arrowleft"
