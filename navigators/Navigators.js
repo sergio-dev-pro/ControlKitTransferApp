@@ -57,12 +57,17 @@ function Navigators() {
 
   const hasOnlyOneEvent = events && events.length === 1;
 
+  console.log('Permissions: ', permissions)
+  console.log('selectedEventId@@@@: ' + selectedEventId)
+
+
   const eventPermissions =
     selectedEventId &&
     permissions &&
     permissions.find(permission => permission.eventId == selectedEventId);
 
   if (userToken && selectedEventId && !eventPermissions) {
+    console.log('NAVIGATOR LOGOUT')
     logout();
   }
 

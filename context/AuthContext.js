@@ -110,6 +110,8 @@ export function AuthProvider({ children }) {
        // events,
         permissions: decodedToken.Permissions ? JSON.parse(decodedToken.Permissions) : null,
       });
+    } else {
+      console.log('sem token')
     }
     setIsAuthenticating(false);
   };
