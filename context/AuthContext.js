@@ -151,7 +151,7 @@ export function AuthProvider({ children }) {
   const authenticateUser = async loginData => {
     setIsAuthenticating(true);
     try {
-      const url = BASE_URL_V2 + '/users/login';
+      const url = BASE_URL_V2 + '/companyusers/login';
       const dataResponse = await axios({
         url,
         method: 'POST',
@@ -182,7 +182,7 @@ export function AuthProvider({ children }) {
         isAuthenticated: true,
         //events,
         selectedEventId,
-        permissions: JSON.parse(decodedToken.Permissions),
+        companies: dataResponse.data.companies,
         hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true",
         hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true",
         hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true",

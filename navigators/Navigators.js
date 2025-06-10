@@ -64,7 +64,7 @@ function Navigators() {
   const eventPermissions =
     selectedEventId &&
     permissions &&
-    permissions.find(permission => permission.eventId == selectedEventId);
+    permissions;
 
   if (userToken && selectedEventId && !eventPermissions) {
     console.log('NAVIGATOR LOGOUT')
@@ -86,38 +86,38 @@ function Navigators() {
               marginTop: 16,
             },
           }}>
-          {eventPermissions.hasKitDeliveryPermission && (
+          {eventPermissions.includes("page.delivery.kit") && (
             <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
           )}
-          {eventPermissions.hasBraceletDeliveryPermission && (
+          {eventPermissions.includes("page.delivery.bracelet") && (
             <Drawer.Screen
               name="Entregar pulseira"
               component={DeliverBraceletDrawerScreen}
             />
           )}
-          {eventPermissions.hasBraceletRegistrationPermission && (
+          {eventPermissions.includes("page.ticket.register.qrcode") && (
             <Drawer.Screen
               name="Registrar Qr Code"
               component={BraceletRegistrationDrawerScreen}
             />
           )}
-          {eventPermissions.hasManualRegistrationPermission && (
+          {/* {eventPermissions.hasManualRegistrationPermission && (
             <Drawer.Screen
               name="Cadastro manual"
               component={ManualRegisterScreen}
             />
-          )}
+          )} */}
 
-          {eventPermissions.hasManualBoxOfficeRegistrationPermission && (
+          {/* {eventPermissions.hasManualBoxOfficeRegistrationPermission && (
             <Drawer.Screen
               name="Cadastro - Bilheteria"
               component={TicketOfficeManualRegisterScreen}
             />
-          )}
-          {eventPermissions.hasItinerariesPermission && (
+          )} */}
+          {/* {eventPermissions.hasItinerariesPermission && (
             <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
-          )}
-          {eventPermissions.hasPhotoReregisterPermission && (
+          )} */}
+          {eventPermissions.includes("page.user.retake.photo") && (
             <Drawer.Screen
               name="Recadastrar foto"
               component={PhotoReregisterDrawerScreen}
@@ -129,13 +129,13 @@ function Navigators() {
               component={EventSelectionDrawerScreen}
             />
           )}
-          {eventPermissions.canCreateTicket && (
+          {/* {eventPermissions.includes("page.delivery.kit") && (
             <Drawer.Screen name="Novo ingresso" component={NewTicket} />
-          )}
-          {eventPermissions.canCreateTicket && (
+          )} */}
+          {eventPermissions.includes("page.ticket.add") && (
             <Drawer.Screen name="Cadastro rápido" component={NewFastTicket} />
           )}
-          {eventPermissions.canChangeUserEmail && (
+          {eventPermissions.includes("page.user.update.email") && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
           )}
           <Drawer.Screen

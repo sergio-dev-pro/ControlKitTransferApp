@@ -22,7 +22,7 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery 
   const cleanCpf = cpf.replace(/\D/g, '');
   return axios({
     url:
-      BASE_URL_V2 + `/users/bydocument?document=${cleanCpf}&eventid=${eventId}`,
+      BASE_URL_V2 + `/users?searchTerm=${cleanCpf}&eventid=${eventId}`,
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -36,7 +36,7 @@ export const getUserByEmail = async (email, eventId, token) =>
   axios({
     url:
       BASE_URL_V2 +
-      '/users/byemail?email=' +
+      '/users?searchTerm=' +
       email +
       '&eventId=' +
       eventId,
