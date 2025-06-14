@@ -7,56 +7,55 @@ import Button from '../components/Button';
 import Loading from '../components/Loading';
 import { AuthContext } from '../context/AuthContext';
 import GStyles from '../style/global';
-import { getEventsList } from '../api/EventApi';
-import BASE_URL_V2 from '../constants/api2';
 
 function EventSelectionScreen() {
-  const [listEvents, setListEvents] = useState([]); // Corrigido!
-  const [loading, setLoading] = useState(true);
+  const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+  const { setSelectedEventId, companies } = useContext(AuthContext);
 
-  const { setSelectedEventId, userToken } = useContext(AuthContext);
-  
+  const selectedCompany = companies?.find(c => c.id === selectedCompanyId);
+
+  const logCompanies = () => {
+    console.log('Companies:', JSON.stringify(companies, null, 2));
+  };
+
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await getEventsList(userToken);
-        console.log('Eventos retornados:', response); // Verifica o retorno da API
-        setListEvents(response);
-      } catch (error) {
-        console.error('Erro ao carregar eventos:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (companies) {
+      logCompanies();
+    }
+  }, [companies]);
 
-    fetchEvents();
-  }, [userToken]); 
-
-  if (loading) {
-    return (
-      <View style={GStyles.view}>
-        <AuthHeader />
-        <View style={GStyles.container}>
-          <Loading isActive />
-        </View>
-      </View>
-    );
-  }
-
-  console.log(listEvents)
 
   return (
     <View style={GStyles.view}>
       <AuthHeader />
       <View style={GStyles.container}>
-        <Text h3 h3Style={{ textAlign: 'center' }}>Selecione o evento</Text>
+        <Text h3 h3Style={{ textAlign: 'center', marginBottom: 20 }}>
+          {selectedCompanyId ? 'Selecione o evento' : 'Selecione a empresa'}
+        </Text>
+
+        {selectedCompanyId && (
+          <Button
+            onPress={() => setSelectedCompanyId(null)}
+            title="Voltar para empresas"
+            type="clear"
+            containerStyle={{ marginBottom: 10 }}
+          />
+        )}
+
         <FlatList
-          data={listEvents} // Agora correto!
+          data={selectedCompanyId ? selectedCompany?.events || [] : companies}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <ListItem containerStyle={GStyles.maxWidth}>
               <Button
-                onPress={() => setSelectedEventId(item.id)}
+                onPress={() => {
+                  if (selectedCompanyId) {
+                    setSelectedEventId(item.id); // Aqui salva o ID do evento selecionado no contexto
+                    // Aqui você pode navegar para outra tela, se quiser
+                  } else {
+                    setSelectedCompanyId(item.id); // Aqui seleciona a empresa
+                  }
+                }}
                 size="lg"
                 type="outline"
                 containerStyle={{ width: '100%' }}

@@ -67,7 +67,7 @@ function Navigators() {
     permissions;
 
   if (userToken && selectedEventId && !eventPermissions) {
-    console.log('NAVIGATOR LOGOUT')
+        console.log('NAVIGATOR LOGOUT')
     logout();
   }
 

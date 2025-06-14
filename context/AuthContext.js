@@ -83,12 +83,14 @@ export function AuthProvider({ children }) {
 
   const getUserToken = async () => {
     const token = await AsyncStorage.getItem('userToken');
+    const companiesString = await AsyncStorage.getItem('userCompanies');
     if (token) {
       const eventInJsonFormat = await AsyncStorage.getItem('event');
       const event = JSON.parse(eventInJsonFormat);
       var decodedToken = jwt_decode(token);
       console.log('@@@decodedToken', decodedToken);
      // const events = decodedToken?.Events ? JSON.parse(decodedToken.Events) : [];
+     const companies = companiesString ? JSON.parse(companiesString) : [];
       setAuthState({
         userToken: token,
         hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true",
@@ -109,6 +111,7 @@ export function AuthProvider({ children }) {
         //requiredForms: event?.requiredForms,
        // events,
         permissions: decodedToken.Permissions ? JSON.parse(decodedToken.Permissions) : null,
+        companies: companies        
       });
     } else {
       console.log('sem token')
@@ -147,6 +150,7 @@ export function AuthProvider({ children }) {
       token,
     }));
   };
+  
 
   const authenticateUser = async loginData => {
     setIsAuthenticating(true);
@@ -164,6 +168,7 @@ export function AuthProvider({ children }) {
       var token = dataResponse.data.accessToken;
       // save token in async storage.
       await AsyncStorage.setItem('userToken', token);
+      await AsyncStorage.setItem('userCompanies', JSON.stringify(dataResponse.data.companies));
       // decode token to get events.
       var decodedToken = jwt_decode(token);
       console.log('decodedToken=' + JSON.stringify(decodedToken));
@@ -177,6 +182,8 @@ export function AuthProvider({ children }) {
       // const requiredForms = eventRequiredFields
       //   ? getRequiredForms(eventRequiredFields.data)
       //   : null;
+
+
       let authStateChanges = {
         userToken: token,
         isAuthenticated: true,
@@ -209,6 +216,7 @@ export function AuthProvider({ children }) {
       //     console.error(error);
       //   }
       // }
+     
       setAuthState(prevState => ({
         ...prevState,
         ...authStateChanges,
