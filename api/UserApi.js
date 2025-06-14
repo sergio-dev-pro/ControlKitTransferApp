@@ -70,7 +70,7 @@ export const saveUserPhoto = async formData => {
 
 export const saveUserPhotoAgain = async (formData, token) => {
   await axios({
-    url: BASE_URL_V2 + "/files/updateFace?origin=meetingpointapp",
+    url: BASE_URL_V2 + "/users/face?origin=meetingpointapp",
     method: "POST",
     data: formData,
     headers: {
@@ -142,7 +142,7 @@ export const completeTicketRegister = async (data, userToken) => {
 export const updateEmail = async (data, userToken) => {
 
   axios({
-    url: BASE_URL_V2 + '/users/updateEmail',
+    url: BASE_URL_V2 + '/users/email',
     method: 'PATCH',
     data: data,
     headers: {
