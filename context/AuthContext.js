@@ -243,6 +243,13 @@ export function AuthProvider({ children }) {
     setAuthState(initialState);
   };
 
+  const setPermission = (selectedEventPermissions) => {
+    setAuthState(prevState => ({
+      ...prevState,
+      permissions: selectedEventPermissions,
+    }));
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -253,9 +260,11 @@ export function AuthProvider({ children }) {
         setAuthState,
         setIsAuthenticating,
         setSelectedEventId,
+        setPermission,
         logout,
         setUserToken,
         isSearchingEventSettings,
+        
       }}>
       {children}
     </AuthContext.Provider>

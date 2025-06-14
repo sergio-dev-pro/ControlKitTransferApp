@@ -10,21 +10,14 @@ import GStyles from '../style/global';
 
 function EventSelectionScreen() {
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
-  const { setSelectedEventId, companies } = useContext(AuthContext);
+  const { setSelectedEventId, companies, setPermission } = useContext(AuthContext);
 
   const selectedCompany = companies?.find(c => c.id === selectedCompanyId);
 
-  const logCompanies = () => {
-    console.log('Companies:', JSON.stringify(companies, null, 2));
-  };
 
-  useEffect(() => {
-    if (companies) {
-      logCompanies();
-    }
-  }, [companies]);
+  console.log(selectedCompanyId)
 
-
+  
   return (
     <View style={GStyles.view}>
       <AuthHeader />
@@ -50,8 +43,8 @@ function EventSelectionScreen() {
               <Button
                 onPress={() => {
                   if (selectedCompanyId) {
-                    setSelectedEventId(item.id); // Aqui salva o ID do evento selecionado no contexto
-                    // Aqui você pode navegar para outra tela, se quiser
+                    setSelectedEventId(item.id); 
+                    setPermission(item.permissions);
                   } else {
                     setSelectedCompanyId(item.id); // Aqui seleciona a empresa
                   }
