@@ -17,6 +17,17 @@ function EventSelectionScreen() {
 
   console.log(selectedCompanyId)
 
+useEffect(() => {
+  const saveCompanyId = async () => {
+    if (selectedCompanyId) {
+      await AsyncStorage.setItem('userCompanyeId', JSON.stringify(selectedCompanyId));
+    }
+  };
+
+  saveCompanyId();
+}, [selectedCompanyId]);
+
+
   
   return (
     <View style={GStyles.view}>
