@@ -120,7 +120,7 @@ function PhotoReregisterDrawerScreen({ navigation }) {
             isVisible={isVisible}
             onClose={() => {
               setIsVisible(false);
-              navigation.navigate('Kits');
+              navigation.navigate('Mudar evento');
             }}
           />
         )}

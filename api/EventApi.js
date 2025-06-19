@@ -58,7 +58,7 @@ export const getEventDays = async eventId =>
 
 export const getEventsList = async (token, companiesId) => {
   var response = await axios({
-    url: `${BASE_URL_V2}/events`,
+    url: `${BASE_URL_V2}/events?companyId=${companiesId}`,
     method: 'GET',
     headers: {
       Accept: 'application/json',

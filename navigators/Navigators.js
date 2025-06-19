@@ -58,7 +58,6 @@ function Navigators() {
   const hasOnlyOneEvent = events && events.length === 1;
 
   console.log('Permissions: ', permissions)
-  console.log('selectedEventId@@@@: ' + selectedEventId)
 
 
   const eventPermissions =
@@ -67,7 +66,6 @@ function Navigators() {
     permissions;
 
   if (userToken && selectedEventId && !eventPermissions) {
-        console.log('NAVIGATOR LOGOUT')
     logout();
   }
 
@@ -77,6 +75,7 @@ function Navigators() {
     <>
       {userToken && selectedEventId && eventPermissions ? (
         <Drawer.Navigator
+         key={selectedEventId}
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {

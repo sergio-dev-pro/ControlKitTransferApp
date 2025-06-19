@@ -7,6 +7,7 @@ import Button from '../components/Button';
 import Loading from '../components/Loading';
 import { AuthContext } from '../context/AuthContext';
 import GStyles from '../style/global';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function EventSelectionScreen() {
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
@@ -15,18 +16,15 @@ function EventSelectionScreen() {
   const selectedCompany = companies?.find(c => c.id === selectedCompanyId);
 
 
-  console.log(selectedCompanyId)
+  useEffect(() => {
+    const saveCompanyId = async () => {
+      if (selectedCompanyId) {
+        await AsyncStorage.setItem('userCompanyId', JSON.stringify(selectedCompanyId));
+      }
+    };
 
-useEffect(() => {
-  const saveCompanyId = async () => {
-    if (selectedCompanyId) {
-      await AsyncStorage.setItem('userCompanyeId', JSON.stringify(selectedCompanyId));
-    }
-  };
-
-  saveCompanyId();
-}, [selectedCompanyId]);
-
+    saveCompanyId();
+  }, [selectedCompanyId]);
 
   
   return (

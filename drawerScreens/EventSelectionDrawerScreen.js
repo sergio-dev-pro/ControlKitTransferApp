@@ -1,14 +1,17 @@
-import {Text} from '@rneui/themed';
-import React, {useContext, useEffect, useState} from 'react';
+import { Text } from '@rneui/themed';
+import React, { useContext, useEffect, useState } from 'react';
 import GStyles from '../style/global';
-import {Divider, ListItem} from '@rneui/base';
-import {FlatList, View} from 'react-native';
+import { Divider, ListItem } from '@rneui/base';
+import { FlatList, View } from 'react-native';
 import Button from '../components/Button';
-import {AuthContext} from '../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
 import THEME from '../style/theme';
 import { getEventsList } from '../api/EventApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { event } from 'react-native-reanimated';
+
 
 const getRouteNameByPermission = permissions => {
   switch (true) {
@@ -31,21 +34,24 @@ const getRouteNameByPermission = permissions => {
     case permissions?.canChangeUserEmail:
       return 'Alterar e-mail';
     default:
-      return 'Kits';
+      return null;
   }
 };
 
-function EventSelectionDrawerScreen({navigation}) {
-  const {setSelectedEventId, selectedEventId, permissions, authToken} =
-    useContext(AuthContext);
+function EventSelectionDrawerScreen({ navigation }) {
+  const { setSelectedEventId, selectedEventId, permissions, userToken, setPermission } = useContext(AuthContext);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+
 
   useEffect(() => {
     const fetchEvents = async () => {
       setIsLoading(true);
       try {
-        const eventsData = await getEventsList(authToken);
+        const storedCompanyId = await AsyncStorage.getItem('userCompanyId'); // <--- CORRETO
+        const parsedCompanyId = JSON.parse(storedCompanyId);
+        const eventsData = await getEventsList(userToken, parsedCompanyId);
         setEvents(eventsData);
       } catch (error) {
         console.error('Erro ao buscar eventos:', error);
@@ -55,30 +61,55 @@ function EventSelectionDrawerScreen({navigation}) {
     };
 
     fetchEvents();
-  }, [authToken]);
+  }, [userToken]);
+
 
   const handleEventSelection = async eventId => {
     if (eventId !== selectedEventId) {
       await setSelectedEventId(eventId);
     }
 
-    const eventPermissions =
-      permissions?.find(permission => permission.eventId === eventId);
+    const selectedEvent = events.find(event => event.id === eventId);
+    const eventPermissions = selectedEvent?.permissions || [];
 
-      
+    setPermission(eventPermissions);
 
-    navigation.navigate(getRouteNameByPermission(eventPermissions));
+
+    const permissionObj = {
+      hasKitDeliveryPermission: eventPermissions.includes("page.delivery.kit"),
+      hasBraceletDeliveryPermission: eventPermissions.includes("page.delivery.bracelet"),
+      hasBraceletRegistrationPermission: eventPermissions.includes("page.ticket.register.qrcode"),
+      hasManualRegistrationPermission: eventPermissions.includes("page.manual.registration"),
+      hasManualBoxOfficeRegistrationPermission: eventPermissions.includes("page.manual.boxoffice"),
+      hasItinerariesPermission: eventPermissions.includes("page.itineraries"),
+      hasPhotoReregisterPermission: eventPermissions.includes("page.user.retake.photo"),
+      canCreateTicket: eventPermissions.includes("page.ticket.add"),
+      canChangeUserEmail: eventPermissions.includes("page.user.update.email"),
+    };
+
+    const routeName = getRouteNameByPermission(permissionObj);
+
+    // ⚠️ Só navega se a rota for válida (evita erro de rota inexistente)
+    if (routeName) {
+      setTimeout(() => {
+        navigation.navigate(routeName);
+      }, 50);
+    } else {
+      console.warn('Nenhuma rota correspondente às permissões encontradas.');
+    }
   };
+
+
 
   return (
     <>
-      <View style={{...GStyles.view}}>
+      <View style={{ ...GStyles.view }}>
         <Header
-          style={{marginBottom: 0}}
+          style={{ marginBottom: 0 }}
           openDrawer={() => navigation.openDrawer()}
         />
-        <View style={{width: '100%', backgroundColor: THEME.cor.whitesmoke}}>
-          <Text h3 h3Style={{padding: 8, textAlign: 'center'}}>
+        <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
+          <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
             Eventos
           </Text>
           <Divider />
@@ -90,14 +121,14 @@ function EventSelectionDrawerScreen({navigation}) {
             <FlatList
               data={events}
               keyExtractor={item => item.id.toString()}
-              renderItem={({item}) => (
+              renderItem={({ item }) => (
                 <ListItem containerStyle={GStyles.maxWidth}>
                   <Button
                     onPress={() => handleEventSelection(item.id)}
                     type={selectedEventId === item.id ? 'solid' : 'outline'}
                     size="lg"
-                    containerStyle={{width: '100%'}}
-                    titleStyle={{fontWeight: 'bold', fontSize: 20}}>
+                    containerStyle={{ width: '100%' }}
+                    titleStyle={{ fontWeight: 'bold', fontSize: 20 }}>
                     {item.name}
                   </Button>
                 </ListItem>
