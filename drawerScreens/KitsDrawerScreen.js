@@ -16,7 +16,7 @@ import { useAlert } from '../context/AlertContext';
 import { AuthContext } from '../context/AuthContext';
 import { getDeviceId } from 'react-native-device-info';
 import GStyles from '../style/global';
-import { fetchTickets, registerTicket } from '../api/TicketApi';
+import { fetchTickets, getTicketDelivery, registerTicket } from '../api/TicketApi';
 import * as realmApi from '../api/realmApi';
 import useNetinfo from './hooks/useNetinfo';
 import THEME from '../style/theme';
@@ -90,7 +90,7 @@ function KitsDrawerScreen({ navigation }) {
         setMustSelectShirtSize(response.data.shirtSizeIsRequired);
       } catch (error) {
         console.log('KitsDrawerScreen useEffect getEventRequiredFields', error);
-        alert('Erro ao buscar campos requeridos, saia e entre novamente.');
+        //alert('Erro ao buscar campos requeridos, saia e entre novamente.');
       } finally {
         setCheckingIfNeedSelectShirtSize(false);
       }
@@ -131,6 +131,9 @@ function KitsDrawerScreen({ navigation }) {
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
 
+    //todo: vai precisar bater na api para pegar o ticketId, e assim conseguir buscar nos ticketFounds, agora tem que buscar por id
+    //Endpoint para conseguir o ticketId: GET /Deliveries passando por query string eventId e accessKey
+
     if (ticketFounds.length > 0) {
       const ticketCodeFounds = ticketFounds.map(ticket => ticket.code);
       // Verifica se o codigo lido ja foi lido.
@@ -142,13 +145,18 @@ function KitsDrawerScreen({ navigation }) {
    
     try {
       setLoading(true);
-      const { data: ticket } = await registerTicket(
+      const { data: ticket } = await getTicketDelivery(
         authContext.selectedEventId,
-        [code],
-        authContext.userToken
+        code,
+        authContext.userToken, 'Kit'
       );
 
-      if (ticket.delivered) {
+      if(!ticket)
+      {
+        throw new Error("Ingresso não encontrado na api!");
+      }
+
+      if (ticket.kitDeliveredAt) {
         setHasKitAlreadyDelivered(true);
         setShowModalOfReasonForKitDelivery(true);
       }
@@ -214,55 +222,36 @@ function KitsDrawerScreen({ navigation }) {
     try {
       setIsLoading(true);
 
-      // Tentando registrar o documento
-      try {
-        const formData = new FormData();
-
-        formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
-        formData.append('file', {
-          uri: documentImg,
-          type: 'image/jpg',
-          name: 'documentImage.jpg',
-        });
-        formData.append('EventId', authContext.selectedEventId)
-        formData.append('Document', ticketFounds[0]?.document.replace(/[.\-]/g, ''))
-
-        if (mustSelectShirtSize) {
-          const shirtSizeByCode = {};
-          for (var ticket in ticketFounds) {
-            shirtSizeByCode[ticketFounds[ticket].code] =
-              ticketFounds[ticket].shirtSize;
-          }
-          formData.append('codesShirtSize', JSON.stringify(shirtSizeByCode));
-        }
-
-        await ticketOwnerDocumentRegistration(authContext.userToken, formData);
-      } catch (error) {
-        console.error('Erro ao registrar o documento:', error);
-        setAlertMessage('Erro ao registrar o documento!', '#dc143c');
-        throw error; // Relança o erro para que o fluxo de execução pare
-      }
-
-      // Tentando registrar a assinatura do kit
+      // Tentando registrar a assinatura do kit e documento
       try {
         const formData = new FormData();
         console.log('Kit Codes antes de adicionar ao FormData:', JSON.stringify(kitCodes));
 
-        formData.append('kitCodes', JSON.stringify(kitCodes));
-        formData.append('codes', JSON.stringify(ticketFounds.map(t => t.code)));
-        formData.append('file', {
+        //formData.append('kitCodes', JSON.stringify(kitCodes));
+        ticketFounds.forEach((ticket, index) => {
+          formData.append(`Tickets[${index}].TicketId`, ticket.id);
+          if(reasonForKitDelivery)
+          {
+            formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
+            formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
+          }
+        });
+        formData.append('SignatureDocumentFile', {
+          uri: documentImg,
+          type: 'image/jpg',
+          name: 'documentImage.jpg',
+        });
+        formData.append('SignatureFile', {
           uri: 'data:image/png;base64,' + signature?.encoded + ';',
           type: 'image/png',
           name: 'signatureImage.png',
         });
-        formData.append('EventId', authContext.selectedEventId)
-        formData.append('Document', ticketFounds[0]?.document.replace(/[.\-]/g, ''))
+        formData.append('EventId', authContext.selectedEventId);
+        formData.append('Type', 'Kit');
 
-        if (reasonForKitDelivery) formData.append('reason', reasonForKitDelivery);
-
-        if (incompleteRegistrationReason) {
-          formData.append('reasonInvalidUser', incompleteRegistrationReason);
-        }
+        // if (incompleteRegistrationReason) {
+        //   formData.append('reasonInvalidUser', incompleteRegistrationReason);
+        // }
 
         await ticketOwnerSignatureRegistration(authContext.userToken, formData);
         setAlertMessage('Entrega de kit registrada', '#32cd32');
@@ -796,7 +785,7 @@ function KitsDrawerScreen({ navigation }) {
         </View>
       )}
 
-      <JustificationModal
+      {/* <JustificationModal
         modalVisible={isValidBoolean}
         setModalVisible={setIsValidBoolean}
         onSubmit={handleJustificationSubmit}
@@ -804,7 +793,7 @@ function KitsDrawerScreen({ navigation }) {
           cancel()
         }}
         message={`Cadastro do usuário ínvalido. Informe um motivo para continuar com a entrega do kit.`}
-      />
+      /> */}
 
 
     </View>
@@ -891,54 +880,34 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
     try {
       setIsLoading(true);
-      try {
-        const formData = new FormData();
-
-        formData.append('codes', JSON.stringify(selectedTicketCodes));
-
-        formData.append('file', {
-          uri: documentImg,
-          type: 'image/jpg',
-          name: 'documentImage.jpg',
-        });
-
-        formData.append('EventId', authContext.selectedEventId)
-        formData.append('Document', user.id.replace(/[.\-]/g, ''))
-
-        console.log('FormData para registrar documento:', formData);
-
-        if (mustSelectShirtSize) {
-          formData.append('codesShirtSize', JSON.stringify(ticketCodeAndShirtSize));
-        }
-
-        await ticketOwnerDocumentRegistration(authContext.userToken, formData);
-        console.log('Documento registrado com sucesso.');
-      } catch (error) {
-        console.error('Erro ao registrar documento:', error);
-        throw `Chamada para registrar documento, payload = ${JSON.stringify({
-          formData,
-        })} ${ticketOwnerDocumentRegistration}${error}`;
-      }
 
       const formData = new FormData();
-      const getQrcodeReads = () => selectedTicketCodes.map(code => shirtCodesRead[code]?.code || 'Código não encontrado');
-      formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
-      formData.append('codes', JSON.stringify(selectedTicketCodes));
-      formData.append('file', {
+      // const getQrcodeReads = () => selectedTicketCodes.map(code => shirtCodesRead[code]?.code || 'Código não encontrado');
+      // formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
+      selectedTicketCodes.forEach((ticketId, index) => {
+          formData.append(`Tickets[${index}].TicketId`, ticketId);
+          if(hasKitAlreadyDelivered)
+          {
+            formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
+            formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
+          }
+      });
+      formData.append('SignatureDocumentFile', {
+        uri: documentImg,
+        type: 'image/jpg',
+        name: 'documentImage.jpg',
+      });
+      formData.append('SignatureFile', {
         uri: 'data:image/png;base64,' + signature?.encoded + ';',
         type: 'image/png',
         name: 'signatureImage.png',
       });
-      formData.append('EventId', authContext.selectedEventId)
-      formData.append('Document', user.id.replace(/[.\-]/g, ''))
+      formData.append('EventId', authContext.selectedEventId);
+      formData.append('Type', 'Kit');
 
-      if (hasKitAlreadyDelivered) {
-        formData.append('reason', reasonForKitDelivery);
-      }
-
-      if (incompleteRegistrationReason) {
-        formData.append('reasonInvalidUser', incompleteRegistrationReason);
-      }
+      // if (incompleteRegistrationReason) {
+      //   formData.append('reasonInvalidUser', incompleteRegistrationReason);
+      // }
 
       console.log('Enviando dados para registrar a assinatura do kit...');
       await ticketOwnerSignatureRegistration(authContext.userToken, formData);
@@ -955,32 +924,29 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   };
 
 
-  const confirmTicketCodeSelection = async (codes) => {
+  const confirmTicketCodeSelection = async (ticketIds) => {
     try {
       // Recupera a propriedade braceletDelivered e accessKey para cada ingresso
-      const accessKeys = codes
-        .map(index => user.tickets?.[index]?.accessKey)
-        .filter(Boolean);
 
       setIsConfirmingTheTicketCodeSelection(true);
 
       let hasKitDelivered = false;
 
-      if (accessKeys.length === 0) {
-        console.warn("Nenhuma accessKey válida foi encontrada.");
+      if (ticketIds.length === 0) {
+        console.warn("Nenhum ingresso selecionado.");
         setAlertMessage('Não foi possível localizar os ingressos selecionados.');
         return;
       }
 
       try {
-        const { data: ticket } = await registerTicket(
-          authContext.selectedEventId,
-          accessKeys,
-          authContext.userToken
-        );
+        const selectedTickets = user.tickets.filter(ticket => ticketIds.includes(ticket.id));
 
-        if (ticket.delivered) {
-          hasKitDelivered = true;
+       for (let i = 0; i < selectedTickets.length; i++) {
+          const ticket = selectedTickets[i];
+          if (ticket.kitDeliveredAt) {
+            hasKitDelivered = true;
+            break;
+          }
         }
       } catch (error) {
         console.error("Erro no registerTicket:", error);
@@ -990,7 +956,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
       setHasKitAlreadyDelivered(hasKitDelivered);
       setShowModalOfReasonForKitDelivery(hasKitDelivered);
-      setSelectedTicketCodes(codes);
+      setSelectedTicketCodes(ticketIds);
 
     } catch (error) {
       console.error("Erro inesperado na função confirmTicketCodeSelection:", error);
@@ -1391,7 +1357,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         </View>
       )}
 
-      <JustificationModal
+      {/* <JustificationModal
         modalVisible={isValidBoolean}
         setModalVisible={setIsValidBoolean}
         onSubmit={handleJustificationSubmit}
@@ -1400,7 +1366,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           clearState();
         }}
         message={`Cadastro do usuário ínvalido. Informe um motivo para continuar com a entrega do kit.`}
-      />
+      /> */}
 
 
     </View>
@@ -1510,7 +1476,7 @@ const TicketCodeSelectionModal = ({
         <FlatList
           data={tickets} // tickets: array de [code, ticketData]
           renderItem={({ item: [code, ticket], index }) => (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }} key={code}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }} key={ticket.id}>
               <Text
                 style={{
                   fontSize: 16,
@@ -1531,7 +1497,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {[ ticket.sector || '',  ticket.category || '', ticket.day || '', ticket.braceletDelivered ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
+                {[ ticket.sector || '', ticket.day || '', ticket.kitDeliveredAt ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
               </Text>
             </View>
           )}

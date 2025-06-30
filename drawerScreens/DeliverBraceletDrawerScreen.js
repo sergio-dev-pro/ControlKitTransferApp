@@ -2,6 +2,7 @@ import { Button, CheckBox, Divider, Text } from '@rneui/themed';
 import React, { useContext, useEffect, useState } from 'react';
 import { Alert, View } from 'react-native';
 import {
+  getTicketDelivery,
   registerBraceletDelivery,
   registerBraceletDeliveryByDocument,
 } from '../api/TicketApi';
@@ -80,11 +81,41 @@ function DeliverBraceletDrawerScreen({ navigation }) {
     try {
       setLoading(true);
 
+      const { data: ticket } = await getTicketDelivery(
+        authContext.selectedEventId,
+        ticketCode,
+        authContext.userToken, 'Bracelet'
+      );
+
+      console.log('@@@@@ticketReturned='+ ticket)
+
+      if(!ticket)
+      {
+        throw new Error("Ingresso não encontrado na api!");
+      }
+
+      if (ticket.braceletDeliveredAt && !reason) {
+          const message = `A pulseira para o setor ${ticket.sector} no dia ${ticket.day} já foi entregue.`;
+          setTicketCodesReuse([ticket.ticketId]);
+          setJustificationMessage(message);
+          setIsModalVisible(true);
+          return;
+      }
+
+      const formData = new FormData();
+        formData.append('EventId', authContext.selectedEventId);
+        formData.append('Type', 'Bracelet');
+        formData.append(`Tickets[0].TicketId`, ticket.ticketId);
+
+      if(reason)
+      {
+        formData.append(`Tickets[0].Reason`, reason);
+        formData.append(`Tickets[0].ReasonType`, 'Exchange');
+      }
+
       const success = await registerBraceletDelivery(
         authContext.userToken,
-        reason,
-        authContext.selectedEventId,
-        ticketCode
+        formData
       );
 
       if (success) {
@@ -151,10 +182,17 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       setLoading(true);
       setOperationCancelled(false);
 
+      console.log('ticketCodes='+ticketCodes)
+
       if (userTickets) {
         const alreadyDelivered = userTickets.filter(ticket =>
-          ticketCodes.includes(ticket.accessKey) && ticket.braceletDelivered
+          ticketCodes.includes(ticket.id) && ticket.braceletDeliveredAt
         );
+        
+        console.log('userTickets='+userTickets)
+        console.log('alreadyDelivered='+alreadyDelivered)
+
+        console.log()
 
         if (alreadyDelivered.length > 0 && !reason) {
           let message = '';
@@ -176,30 +214,36 @@ function DeliverBraceletDrawerScreen({ navigation }) {
         }
       }
 
-      const requests = ticketCodes.map(async (code, index) => {
-        if (operationCancelled) {
-          console.log(`❌ Operação cancelada antes de processar ticket ${index + 1}`);
-          return;
-        }
+      const formData = new FormData();
+        formData.append('EventId', authContext.selectedEventId);
+        formData.append('Type', 'Bracelet');
+
+        ticketCodes.forEach((ticketId, index) => {
+          formData.append(`Tickets[${index}].TicketId`, ticketId);
+          if(reason)
+          {
+            formData.append(`Tickets[${index}].Reason`, reason);
+            formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
+          }
+        });
+
+        console.log('formData='+ JSON.stringify(formData));
 
         try {
-          const response = await registerBraceletDeliveryByDocument(
+          const response = await registerBraceletDelivery(
             authContext.userToken,
-            reason,
-            authContext.selectedEventId,
-            userDocument.replace(/[.\-]/g, ''),
-            ticketCodes
+            formData
           );
 
           if (response) {
-            console.log(`✅ Entrega registrada para ticket ${index + 1}:`, response.data);
+            console.log(`✅ Entrega registrada para ticket: `, response.data);
 
             const { data: ticket } = response;
-            setAlertMessage(`Entrega registrada com sucesso para o setor ${ticket.sectorName}.`, '#32cd32');
+            setAlertMessage(`Entrega registrada com sucesso!`, '#32cd32');
           }
 
         } catch (error) {
-          console.error(`❌ Erro ao registrar entrega do ticket ${index + 1}:`, error);
+          console.error(`❌ Erro ao registrar entrega do ticket: `, error);
 
           if (error.response) {
             console.error("🔴 Resposta do servidor:", error.response.data);
@@ -209,9 +253,6 @@ function DeliverBraceletDrawerScreen({ navigation }) {
 
           setAlertMessage("Erro ao registrar entrega da pulseira", "#dc143c");
         }
-      });
-
-      await Promise.all(requests);
 
       setReason('');
 
@@ -340,7 +381,7 @@ const TicketCodeSelectionModal = ({
           Selecione o dia para a entrega da pulseira
         </Text>
         {tickets.map((ticket) => {
-          const code = ticket.accessKey;
+          const code = ticket.id;
           return (
             <View
               style={{ flexDirection: 'row', alignItems: 'center' }}
@@ -354,7 +395,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15 }}>
-                {[ ticket.sector || '',  ticket.category || '', ticket.day || '', ticket.braceletDelivered ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
+                {[ ticket.sector || '', ticket.day || '', ticket.braceletDeliveredAt ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
               </Text>
             </View>
           );

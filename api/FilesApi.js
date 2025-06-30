@@ -18,7 +18,7 @@ export const ticketOwnerDocumentRegistration = (token, formData) => {
 
 export const ticketOwnerSignatureRegistration = async (token, formData) => {
   await axios({
-    url: BASE_URL_V2 + `/files/signatures`,
+    url: BASE_URL_V2 + `/Deliveries`,
     method: 'POST',
     data: formData,
     headers: {

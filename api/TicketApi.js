@@ -28,36 +28,30 @@ export const fetchTickets = async (deviceId, eventId, userToken) =>
     });
   };
 
-
-export const registerBraceletDelivery = async (token, reason, eventId, accessKey) => {
-  try {
-    const response = await axios({
-      url: BASE_URL_V2 + `/tickets/deliveryBracelet`,
-      method: 'PATCH',
-      data: { reason, eventId, accessKey },
+  export const getTicketDelivery = async (eventId, accessKey, token, type) => {
+    const payload = { eventId, accessKey };
+    return await axios({
+      url: BASE_URL_V2 + `/Deliveries?eventId=${eventId}&accessKey=${accessKey}&type=${type}`,
+      method: 'GET',
       headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json-patch+json',
+        Authorization: 'Bearer ' + token,
       },
     });
+  };
 
-    return true;
-  } catch (error) {
-    console.error("Erro na requisição:", error.response?.data || error.message);
-    throw error;
-  }
-};
 
-export const registerBraceletDeliveryByDocument = async (token, reason, eventId, document, accessKeys) => {
+
+export const registerBraceletDelivery = async (token, formData) => {
 
   const response = await axios({
-    url: BASE_URL_V2 + `/tickets/deliveryBraceletByDocument`,
-    method: 'PATCH',
-    data: { reason, eventId, document, accessKeys },
+    url: BASE_URL_V2 + `/Deliveries`,
+    method: 'POST',
+    data: formData,
     headers: {
       Accept: 'text/plain',
-      'Content-Type': 'application/json-patch+json',
+      'Content-Type': 'multipart/form-data',
       Authorization: 'Bearer ' + token,
     },
   });
