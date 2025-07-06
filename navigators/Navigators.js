@@ -17,6 +17,7 @@ import NewFastTicket from '../drawerScreens/NewFastTicket';
 import BraceletRegistrationDrawerScreen from '../drawerScreens/BraceletRegistrationDrawerScreen';
 import TicketOfficeManualRegisterScreen from '../drawerScreens/ManualRegisterScreen/TicketOfficeManualRegisterScreen';
 import ManualRegisterByTickets from '../drawerScreens/ManualRegisterScreen/ManualRegisterByTickets';
+import BoardingDrawerScreen from '../drawerScreens/BoardingDrawerScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -128,17 +129,16 @@ function Navigators() {
           {/* {eventPermissions.includes("page.delivery.kit") && (
             <Drawer.Screen name="Novo ingresso" component={NewTicket} />
           )} */}
-          {eventPermissions.includes("page.ticket.add") && (
+          {/* {eventPermissions.includes("page.ticket.add") && (
             <Drawer.Screen name="Cadastro rápido" component={NewFastTicket} />
-          )}
+          )} */}
           {eventPermissions.includes("page.user.update.email") && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
           )}
-          <Drawer.Screen
-            name="ManualRegisterByTickets"
-            component={ManualRegisterByTickets}
-            options={{ drawerItemStyle: { display: 'none' } }}
-          />
+          {eventPermissions.includes("page.transport.boarding.add") && (
+            <Drawer.Screen name="Embarque" component={BoardingDrawerScreen} />
+          )}
+          {/* <Drawer.Screen name="ManualRegisterByTickets" component={ManualRegisterByTickets} options={{ drawerItemStyle: { display: 'none' } }} /> */}
         </Drawer.Navigator>
       ) : (
         <Stack.Navigator>
