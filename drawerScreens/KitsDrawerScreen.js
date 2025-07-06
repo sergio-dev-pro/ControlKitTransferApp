@@ -142,7 +142,7 @@ function KitsDrawerScreen({ navigation }) {
     }
 
     setShowQrcodereader(false);
-   
+
     try {
       setLoading(true);
       const { data: ticket } = await getTicketDelivery(
@@ -151,8 +151,7 @@ function KitsDrawerScreen({ navigation }) {
         authContext.userToken, 'Kit'
       );
 
-      if(!ticket)
-      {
+      if (!ticket) {
         throw new Error("Ingresso não encontrado na api!");
       }
 
@@ -202,6 +201,8 @@ function KitsDrawerScreen({ navigation }) {
     }
   };
 
+
+
   const registerDelivery = async () => {
     if (mustSelectShirtSize) {
       const ticktesWithSelectedShirtSize = ticketFounds.filter(
@@ -229,9 +230,8 @@ function KitsDrawerScreen({ navigation }) {
 
         //formData.append('kitCodes', JSON.stringify(kitCodes));
         ticketFounds.forEach((ticket, index) => {
-          formData.append(`Tickets[${index}].TicketId`, ticket.id);
-          if(reasonForKitDelivery)
-          {
+          formData.append(`Tickets[${index}].TicketId`, ticket.ticketId);
+          if (reasonForKitDelivery) {
             formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
             formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
           }
@@ -289,6 +289,7 @@ function KitsDrawerScreen({ navigation }) {
   // );
   // console.log(`@@@ ticketFounds`, ticketFounds, ticketCode);
   console.log('@@@@@ MOCK', ticketFounds);
+  console.log('checkingIfNeedSelectShirtSize', checkingIfNeedSelectShirtSize)
   const inputNameErrorMsg =
     (name.length === 0 && 'Campo de nome deve ser preenchido') ||
     (name.length < 3 && 'Campo de nome deve ter no minímo 3 caracteres') ||
@@ -308,6 +309,7 @@ function KitsDrawerScreen({ navigation }) {
 
     return [day, month, year].join('/');
   };
+
 
   const handleQRCodeCamisa = async (ticketCode) => {
     if (!ticketCode) {
@@ -454,8 +456,7 @@ function KitsDrawerScreen({ navigation }) {
                       }}>
                       <Text h4>Dia:</Text>
                       <View>
-                        <Text h4>{formatDate(ticketFound?.day)}</Text>
-                        <Text h4>{formatDateForTextDay(ticketFound?.day)}</Text>
+                        <Text style={{ fontSize: 18 }}>{ticketFound?.day}</Text>
                       </View>
                     </View>
                     {ticketFound?.document && (
@@ -484,7 +485,7 @@ function KitsDrawerScreen({ navigation }) {
                       </View>
                     )}
 
-                    {ticketFound?.sectorName && (
+                    {ticketFound?.sector && (
                       <View
                         style={{
                           flexDirection: 'column',
@@ -492,7 +493,7 @@ function KitsDrawerScreen({ navigation }) {
                           marginBottom: 8,
                         }}>
                         <Text h4>Setor:</Text>
-                        <Text style={{ fontSize: 18 }}>{ticketFound.sectorName}</Text>
+                        <Text style={{ fontSize: 18 }}>{ticketFound.sector}</Text>
                       </View>
                     )}
 
@@ -862,6 +863,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   };
 
   const registerDelivery = async () => {
+    console.log('selectedTicketCodes: ' + selectedTicketCodes)
     if (mustSelectShirtSize) {
       // Verifica se foi selecionado o tamanho da camisa para cada ingresso
       let wasSelected = true;
@@ -885,12 +887,11 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       // const getQrcodeReads = () => selectedTicketCodes.map(code => shirtCodesRead[code]?.code || 'Código não encontrado');
       // formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
       selectedTicketCodes.forEach((ticketId, index) => {
-          formData.append(`Tickets[${index}].TicketId`, ticketId);
-          if(hasKitAlreadyDelivered)
-          {
-            formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
-            formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
-          }
+        formData.append(`Tickets[${index}].TicketId`, ticketId);
+        if (hasKitAlreadyDelivered) {
+          formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
+          formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
+        }
       });
       formData.append('SignatureDocumentFile', {
         uri: documentImg,
@@ -941,7 +942,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       try {
         const selectedTickets = user.tickets.filter(ticket => ticketIds.includes(ticket.id));
 
-       for (let i = 0; i < selectedTickets.length; i++) {
+        for (let i = 0; i < selectedTickets.length; i++) {
           const ticket = selectedTickets[i];
           if (ticket.kitDeliveredAt) {
             hasKitDelivered = true;
@@ -972,7 +973,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     selectedTicketCodes &&
     Object.entries(
       selectedTicketCodes
-        .map(code => user.tickets[code])
+        .map(id => user.tickets.find(ticket => ticket.id === id))
+        .filter(Boolean)
         .reduce((acc, ticket) => {
           const setor = ticket.sector || 'Setor não informado';
           const dia = ticket.day || 'Dia não informado';
@@ -981,6 +983,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           return acc;
         }, {})
     );
+
+
 
 
   const handleQRCodeCamisa = async (ticketCode) => {
@@ -1048,6 +1052,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setIsValidBoolean(false);
   };
 
+  console.log('Ticket IDs selecionados:', selectedTicketCodes);
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -1064,7 +1070,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       {user?.tickets && (
         <TicketCodeSelectionModal
           isVisible={user?.tickets && !selectedTicketCodes}
-          tickets={Object.entries(user.tickets)}
+          tickets={user.tickets}
           user={user}  // Adicionando o user como prop
           onClose={() => setUser(undefined)}
           onConfirm={confirmTicketCodeSelection}
@@ -1097,65 +1103,74 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
           <FlatList
             data={selectedTicketCodes}
-            renderItem={({ item, index }) => (
-              <Card containerStyle={{ alignItems: 'center' }} key={item}>
-                <Text style={{ fontSize: 15, fontWeight: '700' }}>
-                  {user.tickets[item].sector} - {user.tickets[item].day}
-                </Text>
-                {user.shirtSizes && user.shirtSizes[item] && (
-                  <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>Tamanho da camisa: {user.shirtSizes[item]}</Text>
-                )}
+            renderItem={({ item: ticketId, index }) => {
+              const ticket = user.tickets.find(t => t.id === ticketId);
+              if (!ticket) return null; // segurança extra
 
-                {mustSelectShirtSize && (
-                  <SelectModal
-                    label="Tamanho da camisa"
-                    value={ticketCodeAndShirtSize[item] || ''}
-                    setValue={value =>
-                      setTicketCodeAndShirtSize(prev => ({
-                        ...prev,
-                        [item]: value,
-                      }))
-                    }
-                    errorMessage="Campo obrigatório"
-                    placeholder="Selecione"
-                    items={[
-                      { key: 'P', value: 'P' },
-                      { key: 'M', value: 'M' },
-                      { key: 'G', value: 'G' },
-                      { key: 'GG', value: 'GG' },
-                      { key: 'EG1', value: 'EG1' },
-                      { key: 'EG2', value: 'EG2' },
-                    ]}
-                  />
-                )}
+              return (
+                <Card containerStyle={{ alignItems: 'center' }} key={ticketId}>
+                  <Text style={{ fontSize: 15, fontWeight: '700' }}>
+                    {ticket.sector} - {ticket.day}
+                  </Text>
 
-                {shirtCodesRead[item] && (
-                  <View
-                    style={{
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      marginTop: 8,
-                    }}
-                  >
+                  {user.shirtSizes && user.shirtSizes[ticketId] && (
                     <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
-                      Código do Kit:
+                      Tamanho da camisa: {user.shirtSizes[ticketId]}
                     </Text>
-                    <Text style={{ fontSize: 14, color: '#555', marginBottom: 10 }}>
-                      {shirtCodesRead[item].code || 'Não disponível'}
-                    </Text>
+                  )}
 
-                    <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
-                      Tamanho da camisa:
-                    </Text>
-                    <Text style={{ fontSize: 14, color: '#555' }}>
-                      ({shirtCodesRead[item].shirtSize || 'Não disponível'})
-                    </Text>
-                  </View>
-                )}
-              </Card>
-            )}
+                  {mustSelectShirtSize && (
+                    <SelectModal
+                      label="Tamanho da camisa"
+                      value={ticketCodeAndShirtSize[ticketId] || ''}
+                      setValue={value =>
+                        setTicketCodeAndShirtSize(prev => ({
+                          ...prev,
+                          [ticketId]: value,
+                        }))
+                      }
+                      errorMessage="Campo obrigatório"
+                      placeholder="Selecione"
+                      items={[
+                        { key: 'P', value: 'P' },
+                        { key: 'M', value: 'M' },
+                        { key: 'G', value: 'G' },
+                        { key: 'GG', value: 'GG' },
+                        { key: 'EG1', value: 'EG1' },
+                        { key: 'EG2', value: 'EG2' },
+                      ]}
+                    />
+                  )}
+
+                  {shirtCodesRead[ticketId] && (
+                    <View
+                      style={{
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        marginTop: 8,
+                      }}
+                    >
+                      <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                        Código do Kit:
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#555', marginBottom: 10 }}>
+                        {shirtCodesRead[ticketId].code || 'Não disponível'}
+                      </Text>
+
+                      <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                        Tamanho da camisa:
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#555' }}>
+                        ({shirtCodesRead[ticketId].shirtSize || 'Não disponível'})
+                      </Text>
+                    </View>
+                  )}
+                </Card>
+              );
+            }}
             keyExtractor={item => item}
           />
+
         </>
       )}
 
@@ -1387,15 +1402,14 @@ const TicketCodeSelectionModal = ({
   const [selecteds, setSelecteds] = useState([]);
   const [hasAllSelected, setHasAllSelected] = useState(false);
   const setAlertMessage = useAlert();
-  const toggleCheckbox = code => {
-    setSelecteds(prev => {
-      if (prev.includes(code)) {
-        return prev.filter(c => c !== code);
-      } else {
-        return [...prev, code];
-      }
-    });
+  const toggleCheckbox = ticketId => {
+    setSelecteds(prev =>
+      prev.includes(ticketId)
+        ? prev.filter(c => c !== ticketId)
+        : [...prev, ticketId]
+    );
   };
+
 
   const handleConfirm = () => {
     if (selecteds.length === 0)
@@ -1409,8 +1423,8 @@ const TicketCodeSelectionModal = ({
       setSelecteds([]);
     } else {
       setHasAllSelected(true);
-      const allTickestCodes = tickets.map(ticket => ticket[0]);
-      setSelecteds(allTickestCodes);
+      const allTicketIds = tickets.map(ticket => ticket.id);
+      setSelecteds(allTicketIds);
     }
   }
 
@@ -1474,8 +1488,8 @@ const TicketCodeSelectionModal = ({
           />
         </View>
         <FlatList
-          data={tickets} // tickets: array de [code, ticketData]
-          renderItem={({ item: [code, ticket], index }) => (
+          data={tickets} // Agora é um array de objetos `ticket`
+          renderItem={({ item: ticket, index }) => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }} key={ticket.id}>
               <Text
                 style={{
@@ -1490,19 +1504,22 @@ const TicketCodeSelectionModal = ({
               <CheckBox
                 size={28}
                 containerStyle={{ padding: 0, marginLeft: -5, marginRight: 10 }}
-                checked={selecteds.includes(code)}
-                onPress={() => toggleCheckbox(code)}
+                checked={selecteds.includes(ticket.id)}
+                onPress={() => toggleCheckbox(ticket.id)}
                 iconType="material-community"
                 checkedIcon="checkbox-outline"
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {[ ticket.sector || '', ticket.day || '', ticket.kitDeliveredAt ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
+                {[ticket.sector || '', ticket.day || '', ticket.kitDeliveredAt ? "ENTREGUE" : null]
+                  .filter(Boolean)
+                  .join(' - ')}
               </Text>
             </View>
           )}
-          keyExtractor={item => item[0]}
+          keyExtractor={item => item.id}
         />
+
 
         <View
           style={{

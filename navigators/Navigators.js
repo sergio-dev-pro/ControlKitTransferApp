@@ -57,9 +57,6 @@ function Navigators() {
 
   const hasOnlyOneEvent = events && events.length === 1;
 
-  console.log('Permissions: ', permissions)
-
-
   const eventPermissions =
     selectedEventId &&
     permissions &&
