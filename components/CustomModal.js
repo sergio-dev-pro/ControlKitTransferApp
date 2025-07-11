@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, Button, StyleSheet, ScrollView } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 
 const CustomModal = ({ visible, title, content, onClose, confirm, disableConfirm, alertText }) => {
   return (
@@ -11,8 +11,9 @@ const CustomModal = ({ visible, title, content, onClose, confirm, disableConfirm
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          {/* Renderização do título */}
-          <Text style={styles.modalTitle}>{title}</Text>
+          {/* Renderiza título somente se existir */}
+          {title ? <Text style={styles.modalTitle}>{title}</Text> : null}
+
           <ScrollView>
             {React.isValidElement(content) ? (
               content
@@ -21,11 +22,28 @@ const CustomModal = ({ visible, title, content, onClose, confirm, disableConfirm
             )}
           </ScrollView>
 
-          {/* Container para os botões */}
           <View style={confirm ? styles.buttonsContainer : styles.buttonsContainerCentered}>
-            <Button title={"Fechar"} onPress={onClose} />
-            {confirm && <Button title="Confirmar" onPress={confirm} disabled={disableConfirm} />}
+            {/* Botão Fechar */}
+            <TouchableOpacity style={[styles.button, styles.closeButton]} onPress={onClose}>
+              <Text style={styles.buttonText}>Fechar</Text>
+            </TouchableOpacity>
+
+            {/* Botão Confirmar */}
+            {confirm && (
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.confirmButton,
+                  disableConfirm && styles.buttonDisabled,
+                ]}
+                onPress={confirm}
+                disabled={disableConfirm}
+              >
+                <Text style={styles.buttonText}>Confirmar</Text>
+              </TouchableOpacity>
+            )}
           </View>
+
           {alertText && <Text style={styles.alertText}>{alertText}</Text>}
         </View>
       </View>
@@ -60,8 +78,9 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   modalText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#333',
+    fontWeight: 'bold'
   },
   buttonsContainer: {
     flexDirection: 'row',
@@ -75,12 +94,34 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 20,
   },
+
+  button: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  closeButton: {
+    backgroundColor: '#d9534f', // vermelho (alerta)
+  },
+  confirmButton: {
+    backgroundColor: '#5cb85c', // verde (confirmar)
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
   alertText: {
     marginTop: 15,
     fontSize: 16,
     color: '#000',
-    fontWeight: 'bold' 
-  }
+    fontWeight: 'bold',
+  },
 });
 
 export default CustomModal;

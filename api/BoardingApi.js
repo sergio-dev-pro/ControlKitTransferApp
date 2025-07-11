@@ -28,25 +28,29 @@ export const startBoarding = async (userToken, eventId, itineraryId, vehicleId) 
   }
 };
 
-export const finishBoarding = async (userToken, eventId, boardingId) =>
-{
+export const finishBoarding = async (userToken, eventId, boardingId) => {
   try {
-    var response = await axios({
-        url: BASE_URL_V2 + `/events/${eventId}/Transports/Boardings/${boardingId}/Finish`,
-        method: 'PUT',
-        headers: {
-          Accept: 'application/json',
-          Authorization: 'Bearer ' + userToken
-        },
-      });
-    return response.data;
+    await axios({
+      url: `${BASE_URL_V2}/events/${eventId}/Transports/Boardings/${boardingId}/Finish`,
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
+    return true;
   } catch (error) {
     console.log('error', error);
-    console.log('error error.response.data', error.response.data);
-    Alert.alert('', error.response.data.message);
+    if (error.response?.data?.message) {
+      console.log('error.response.data', error.response.data);
+      Alert.alert('', error.response.data.message);
+    } else {
+      Alert.alert('Erro', 'Ocorreu um erro inesperado ao finalizar o embarque.');
+    }
     return null;
   }
 };
+
 
 export const registerTicketBoarding = async (userToken, eventId, boardingId, accessKey) =>
 {

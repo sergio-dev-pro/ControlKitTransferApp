@@ -12,6 +12,7 @@ import Button from '../components/Button';
 import SelectModal from '../components/SelectModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QrCodeReader from '../components/QrCodeReader';
+import CustomModal from '../components/CustomModal';
 
 const BoardingDrawerScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
@@ -26,8 +27,8 @@ const BoardingDrawerScreen = ({ navigation }) => {
   const [boardingDetails, setBoardingDetails] = useState(null)
   const [selectedVehicleSeatCapacity, setSelectedVehicleSeatCapacity] = useState(null);
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
-  const [boardingCount, setBoardingCount] = useState(0);
-  const [boardingId, setBoardingId] = useState(null)
+  const [boardingCount, setBoardingCount] = useState(0)
+  const [confirmFinishBoarding, setConfirmFinishBoarding] = useState(false)
 
   useFocusEffect(
     useCallback(() => {
@@ -35,7 +36,6 @@ const BoardingDrawerScreen = ({ navigation }) => {
       setValueVehicle(null);
     }, [userToken, selectedEventId])
   );
-
 
   const resetBoardingState = async () => {
     await AsyncStorage.removeItem('boardingDetails');
@@ -45,17 +45,13 @@ const BoardingDrawerScreen = ({ navigation }) => {
     setSelectedVehicleSeatCapacity(null);
     setValueItinerary(null);
     setValueVehicle(null);
-    setItineraries([])
-    setVehicles([])
-    setShowQrcodereader(false)
-
-    fetchAllData();
-
+    setItineraries([]);
+    setVehicles([]);
+    setShowQrcodereader(false);
     setBoardingCount(0);
-
-
+    setConfirmFinishBoarding(false)
+    fetchAllData();
   };
-
 
   const fetchAllData = useCallback(async () => {
     setLoading(true);
@@ -122,6 +118,7 @@ const BoardingDrawerScreen = ({ navigation }) => {
       const simplifiedBoardingDetails = {
         uid: response.uid,
         seatCapacity: selectedVehicleSeatCapacity,
+        boardingCount: 0
       };
       await AsyncStorage.setItem('boardingDetails', JSON.stringify(simplifiedBoardingDetails));
       setActiveBoarding(true);
@@ -132,38 +129,107 @@ const BoardingDrawerScreen = ({ navigation }) => {
   };
 
   const verifyBoarding = async () => {
-    const response = await AsyncStorage.getItem('boardingDetails');
-    const parsed = JSON.parse(response);
-    if (response) {
-      setActiveBoarding(true);
-      setBoardingId(parsed.uid)
-      setBoardingDetails(parsed)
-    } else {
-      setActiveBoarding(false);
+    try {
+      const response = await AsyncStorage.getItem('boardingDetails');
+      const parsed = JSON.parse(response);
+
+      console.log('parsed.uid:@@@@@@@ ' + parsed.uid)
+
+      if (parsed) {
+        setActiveBoarding(true);
+        setBoardingDetails(parsed);
+        setBoardingCount(parsed.boardingCount || 0);
+      } else {
+        setActiveBoarding(false);
+      }
+    } catch (e) {
+      console.error('Erro ao verificar embarque:', e);
     }
   };
 
+  console.log(boardingDetails)
 
   useEffect(() => {
     verifyBoarding();
   }, []);
 
-  const addUserBoarding = async ticketCode => {
+  const addUserBoarding = async (ticketCode) => {
+  setShowQrcodereader(false);
 
-    if (boardingDetails?.seatCapacity === boardingCount) {
-      Alert.alert('', 'Veículo chegou à capacidade máxima.');
-      return; // ← Evita registrar e incrementar
+  if (!ticketCode) {
+    Alert.alert('Erro', 'Código de ingresso inválido.');
+    return;
+  }
+
+  if (!boardingDetails || !boardingDetails.uid) {
+    Alert.alert('Erro', 'Dados do embarque ainda não carregados. Tente novamente.');
+    return;
+  }
+
+  try {
+    const stored = await AsyncStorage.getItem('boardingDetails');
+    const parsed = JSON.parse(stored);
+
+    if (!parsed) {
+      Alert.alert('Erro', 'Dados do embarque não encontrados.');
+      return;
     }
 
-    // await registerTicketBoarding(userToken, selectedEventId, boardingId, ticketCode)
-    setBoardingCount(prev => prev + 1);
-  };
+    if (parsed.seatCapacity !== null && parsed.boardingCount >= parsed.seatCapacity) {
+      Alert.alert('', 'Veículo chegou à capacidade máxima.');
+      return;
+    }
+
+    const success = await registerTicketBoarding(userToken, selectedEventId, parsed.uid, ticketCode);
+
+    if (success) {
+      Alert.alert('Sucesso', 'Usuário adicionado ao embarque.');
+
+      const updatedDetails = {
+        ...parsed,
+        boardingCount: parsed.boardingCount + 1,
+      };
+
+      await AsyncStorage.setItem('boardingDetails', JSON.stringify(updatedDetails));
+      setBoardingDetails(updatedDetails);
+      setBoardingCount(updatedDetails.boardingCount);
+    }
+
+  } catch (error) {
+    console.log('Erro ao registrar embarque:', error);
+    const message = error?.response?.data?.message || 'Erro inesperado';
+    Alert.alert('Erro', message);
+  }
+};
+
 
   const handleFinishBoarding = async () => {
+    try {
+      console.log('ENTROUUUU');
+      setLoading(true);
 
-    //await finishBoarding(userToken, selectedEventId, boardingId)
-    resetBoardingState()
-  }
+      const response = await finishBoarding(userToken, selectedEventId, boardingDetails.uid);
+      console.log('BATEU');
+      console.log(response);
+
+      if (response) {
+        Alert.alert('Sucesso', 'Embarque finalizado com sucesso.');
+        resetBoardingState();
+      }
+    } catch (error) {
+      console.error('Erro ao finalizar embarque:', error);
+      // Erro tratado em finishBoarding
+    } finally {
+      setLoading(false);
+    }
+
+  };
+
+
+  //useEffect(() => {resetBoardingState()})
+
+
+
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -221,7 +287,7 @@ const BoardingDrawerScreen = ({ navigation }) => {
 
             <Button
               title="Finalizar Embarque"
-              onPress={handleFinishBoarding}
+              onPress={() => { setConfirmFinishBoarding(true) }}
               containerStyle={{ width: 200 }}
             />
           </View>
@@ -236,6 +302,20 @@ const BoardingDrawerScreen = ({ navigation }) => {
           onClose={() => setShowQrcodereader(false)}
         />
       )}
+      <CustomModal
+        visible={confirmFinishBoarding}
+        title=""
+        content="Deseja finalizar o embarque?"
+        onClose={() => {
+          setConfirmFinishBoarding(false);
+        }}
+        confirm={handleFinishBoarding}
+      />
+
+
+
+
+
     </View>
   );
 };
