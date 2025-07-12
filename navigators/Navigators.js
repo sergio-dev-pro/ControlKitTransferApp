@@ -92,7 +92,7 @@ function Navigators() {
               component={DeliverBraceletDrawerScreen}
             />
           )}
-          {eventPermissions.includes("page.ticket.register.qrcode") && (
+          {eventPermissions.includes("page.ticket.accesskeys.add") && (
             <Drawer.Screen
               name="Registrar Qr Code"
               component={BraceletRegistrationDrawerScreen}

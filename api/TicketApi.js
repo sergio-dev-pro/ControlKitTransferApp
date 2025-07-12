@@ -60,9 +60,9 @@ export const registerBraceletDelivery = async (token, formData) => {
 }
 export const braceletRegister = async (operatorToken, code, reason, accessKey, eventId) => {
   return await axios({
-    url: BASE_URL_V2 + `/tickets/braceletCode`,
-    method: 'PATCH',
-    data: { code, reason, accessKey, eventId },
+    url: BASE_URL_V2 + `/tickets/keys/${accessKey}`,
+    method: 'POST',
+    data: { code, reason, eventId },
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
@@ -72,7 +72,7 @@ export const braceletRegister = async (operatorToken, code, reason, accessKey, e
 };
 
 export const hasBraceleteCode = async (userToken, accessKey, eventId) => {
-  const url = `${BASE_URL_V2}/tickets/hasBraceletCode?eventId=${eventId}&accessKey=${accessKey}`;
+  const url = `${BASE_URL_V2}/tickets/keys/${accessKey}?eventId=${eventId}`;
 
   try {
     const response = await axios({

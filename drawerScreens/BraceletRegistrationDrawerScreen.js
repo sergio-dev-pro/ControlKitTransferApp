@@ -88,8 +88,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
     try {
       const data = await hasBraceleteCode(bearerToken, keyAccess, selectedEventId);
-      console.log('estado: ' + data.hasCode);
-      setIsTicketPreScanned(data.hasCode);
+      console.log('estado: ' + data.exists);
+      setIsTicketPreScanned(data.exists);
     } catch (error) {
       console.error('Erro ao verificar código da pulseira:', error);
     }
