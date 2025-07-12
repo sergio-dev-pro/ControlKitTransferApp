@@ -147,8 +147,6 @@ const BoardingDrawerScreen = ({ navigation }) => {
     }
   };
 
-  console.log(boardingDetails)
-
   useEffect(() => {
     verifyBoarding();
   }, []);
