@@ -233,13 +233,13 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
               label="Selecione um Ingresso"
               placeholder="Selecione um evento"
               items={(user?.tickets || []).map(ticket => ({
-                key: ticket.accessKey, // Usando `accessKey` como identificador único
+                key: ticket.id, // Usando `accessKey` como identificador único
                 value: [ticket.sector || '', ticket.category || '', ticket.day || ''].filter(Boolean).join(' - ')
               }))}
               value={selectedEventKey}
               setValue={eventKey => {
                 setSelectedEventKey(eventKey);
-                setSelectedEvent(user?.tickets.find(ticket => ticket.accessKey === eventKey));
+                setSelectedEvent(user?.tickets.find(ticket => ticket.id === eventKey));
               }}
             />
 
