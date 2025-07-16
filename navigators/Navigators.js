@@ -18,6 +18,7 @@ import BraceletRegistrationDrawerScreen from '../drawerScreens/BraceletRegistrat
 import TicketOfficeManualRegisterScreen from '../drawerScreens/ManualRegisterScreen/TicketOfficeManualRegisterScreen';
 import ManualRegisterByTickets from '../drawerScreens/ManualRegisterScreen/ManualRegisterByTickets';
 import BoardingDrawerScreen from '../drawerScreens/BoardingDrawerScreen';
+import CompleteRegisterDrawerScreen from '../drawerScreens/CompleteRegisterDrawerScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -134,6 +135,9 @@ function Navigators() {
           )} */}
           {eventPermissions.includes("page.user.update.email") && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
+          )}
+          {eventPermissions.includes("page.user.update.email") && (
+            <Drawer.Screen name="Completar cadastro" component={CompleteRegisterDrawerScreen} />
           )}
           {eventPermissions.includes("page.transport.boarding.add") && (
             <Drawer.Screen name="Embarque" component={BoardingDrawerScreen} />

@@ -83,6 +83,21 @@ export const saveUserPhotoAgain = async (formData, token) => {
   return true
 };
 
+export const completeUserRegister = async (formData, token) => {
+  await axios({
+    url: BASE_URL_V2 + "/users/active",
+    method: "POST",
+    data: formData,
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "multipart/form-data",
+      Authorization: "Bearer " + token,
+    },
+  });
+
+  return true
+};
+
 export const guestPreRegister = async formData => {
   try {
     var response = await axios({
