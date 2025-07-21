@@ -888,6 +888,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       // formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
       selectedTicketCodes.forEach((ticketId, index) => {
         formData.append(`Tickets[${index}].TicketId`, ticketId);
+        formData.append(`Tickets[${index}].Code`, kitCodes[index]);
         if (hasKitAlreadyDelivered) {
           formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
           formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
@@ -917,6 +918,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       onCancelDeliveryByCPF();
     } catch (error) {
       console.error('Erro durante o registro da entrega:', error);
+      console.error('Erro durante o registro da entrega:', error.response.data);
       console.log('Detalhes do erro:', error?.response?.data || 'Sem resposta da API');
       setAlertMessage('Entrega não registrada! KIT NÃO FOI ENTREGUE!');
     } finally {
@@ -998,34 +1000,39 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       setAlertMessage('Erro: Código já escaneado.', '#dc143c');
       return;
     }
-
-    try {
-      const response = await getKitDelivery(ticketCode);
-      if (response) {
-        setShowQrCodeCamisa(false);
-        setShowResponseCamisa(response);
-        setCurrentTicketCode(ticketCode);
-        setShowModalResponse(true);
-      } else {
-        setShowQrCodeCamisa(false);
-        setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
-      }
-    } catch (error) {
-      setShowQrCodeCamisa(false);
-      console.error("Erro em handleQRCodeCamisa:", error);
-      setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
-    }
+    setShowQrCodeCamisa(false);
+    console.log('@@ticketCode', ticketCode);
+    setCurrentTicketCode(ticketCode);
+    addToArray(ticketCode);
+    // try {
+    //   const response = await getKitDelivery(ticketCode);
+    //   if (response) {
+    //     setShowQrCodeCamisa(false);
+    //     setShowResponseCamisa(response);
+    //     setCurrentTicketCode(ticketCode);
+    //     setShowModalResponse(true);
+    //   } else {
+    //     setShowQrCodeCamisa(false);
+    //     setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
+    //   }
+    // } catch (error) {
+    //   setShowQrCodeCamisa(false);
+    //   console.error("Erro em handleQRCodeCamisa:", error);
+    //   setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
+    // }
   };
 
   // const ticketsWithReadCodes = Object.keys(shirtCodesRead);
   const selectedTicketsAvailable = selectedTicketCodes && selectedTicketCodes.filter(ticketId => !shirtCodesRead[ticketId]);
-  const addToArray = () => {
-    setShowModalResponse(false);
-    setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
-    setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
+  const addToArray = (ticketCode) => {
+    // setShowModalResponse(false);
+    setKitCodes(prevKitCodes => [...prevKitCodes, ticketCode]);
+    // setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
     // const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.map(code => ({code: user.tickets[code]})).filter(item => item.code.includes(day))[0];
     const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.filter(item => user.tickets[item].includes(day))[0];
-    setShirtCodesRead(prevState => ({ ...prevState, [getTicketIdByDayOfCodeRead(showResponseCamisa.day)]: { code: currentTicketCode, ...showResponseCamisa } }))
+    // setShirtCodesRead(prevState => ({ ...prevState, [getTicketIdByDayOfCodeRead(showResponseCamisa.day)]: { code: currentTicketCode, ...showResponseCamisa } }))
+    console.log('@@currentTicketCode', ticketCode)
+    setShirtCodesRead(prevState => ({ ...prevState, [selectedTicketsAvailable[0]] : { code: ticketCode } }))
   };
 
   useEffect(() => {
@@ -1037,7 +1044,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       console.log("User está indefinido");
     }
 
-    if (authContext.selectedEventId === 10 || authContext.selectedEventId === 435) {
+    if (authContext.selectedEventId === '5db21f36-f4e3-42a9-87c4-2506a37de28c') {
       setEventAllowed(true);
     }
   }, [user, authContext.selectedEventId]);
@@ -1053,6 +1060,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   };
 
   console.log('Ticket IDs selecionados:', selectedTicketCodes);
+  console.log('eventAllowed:', eventAllowed);
 
 
   return (
@@ -1157,12 +1165,12 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                         {shirtCodesRead[ticketId].code || 'Não disponível'}
                       </Text>
 
-                      <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
+                      {/* <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
                         Tamanho da camisa:
                       </Text>
                       <Text style={{ fontSize: 14, color: '#555' }}>
                         ({shirtCodesRead[ticketId].shirtSize || 'Não disponível'})
-                      </Text>
+                      </Text> */}
                     </View>
                   )}
                 </Card>
