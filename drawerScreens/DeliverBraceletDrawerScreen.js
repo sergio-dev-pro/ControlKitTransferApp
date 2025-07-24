@@ -19,6 +19,7 @@ import SelectModal from '../components/SelectModal';
 import JustificationModal from '../components/JustificationModal';
 import SearchUserModal from '../components/SearchUserModal';
 import ReactNativeModal from 'react-native-modal';
+import { TouchableOpacity } from 'react-native';
 
 function DeliverBraceletDrawerScreen({navigation}) {
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,7 @@ function DeliverBraceletDrawerScreen({navigation}) {
   const [showQrCodeReader, setShowQrcodereader] = useState(false);
   const [showSearchModalByCPF, setShowSearchModalByCPF] = useState(false);
   const [userTickets, setUserTickets] = useState();
+  const [SspMuralhaBlocked, setSspMuralhaBlocked] = useState(false);
 
   const authContext = useContext(AuthContext);
   const setAlertMessage = useAlert();
@@ -217,6 +219,8 @@ function DeliverBraceletDrawerScreen({navigation}) {
   };
 
   const handleUserFound = user => {
+    if(user?.sspMuralhaBlocked)
+    return setSspMuralhaBlocked(true);
     console.log('@@@@@@@@user.tickets =================>', user.tickets);
     user && setUserTickets(user.tickets);
     setShowSearchModalByCPF(false);
@@ -347,6 +351,48 @@ function DeliverBraceletDrawerScreen({navigation}) {
         onCancel={handleJustificationCancel}
         message={`${justificationMessage}\nPara registrar uma nova entrega, por favor, forneça uma justificativa detalhada.`}
       />
+      <ReactNativeModal
+        isVisible={SspMuralhaBlocked}
+        backdropOpacity={0.1}
+        style={{alignItems: 'center'}}
+        onBackdropPress={() => {
+          setSspMuralhaBlocked(false);
+        }}>
+        <View
+          style={{
+            backgroundColor: 'white',
+            borderRadius: 10,
+            padding: 20,
+            height: 'auto',
+            width: `95%`,
+          }}>
+          <Text h4 h4Style={{marginBottom: 20, color: '#7E22CE', fontSize: 20}}>
+            Documento com restrição. Procure um supervisor.
+          </Text>
+          <View
+            style={{
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              // alignItems: 'center',
+            }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#7E22CE',
+                paddingVertical: 12,
+                paddingHorizontal: 32,
+                borderRadius: 8,
+              }}
+              onPress={() => {
+                setSspMuralhaBlocked(false);
+              }}>
+              <Text style={{color: '#FFFFFF', fontSize: 16, fontWeight: '600'}}>
+                Ok
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ReactNativeModal>
     </View>
   );
 }

@@ -86,8 +86,8 @@ export function AuthProvider({children}) {
       const eventInJsonFormat = await AsyncStorage.getItem('event');
       const event = JSON.parse(eventInJsonFormat);
       var decodedToken = jwt_decode(token);
-      console.log('@@@decodedToken', decodedToken);
-      const events = JSON.parse(decodedToken.Events);
+      console.log('@@@decodedToken', decodedToken, decodedToken.Events);
+      const events = decodedToken.Events ? JSON.parse(decodedToken.Events) : [];
       setAuthState({
         userToken: token,
         hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true", 

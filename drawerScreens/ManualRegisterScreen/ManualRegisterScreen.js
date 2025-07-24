@@ -12,7 +12,7 @@ import {
   getUserByCpf,
   getUserByEmail,
 } from '../../api/UserApi';
-import Modal from 'react-native-modal';
+import Modal, { ReactNativeModal } from 'react-native-modal';
 import THEME from '../../style/theme';
 import {useIsFocused} from '@react-navigation/native';
 import RegisterForm from './RegisterForm';
@@ -20,6 +20,7 @@ import GuestRegistrations from './GuestRegistrations';
 import CodeReaderForEachDay from './CodeReaderForEachDay';
 import {formatDateAaaaMmDd} from '../../helpers/format';
 import SearchUserModal from '../../components/SearchUserModal';
+import { TouchableOpacity } from 'react-native';
 
 function ManualRegisterScreen({navigation}) {
   // const [requiredForms, setRequiredForms] = useState();
@@ -81,6 +82,7 @@ function ManualRegisterScreen({navigation}) {
   const [guestRegistereds, setGuestRegistereds] = useState();
 
   const [showQRcodeReader, setShowQRcodeReader] = useState(false);
+  const [SspMuralhaBlocked, setSspMuralhaBlocked] = useState(false);
 
   useEffect(() => {
     // O ref.current e utilizado para verificar se
@@ -90,6 +92,8 @@ function ManualRegisterScreen({navigation}) {
 
   const handleUserFound = userFounded => {
     if (userFounded.isActive) return alert('Usuário já registrado.');
+    if(userFounded?.sspMuralhaBlocked)
+    return setSspMuralhaBlocked(true);
     setIsVisible(false);
     setUser(userFounded);
     setUserToken(userFounded.token);
@@ -295,6 +299,55 @@ function ManualRegisterScreen({navigation}) {
           type={codeReaderType}
           onReadCodes={handleReadCodes}
         />
+        <ReactNativeModal
+                  isVisible={SspMuralhaBlocked}
+                  backdropOpacity={0.1}
+                  style={{alignItems: 'center'}}
+                  onBackdropPress={() => {
+                    setSspMuralhaBlocked(false);
+                  }}>
+                    <View
+                            style={{
+                              backgroundColor: 'white',
+                              borderRadius: 10,
+                              padding: 20,
+                              height: 'auto',
+                              width: `95%`,
+                            }}>
+                            <Text h4 h4Style={{marginBottom: 20, color: '#7E22CE', fontSize: 20}}>
+                              Documento com restrição. Procure um supervisor.
+                            </Text>
+                            <View
+                              style={{
+                                width: '100%',
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                // alignItems: 'center',
+                              }}>
+                              {/* <Button
+                                type="clear"
+                                size="lg"
+                                containerStyle={{marginLeft: 16, color: '#000'}}
+                                title="Ok"
+                                color={"error"}
+                                onPress={()=> {setSspMuralhaBlocked(false)}}
+                              /> */}
+                             <TouchableOpacity
+                              style={{
+                                backgroundColor: '#7E22CE',
+                                paddingVertical: 12,
+                                paddingHorizontal: 32,
+                                borderRadius: 8,
+                              }}
+                              onPress={()=> {setSspMuralhaBlocked(false);}}>
+                              <Text
+                                style={{color: '#FFFFFF', fontSize: 16, fontWeight: '600'}}>
+                                Ok
+                              </Text>
+                            </TouchableOpacity>
+                            </View>
+                          </View>
+                  </ReactNativeModal>
       </View>
     </>
   );

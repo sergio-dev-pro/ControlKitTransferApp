@@ -72,6 +72,7 @@ const SearchUserModal = ({
       else searchedFor.cpf = inputValue;
       onUserFound({...user, id: inputValue}, searchedFor);
     } catch (error) {
+      console.log('@@@ error.response.data', error.response.data)
       console.error(error);
       console.error(error.response.data.errors);
       if (error?.request?.status == 404) {

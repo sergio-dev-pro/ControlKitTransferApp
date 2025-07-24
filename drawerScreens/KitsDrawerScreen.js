@@ -39,6 +39,7 @@ import SearchUserModal from '../components/SearchUserModal';
 import ReasonForKitDeliveryModal from '../components/ReasonForKitDeliveryModal';
 import CustomModal from '../components/CustomModal';
 import JustificationModal from '../components/JustificationModal';
+import { TouchableOpacity } from 'react-native';
 
 function KitsDrawerScreen({ navigation }) {
   const authContext = useContext(AuthContext);
@@ -872,8 +873,11 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [shirtCodesRead, setShirtCodesRead] = useState({});
   const [isValidBoolean, setIsValidBoolean] = useState(false);
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
+  const [SspMuralhaBlocked, setSspMuralhaBlocked] = useState(false);
 
   const handleUserFound = (user, searchedFor) => {
+    if(user?.sspMuralhaBlocked)
+    return setSspMuralhaBlocked(true);
     console.log('searchedFor', searchedFor.cpf)
     console.log('@@@@@@@@user', user);
     user && setUser(user);
@@ -1402,6 +1406,55 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         message={`Cadastro do usuário ínvalido. Informe um motivo para continuar com a entrega do kit.`}
       />
 
+    <ReactNativeModal
+              isVisible={SspMuralhaBlocked}
+              backdropOpacity={0.1}
+              style={{alignItems: 'center'}}
+              onBackdropPress={() => {
+                setSspMuralhaBlocked(false);
+              }}>
+                <View
+                        style={{
+                          backgroundColor: 'white',
+                          borderRadius: 10,
+                          padding: 20,
+                          height: 'auto',
+                          width: `95%`,
+                        }}>
+                        <Text h4 h4Style={{marginBottom: 20, color: '#7E22CE', fontSize: 20}}>
+                          Documento com restrição. Procure um supervisor.
+                        </Text>
+                        <View
+                          style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            // alignItems: 'center',
+                          }}>
+                          {/* <Button
+                            type="clear"
+                            size="lg"
+                            containerStyle={{marginLeft: 16, color: '#000'}}
+                            title="Ok"
+                            color={"error"}
+                            onPress={()=> {setSspMuralhaBlocked(false)}}
+                          /> */}
+                         <TouchableOpacity
+                          style={{
+                            backgroundColor: '#7E22CE',
+                            paddingVertical: 12,
+                            paddingHorizontal: 32,
+                            borderRadius: 8,
+                          }}
+                          onPress={()=> {setSspMuralhaBlocked(false);}}>
+                          <Text
+                            style={{color: '#FFFFFF', fontSize: 16, fontWeight: '600'}}>
+                            Ok
+                          </Text>
+                        </TouchableOpacity>
+                        </View>
+                      </View>
+              </ReactNativeModal>
 
     </View>
 

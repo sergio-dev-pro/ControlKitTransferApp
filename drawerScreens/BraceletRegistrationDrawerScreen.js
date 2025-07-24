@@ -16,6 +16,7 @@ import { reduceArrayToJustDifferentDates } from '../helpers/reduceCallbacks';
 import JustificationModal from '../components/JustificationModal';
 import CustomModal from '../components/CustomModal';
 import { getUserByCpfWithAuth } from '../api/UserApi';
+import ReactNativeModal from 'react-native-modal';
 
 
 function BraceletRegistrationDrawerScreen({ navigation }) {
@@ -37,6 +38,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [selectedEventKey, setSelectedEventKey] = useState('');
   const [registerNewTicket, setRegisterNewTicket] = useState(false)
   const [guardarCpf, setGuardarCpf] = useState('');
+  const [SspMuralhaBlocked, setSspMuralhaBlocked] = useState(false);
 
   const resetState = () => {
     setUser();
@@ -67,6 +69,9 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     console.log('selectedEventId=' + selectedEventId);
     if (!userFounded.isActive && selectedEventId != 435)
       return alert('Usuário não registrado, registre no cadastro manual.');
+
+    if(userFounded?.sspMuralhaBlocked)
+    return setSspMuralhaBlocked(true);
 
     const userState = { ...userFounded, ...searchedFor };
 
@@ -357,7 +362,55 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         }}
       />
 
-
+        <ReactNativeModal
+                  isVisible={SspMuralhaBlocked}
+                  backdropOpacity={0.1}
+                  style={{alignItems: 'center'}}
+                  onBackdropPress={() => {
+                    setSspMuralhaBlocked(false);
+                  }}>
+                    <View
+                            style={{
+                              backgroundColor: 'white',
+                              borderRadius: 10,
+                              padding: 20,
+                              height: 'auto',
+                              width: `95%`,
+                            }}>
+                            <Text h4 h4Style={{marginBottom: 20, color: '#7E22CE', fontSize: 20}}>
+                              Documento com restrição. Procure um supervisor.
+                            </Text>
+                            <View
+                              style={{
+                                width: '100%',
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                // alignItems: 'center',
+                              }}>
+                              {/* <Button
+                                type="clear"
+                                size="lg"
+                                containerStyle={{marginLeft: 16, color: '#000'}}
+                                title="Ok"
+                                color={"error"}
+                                onPress={()=> {setSspMuralhaBlocked(false)}}
+                              /> */}
+                             <TouchableOpacity
+                              style={{
+                                backgroundColor: '#7E22CE',
+                                paddingVertical: 12,
+                                paddingHorizontal: 32,
+                                borderRadius: 8,
+                              }}
+                              onPress={()=> {setSspMuralhaBlocked(false);}}>
+                              <Text
+                                style={{color: '#FFFFFF', fontSize: 16, fontWeight: '600'}}>
+                                Ok
+                              </Text>
+                            </TouchableOpacity>
+                            </View>
+                          </View>
+                  </ReactNativeModal>
     </View>
   );
 }

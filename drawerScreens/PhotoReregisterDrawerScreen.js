@@ -10,10 +10,13 @@ import {useAlert} from '../context/AlertContext';
 import {AuthContext} from '../context/AuthContext';
 import GStyles from '../style/global';
 import THEME from '../style/theme';
+import ReactNativeModal from 'react-native-modal';
+import { TouchableOpacity } from 'react-native';
 
 function PhotoReregisterDrawerScreen({navigation}) {
   const [isVisible, setIsVisible] = useState(true);
   const [user, setUser] = useState();
+  const [SspMuralhaBlocked, setSspMuralhaBlocked] = useState(false);
   const isFocused = useIsFocused();
   const ref = useRef();
   const {setUserToken} = useContext(AuthContext);
@@ -31,6 +34,9 @@ function PhotoReregisterDrawerScreen({navigation}) {
   const handleUserFound = userFounded => {
     if (!userFounded.isActive && !userFounded.useFacialWeb)
       return setAlertMessage('Usuário precisa realizar o cadastro inicial.');
+    
+    if(userFounded?.sspMuralhaBlocked)
+    return setSspMuralhaBlocked(true);
 
     setUser(userFounded);
     setIsVisible(false);
@@ -61,7 +67,7 @@ function PhotoReregisterDrawerScreen({navigation}) {
     setIsLoading(false);
   };
 
-  console.log(user);
+  console.log("@@@user user sspMuralhaBlocked SspMuralhaBlocked",user, user?.sspMuralhaBlocked, "=", user?.SspMuralhaBlocked);
   return (
     <View style={{...GStyles.view}}>
       <Header
@@ -116,6 +122,55 @@ function PhotoReregisterDrawerScreen({navigation}) {
             isSavingPhoto={isLoading}
           />
         )}
+        <ReactNativeModal
+          isVisible={SspMuralhaBlocked}
+          backdropOpacity={0.1}
+          style={{alignItems: 'center'}}
+          onBackdropPress={() => {
+            setSspMuralhaBlocked(false);
+          }}>
+            <View
+                    style={{
+                      backgroundColor: 'white',
+                      borderRadius: 10,
+                      padding: 20,
+                      height: 'auto',
+                      width: `95%`,
+                    }}>
+                    <Text h4 h4Style={{marginBottom: 20, color: '#7E22CE', fontSize: 20}}>
+                      Documento com restrição. Procure um supervisor.
+                    </Text>
+                    <View
+                      style={{
+                        width: '100%',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        // alignItems: 'center',
+                      }}>
+                      {/* <Button
+                        type="clear"
+                        size="lg"
+                        containerStyle={{marginLeft: 16, color: '#000'}}
+                        title="Ok"
+                        color={"error"}
+                        onPress={()=> {setSspMuralhaBlocked(false)}}
+                      /> */}
+                     <TouchableOpacity
+                      style={{
+                        backgroundColor: '#7E22CE',
+                        paddingVertical: 12,
+                        paddingHorizontal: 32,
+                        borderRadius: 8,
+                      }}
+                      onPress={()=> {setSspMuralhaBlocked(false);}}>
+                      <Text
+                        style={{color: '#FFFFFF', fontSize: 16, fontWeight: '600'}}>
+                        Ok
+                      </Text>
+                    </TouchableOpacity>
+                    </View>
+                  </View>
+          </ReactNativeModal>
       </ScrollView>
     </View>
   );
