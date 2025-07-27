@@ -94,7 +94,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
       complement: '',
       city: '',
       state: '',
-      country: '',
+      country: 'BRA',
     });
   };
 
@@ -185,6 +185,29 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
       return;
     }
 
+    if ((address.city && !address.state) || (!address.city && address.state)) {
+      if (address.city && !address.state) {
+        Alert.alert('', 'Você preencheu a cidade, porém não preencheu o estado');
+        return;
+      } else if (!address.city && address.state) {
+        Alert.alert('', 'Você preencheu o estado, porém não preencheu a cidade');
+        return;
+      }
+    }
+
+    if (!address.city && !address.state) {
+      setAddress({
+        street: '',
+        zipcode: '',
+        number: '',
+        neighborhood: '',
+        complement: '',
+        city: '',
+        state: '',
+        country: '',
+      });
+    }
+
     setStep(2);
   };
 
@@ -228,14 +251,19 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     formData.append('Phone.InternationalNumber', guestPhone.nationalNumber);
     formData.append('Gender', genderMap[gender]);
 
-    formData.append('Address.City', address.city);
-    formData.append('Address.State', address.state);
-    formData.append('Address.Street', address.street);
-    formData.append('Address.Zipcode', address.zipcode);
-    formData.append('Address.Number', address.number);
-    formData.append('Address.Neighborhood', address.neighborhood);
-    formData.append('Address.Complement', address.complement);
-    formData.append('Address.Country', address.country)
+
+    if (address.city && address.state) {
+      formData.append('Address.City', address.city);
+      formData.append('Address.State', address.state);
+      formData.append('Address.Street', address.street);
+      formData.append('Address.Zipcode', address.zipcode);
+      formData.append('Address.Number', address.number);
+      formData.append('Address.Neighborhood', address.neighborhood);
+      formData.append('Address.Complement', address.complement);
+      formData.append('Address.Country', address.country)
+    }
+
+
 
     try {
       await completeUserRegister(formData, userToken);
@@ -258,7 +286,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
         console.log('Erro message:', error.message);
       }
       console.log('Config do erro:', error.config);
-      Alert.alert('Erro', 'Falha ao enviar o cadastro: ' + (error.response?.data?.message || error.message));
+      Alert.alert('Erro', (error.response?.data?.message || error.message));
     } finally {
       setIsLoading(false);
     }
@@ -286,12 +314,12 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
   const countryOptions = listCountries.map(({ code, name }) => ({
     key: code,
-    value: code, // agora é só a sigla, ex: "BRA"
-    label: `${name} - ${code}` // o que será exibido no select modal
+    value: `${code} - ${name}`,
+    rawValue: code
   }));
 
 
-
+  console.log(address)
   return (
     <View style={{ ...GStyles.view }}>
       <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
@@ -448,29 +476,29 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
               Cancelar
             </Button>
 
-            {!photoUri ? (
-              <Button
-                size="lg"
-                containerStyle={{ width: '100%' }}
-                titleStyle={{ fontSize: 18 }}
-                onPress={() => {
-                  setTakePhoto(true);
-                  setStep(3);
-                }}
-              >
-                Tirar foto
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                containerStyle={{ width: '100%' }}
-                titleStyle={{ fontSize: 18 }}
-                onPress={handleSubmit}
-                loading={isLoading}
-              >
-                Finalizar Cadastro
-              </Button>
-            )}
+
+            <Button
+              size="lg"
+              containerStyle={{ width: '100%', marginBottom: 20 }}
+              titleStyle={{ fontSize: 18 }}
+              onPress={() => {
+                setTakePhoto(true);
+                setStep(3);
+              }}
+            >
+              Tirar foto
+            </Button>
+
+            <Button
+              size="lg"
+              containerStyle={{ width: '100%' }}
+              titleStyle={{ fontSize: 18 }}
+              onPress={handleSubmit}
+              loading={isLoading}
+            >
+              Finalizar Cadastro
+            </Button>
+
           </View>
         )}
 
