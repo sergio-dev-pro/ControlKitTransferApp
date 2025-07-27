@@ -13,6 +13,9 @@ import SelectModal from '../components/SelectModal';
 import TakePictureModal from '../components/TakePictureModal';
 import { cpfValidation } from '../helpers/validation';
 import SearchUserModal from '../components/SearchUserModal';
+import AddressForm from './ManualRegisterScreen/AdressForm';
+import AddressFormFields from '../components/forms/AddressFormFields';
+import { listCountries } from '../helpers/listCountries';
 
 
 const CompleteRegisterDrawerScreen = ({ navigation }) => {
@@ -40,6 +43,18 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
   const [photoUri, setPhotoUri] = useState(null);
   const setAlertMessage = useAlert();
   const [showSearchModalByCPF, setShowSearchModalByCPF] = useState(false);
+  const [address, setAddress] = useState({
+    street: '',
+    zipcode: '',
+    number: '',
+    neighborhood: '',
+    complement: '',
+    city: '',
+    state: '',
+    country: 'BRA',
+  });
+
+  const [stateSuggestions, setStateSuggestions] = useState([]);
 
 
   // Máscara apenas para CPF
@@ -69,8 +84,20 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     setTakePhoto(false);
     setIsLoading(false);
     setPhotoUri(null);
-    setShowSearchModalByCPF(false)
+    setShowSearchModalByCPF(false);
+
+    setAddress({
+      street: '',
+      zipcode: '',
+      number: '',
+      neighborhood: '',
+      complement: '',
+      city: '',
+      state: '',
+      country: '',
+    });
   };
+
 
 
   const handleDateChange = (text) => {
@@ -201,6 +228,15 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     formData.append('Phone.InternationalNumber', guestPhone.nationalNumber);
     formData.append('Gender', genderMap[gender]);
 
+    formData.append('Address.City', address.city);
+    formData.append('Address.State', address.state);
+    formData.append('Address.Street', address.street);
+    formData.append('Address.Zipcode', address.zipcode);
+    formData.append('Address.Number', address.number);
+    formData.append('Address.Neighborhood', address.neighborhood);
+    formData.append('Address.Complement', address.complement);
+    formData.append('Address.Country', address.country)
+
     try {
       await completeUserRegister(formData, userToken);
       setAlertMessage('Cadastro finalizado com sucesso!', "#32cd32");
@@ -248,192 +284,207 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     }
   };
 
+  const countryOptions = listCountries.map(({ code, name }) => ({
+    key: code,
+    value: code, // agora é só a sigla, ex: "BRA"
+    label: `${name} - ${code}` // o que será exibido no select modal
+  }));
 
 
 
-return (
-  <View style={{ ...GStyles.view }}>
-    <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
-    <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke, flex: 1 }}>
-      <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>Completar cadastro</Text>
-      <Divider />
+  return (
+    <View style={{ ...GStyles.view }}>
+      <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
+      <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke, flex: 1 }}>
+        <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>Completar cadastro</Text>
+        <Divider />
 
 
-      {step == null && (
-        <View style={[GStyles.container]}>
-          <Button
-            size="lg"
-            containerStyle={{ width: '100%', marginTop: 30 }}
-            titleStyle={{ fontSize: 18 }}
-            onPress={() => {
-              setShowSearchModalByCPF(true);
-            }}>
-            Buscar por CPF
-
-          </Button>
-
-          {showSearchModalByCPF && (
-            <SearchUserModal
-              title="Buscar"
-              onUserFound={handleUserFound}
-              placeholderText="Busque pelo CPF"
-              isVisible={showSearchModalByCPF}
-              onClose={() => {
-                setShowSearchModalByCPF(false);
-              }}
-            />
-          )}
-        </View>
-      )}
-
-
-
-      {step === 1 && (
-        <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 16 }}>
-          <Input
-            label="Tipo de Documento"
-            value={documentType === 1 ? 'CPF' : 'Passaporte'}
-            editable={false}
-          />
-          {documentType === 1 ? (
-            <Input
-              label="CPF"
-              keyboardType="numeric"
-              {...maskedCPFInputProps}
-              editable={false}
-            />
-          ) : (
-            <Input
-              label="Passaporte"
-              placeholder="Informe o número do passaporte"
-              value={guestDocument}
-              onChangeText={setGuestDocument}
-              editable={false}
-            />
-          )}
-
-          <Input placeholder="Nome" value={guestFirstname} onChangeText={setGuestFirstname} />
-          <Input placeholder="Sobrenome" value={guestLastname} onChangeText={setGuestLastname} />
-          <Input placeholder="Email" value={guestEmail} onChangeText={setGuestEmail} />
-          <Input
-            label="Data de nascimento"
-            placeholder="DD/MM/AAAA"
-            keyboardType="numeric"
-            value={birthDate}
-            onChangeText={handleDateChange}
-            maxLength={10}
-          />
-
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Input
-              label="Código do País"
-              placeholder="Ex: 55"
-              keyboardType="numeric"
-              containerStyle={{ flex: 1 }}
-              value={guestPhone.countryCode}
-              onChangeText={(text) =>
-                setGuestPhone(prev => ({ ...prev, countryCode: text.replace(/[^\d]/g, '') }))
-              }
-            />
-            <Input
-              label="DDD"
-              placeholder="Ex: 11"
-              keyboardType="numeric"
-              containerStyle={{ flex: 1 }}
-              value={guestPhone.dialCode}
-              onChangeText={(text) =>
-                setGuestPhone(prev => ({ ...prev, dialCode: text.replace(/[^\d]/g, '') }))
-              }
-            />
-          </View>
-
-          <Input
-            label="Número"
-            placeholder="Ex: 912345678"
-            keyboardType="numeric"
-            value={guestPhone.nationalNumber}
-            onChangeText={(text) =>
-              setGuestPhone(prev => ({ ...prev, nationalNumber: text.replace(/[^\d]/g, '') }))
-            }
-          />
-
-          <SelectModal
-            label="Gênero"
-            placeholder="Gênero"
-            items={[
-              { key: 'Masculino', value: 'Masculino' },
-              { key: 'Feminino', value: 'Feminino' },
-              { key: 'Outro', value: 'Outro' },
-            ]}
-            value={gender}
-            setValue={setGender}
-          />
-
-          <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
-            <Button title="Continuar cadastro" onPress={continueRegistry} containerStyle={{ width: '90%' }} />
-
-            <Button title="Continuar cadastro" onPress={handleClear} containerStyle={{ width: '90%' }} />
-
-          </View>
-        </ScrollView>
-      )}
-
-      {step === 2 && (
-        <View
-          style={{
-            padding: 8,
-            marginTop: 20,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Button
-            size="lg"
-            type="outline"
-            containerStyle={{ marginBottom: 20, width: '100%' }}
-            onPress={handleClear}
-            titleStyle={{ fontSize: 18 }}
-          >
-            Cancelar
-          </Button>
-
-          {!photoUri ? (
+        {step == null && (
+          <View style={[GStyles.container]}>
             <Button
               size="lg"
-              containerStyle={{ width: '100%' }}
+              containerStyle={{ width: '100%', marginTop: 30 }}
               titleStyle={{ fontSize: 18 }}
               onPress={() => {
-                setTakePhoto(true);
-                setStep(3);
-              }}
-            >
-              Tirar foto
+                setShowSearchModalByCPF(true);
+              }}>
+              Buscar por CPF
+
             </Button>
-          ) : (
+
+            {showSearchModalByCPF && (
+              <SearchUserModal
+                title="Buscar"
+                onUserFound={handleUserFound}
+                placeholderText="Busque pelo CPF"
+                isVisible={showSearchModalByCPF}
+                onClose={() => {
+                  setShowSearchModalByCPF(false);
+                }}
+              />
+            )}
+          </View>
+        )}
+
+        {step === 1 && (
+          <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 16 }}>
+            <Input
+              label="Tipo de Documento"
+              value={documentType === 1 ? 'CPF' : 'Passaporte'}
+              editable={false}
+            />
+            {documentType === 1 ? (
+              <Input
+                label="CPF"
+                keyboardType="numeric"
+                {...maskedCPFInputProps}
+                editable={false}
+              />
+            ) : (
+              <Input
+                label="Passaporte"
+                placeholder="Informe o número do passaporte"
+                value={guestDocument}
+                onChangeText={setGuestDocument}
+                editable={false}
+              />
+            )}
+
+            <Input placeholder="Nome" value={guestFirstname} onChangeText={setGuestFirstname} />
+            <Input placeholder="Sobrenome" value={guestLastname} onChangeText={setGuestLastname} />
+            <Input placeholder="Email" value={guestEmail} onChangeText={setGuestEmail} />
+            <Input
+              label="Data de nascimento"
+              placeholder="DD/MM/AAAA"
+              keyboardType="numeric"
+              value={birthDate}
+              onChangeText={handleDateChange}
+              maxLength={10}
+            />
+
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Input
+                label="Código do País"
+                placeholder="Ex: 55"
+                keyboardType="numeric"
+                containerStyle={{ flex: 1 }}
+                value={guestPhone.countryCode}
+                onChangeText={(text) =>
+                  setGuestPhone(prev => ({ ...prev, countryCode: text.replace(/[^\d]/g, '') }))
+                }
+              />
+              <Input
+                label="DDD"
+                placeholder="Ex: 11"
+                keyboardType="numeric"
+                containerStyle={{ flex: 1 }}
+                value={guestPhone.dialCode}
+                onChangeText={(text) =>
+                  setGuestPhone(prev => ({ ...prev, dialCode: text.replace(/[^\d]/g, '') }))
+                }
+              />
+            </View>
+
+            <Input
+              label="Número"
+              placeholder="Ex: 912345678"
+              keyboardType="numeric"
+              value={guestPhone.nationalNumber}
+              onChangeText={(text) =>
+                setGuestPhone(prev => ({ ...prev, nationalNumber: text.replace(/[^\d]/g, '') }))
+              }
+            />
+
+            <SelectModal
+              label="Gênero"
+              placeholder="Gênero"
+              items={[
+                { key: 'Masculino', value: 'Masculino' },
+                { key: 'Feminino', value: 'Feminino' },
+                { key: 'Outro', value: 'Outro' },
+              ]}
+              value={gender}
+              setValue={setGender}
+            />
+
+            <AddressFormFields
+              address={address}
+              setAddress={setAddress}
+              stateSuggestions={stateSuggestions}
+              setStateSuggestions={setStateSuggestions}
+            />
+
+            <SelectModal
+              label="País"
+              placeholder="Selecione um país"
+              items={countryOptions}  // [{key, value, label}]
+              value={address.country} // ex: "BRA"
+              setValue={(code) => setAddress(prev => ({ ...prev, country: code }))}
+            />
+
+            <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+              <Button title="Continuar cadastro" onPress={continueRegistry} containerStyle={{ width: '90%' }} />
+            </View>
+          </ScrollView>
+        )}
+
+        {step === 2 && (
+          <View
+            style={{
+              padding: 8,
+              marginTop: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <Button
               size="lg"
-              containerStyle={{ width: '100%' }}
+              type="outline"
+              containerStyle={{ marginBottom: 20, width: '100%' }}
+              onPress={handleClear}
               titleStyle={{ fontSize: 18 }}
-              onPress={handleSubmit}
-              loading={isLoading}
             >
-              Finalizar Cadastro
+              Cancelar
             </Button>
-          )}
-        </View>
-      )}
 
-      {step === 3 && (
-        <TakePictureModal
-          isVisible={takePhoto}
-          cancelPhoto={() => { setTakePhoto(false), setStep(2) }}
-          savePhoto={handleSave}
-          isSavingPhoto={isLoading}
-        />
-      )}
+            {!photoUri ? (
+              <Button
+                size="lg"
+                containerStyle={{ width: '100%' }}
+                titleStyle={{ fontSize: 18 }}
+                onPress={() => {
+                  setTakePhoto(true);
+                  setStep(3);
+                }}
+              >
+                Tirar foto
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                containerStyle={{ width: '100%' }}
+                titleStyle={{ fontSize: 18 }}
+                onPress={handleSubmit}
+                loading={isLoading}
+              >
+                Finalizar Cadastro
+              </Button>
+            )}
+          </View>
+        )}
+
+        {step === 3 && (
+          <TakePictureModal
+            isVisible={takePhoto}
+            cancelPhoto={() => { setTakePhoto(false), setStep(2) }}
+            savePhoto={handleSave}
+            isSavingPhoto={isLoading}
+          />
+        )}
+      </View>
     </View>
-  </View>
-);
+  );
 };
 
 export default CompleteRegisterDrawerScreen;
