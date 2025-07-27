@@ -274,20 +274,27 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
       handleClear();
     } catch (error) {
       if (error.response) {
-        // O request foi feito e o servidor respondeu com status fora do 2xx
+        const errorMessage = error.response.data?.message || '';
         console.log('Erro response status:', error.response.status);
         console.log('Erro response data:', error.response.data);
         console.log('Erro response headers:', error.response.headers);
+
+        // Se a mensagem começar com "Rosto não reconhecido"
+        if (errorMessage.startsWith('Rosto não reconhecido')) {
+          setPhotoUri(null);
+        }
+
+        setAlertMessage(errorMessage, '#dc143c');
       } else if (error.request) {
-        // O request foi feito mas nenhuma resposta foi recebida
         console.log('Erro request:', error.request);
       } else {
-        // Algo aconteceu na configuração do request
         console.log('Erro message:', error.message);
+        setAlertMessage(error.message, '#dc143c');
       }
+
       console.log('Config do erro:', error.config);
-      Alert.alert('Erro', (error.response?.data?.message || error.message));
-    } finally {
+    }
+    finally {
       setIsLoading(false);
     }
   };
@@ -477,27 +484,30 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
             </Button>
 
 
-            <Button
-              size="lg"
-              containerStyle={{ width: '100%', marginBottom: 20 }}
-              titleStyle={{ fontSize: 18 }}
-              onPress={() => {
-                setTakePhoto(true);
-                setStep(3);
-              }}
-            >
-              Tirar foto
-            </Button>
+            {!photoUri ? (
+              <Button
+                size="lg"
+                containerStyle={{ width: '100%', marginBottom: 20 }}
+                titleStyle={{ fontSize: 18 }}
+                onPress={() => {
+                  setTakePhoto(true);
+                  setStep(3);
+                }}
+              >
+                Tirar foto
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                containerStyle={{ width: '100%' }}
+                titleStyle={{ fontSize: 18 }}
+                onPress={handleSubmit}
+                loading={isLoading}
+              >
+                Finalizar Cadastro
+              </Button>
+            )}
 
-            <Button
-              size="lg"
-              containerStyle={{ width: '100%' }}
-              titleStyle={{ fontSize: 18 }}
-              onPress={handleSubmit}
-              loading={isLoading}
-            >
-              Finalizar Cadastro
-            </Button>
 
           </View>
         )}
