@@ -38,6 +38,7 @@ function TicketOfficeManualRegisterScreen({navigation}) {
     if (picturePath) {
       const formData = new FormData();
       formData.append('token', user.token);
+      formData.append('isBoxOfficeRegistration', 'true');
       formData.append('file', {
         uri: picturePath,
         type: 'image/jpeg',
