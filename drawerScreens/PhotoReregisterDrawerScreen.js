@@ -19,7 +19,7 @@ function PhotoReregisterDrawerScreen({navigation}) {
   const [SspMuralhaBlocked, setSspMuralhaBlocked] = useState(false);
   const isFocused = useIsFocused();
   const ref = useRef();
-  const {setUserToken} = useContext(AuthContext);
+  const {setUserToken, userToken} = useContext(AuthContext);
   const setAlertMessage = useAlert();
   useEffect(() => {
     // O ref.current e utilizado para verificar se
@@ -56,7 +56,7 @@ function PhotoReregisterDrawerScreen({navigation}) {
     });
     console.log('@@@@ formData', formData);
     setIsLoading(true);
-    var response = await saveUserPhotoAgain(formData);
+    var response = await saveUserPhotoAgain(formData, userToken);
     if (response) {
       clearState();
       setAlertMessage('Foto atualizada com sucesso!', '#32cd32');

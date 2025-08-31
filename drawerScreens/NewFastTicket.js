@@ -69,7 +69,7 @@ const NewFastTicket = ({navigation}) => {
       console.log('@@@@ formData', formData);
       try {
         setLoading(true);
-        var response = await saveUserPhotoAgain(formData);
+        var response = await saveUserPhotoAgain(formData, authContext.userToken);
         if (response) {
           setAlertMessage('Foto salva com sucesso!');
           clearStates();

@@ -13,6 +13,7 @@ import SearchUserModal from '../../components/SearchUserModal';
 import { RegisterStateContext } from './registerContext';
 import TakePictureScreen from './TakePictureScreen';
 import { useAlert } from '../../context/AlertContext';
+import { AuthContext } from '../../context/AuthContext';
 const formatDate = date => {
   var dateParts = date.split("T")[0].split('-');
     month = dateParts[1];
@@ -32,6 +33,8 @@ function TicketOfficeManualRegisterScreen({navigation}) {
   const ref = useRef();
 
   const setAlertMessage = useAlert();
+  const {userToken} = useContext(AuthContext);
+  
 
   const savePhoto = async picturePath => {
 
@@ -47,7 +50,7 @@ function TicketOfficeManualRegisterScreen({navigation}) {
       console.log('@@@@ formData', formData);
       try {
         setLoading(true);
-        var response = await saveUserPhotoAgain(formData);
+        var response = await saveUserPhotoAgain(formData, userToken);
         if (response) {
           setAlertMessage('Foto salva com sucesso!');
           setTakePhoto(false);

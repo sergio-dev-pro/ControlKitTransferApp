@@ -66,7 +66,7 @@ export const saveUserPhoto = async formData => {
   }
 };
 
-export const saveUserPhotoAgain = async formData => {
+export const saveUserPhotoAgain = async (formData, userToken) => {
   formData.append('deviceInfo', getModel());
   try {
     var response = await axios({
@@ -76,6 +76,8 @@ export const saveUserPhotoAgain = async formData => {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'multipart/form-data',
+        Authorization: 'Bearer ' + userToken,
+
       },
     });
     return response.data;
@@ -160,7 +162,7 @@ export const completeFastTicketRegister = async (eventId, data, userToken) => {
     var response = await axios({
       url: BASE_URL + '/api/users/fast',
       method: 'POST',
-      data: {...data, eventId: eventId},
+      data: { ...data, eventId: eventId },
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer ' + userToken,
