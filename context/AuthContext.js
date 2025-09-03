@@ -149,7 +149,7 @@ export function AuthProvider({children}) {
   const authenticateUser = async loginData => {
     setIsAuthenticating(true);
     try {
-      const url = BASE_URL + '/api/users/loginOperator';
+      const url = BASE_URL + '/api/users/loginTwoAuthFactor';
       const {data: token} = await axios({
         url,
         method: 'POST',
