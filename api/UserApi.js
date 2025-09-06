@@ -177,3 +177,14 @@ export const completeFastTicketRegister = async (eventId, data, userToken) => {
     return null;
   }
 };
+
+  export const validEmailFirstAccess = async (data) => {
+    return axios({
+      url: BASE_URL + '/api/users/firstAccess',
+      method: 'POST',
+      data: data,
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+  };
