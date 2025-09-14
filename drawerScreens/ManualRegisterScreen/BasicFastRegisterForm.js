@@ -1,10 +1,11 @@
-import {Input, Text} from '@rneui/themed';
-import {useState} from 'react';
-import {View} from 'react-native';
-import {useMaskedInputProps} from 'react-native-mask-input';
+import { Input, Text } from '@rneui/themed';
+import { useContext, useState } from 'react';
+import { View } from 'react-native';
+import { useMaskedInputProps } from 'react-native-mask-input';
 import Button from '../../components/Button';
 import SelectModal from '../../components/SelectModal';
-import {cpfValidation} from '../../helpers/validation';
+import { cpfValidation } from '../../helpers/validation';
+import { AuthContext } from '../../context/AuthContext';
 
 const inputErrorMsgs = {
   cpf: 'CPF inválido.',
@@ -13,7 +14,7 @@ const inputErrorMsgs = {
   },
 };
 
-const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSectors, sponsors, onReturn, onCancel}) => {
+const BasicFastRegisterForm = ({ onUserFormCompleted, availableDays, availableSectors, sponsors, onReturn, onCancel }) => {
   const [user, setUser] = useState({
     name: '',
     cpf: '', // usado para amazenar cpf ou passport
@@ -35,12 +36,16 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
     errorMsg: '',
   });
 
-  const {name, cpf} = user;
+  const { name, cpf } = user;
+  const [workingHours, setWorkingHours] = useState(null);
+  const authContext = useContext(AuthContext);
+
+
 
   const maskedCPFInputProps = useMaskedInputProps({
     value: cpf,
     onChangeText: cpfChanged => {
-      setUser(prevState => ({...prevState, cpf: cpfChanged}));
+      setUser(prevState => ({ ...prevState, cpf: cpfChanged }));
       !CPFValidation.isValid && validCPF(cpfChanged);
     },
     mask: [
@@ -67,13 +72,13 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
       const errorMsg = currentCPF.length
         ? inputErrorMsgs.cpf
         : inputErrorMsgs.global.empty;
-      setCPFValidation({errorMsg, isValid: false});
+      setCPFValidation({ errorMsg, isValid: false });
     };
     if (!isValid) {
       invalidCPF();
       return false;
     }
-    const valid = () => setCPFValidation({isValid: true});
+    const valid = () => setCPFValidation({ isValid: true });
     !CPFValidation.isValid && valid();
     return true;
   };
@@ -82,10 +87,10 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
     const isName = name.length >= 3;
     !isName
       ? setNameValidation({
-          isValid: false,
-          errorMsg: 'Nome deve ter no mínimo 3 caracteres.',
-        })
-      : setNameValidation({isValid: true});
+        isValid: false,
+        errorMsg: 'Nome deve ter no mínimo 3 caracteres.',
+      })
+      : setNameValidation({ isValid: true });
 
     return isName;
   };
@@ -117,36 +122,46 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
     if (!validDocument(cpf) || !validName(name)) return;
     if (eventDay == null)
       return alert('Selecione o dia do evento do ingresso.');
-    
+
     if (sectorId == null)
       return alert('Selecione o setor.');
 
+    if(authContext.selectedEventId == 505 && workingHours == null){
+      return alert('Selecione a carga horária.');
+    }
+
     onUserFormCompleted({
-      user: {day: user.day, document: user.cpf, name: user.name, sectorId: sectorId, sponsorId: sponsorId}
+      user: { day: user.day, document: user.cpf, name: user.name, sectorId: sectorId, sponsorId: sponsorId, workingHours: workingHours }
     });
   };
 
   var itemsDay = [];
-  for(var i in availableDays)
-  {
+  for (var i in availableDays) {
     var dayElements = availableDays[i].split("T")[0].split("-");
-    var day = dayElements[2] + "/" + dayElements[1] + "/"+ dayElements[0];
-    itemsDay.push({key: day, value: day});
+    var day = dayElements[2] + "/" + dayElements[1] + "/" + dayElements[0];
+    itemsDay.push({ key: day, value: day });
   }
   var itemsSector = [];
-  for(var j in availableSectors)
-  {
-    itemsSector.push({key: availableSectors[j].id, value: availableSectors[j].name});
+  for (var j in availableSectors) {
+    itemsSector.push({ key: availableSectors[j].id, value: availableSectors[j].name });
   }
 
   var itemsSponsors = [];
-  for(var h in sponsors)
-  {
-    itemsSponsors.push({key: sponsors[h].id, value: sponsors[h].name});
+  for (var h in sponsors) {
+    itemsSponsors.push({ key: sponsors[h].id, value: sponsors[h].name });
   }
 
+  const hourItems = Array.from({ length: 12 }, (_, i) => {
+    const hour = i + 1;
+    return {
+      key: hour,
+      value: `${hour}h`,
+    };
+  });
+
+
   return (
-    <View style={{flex: 1, marginBottom: 40}}>
+    <View style={{ flex: 1, marginBottom: 40 }}>
       <Input
         label="Nome"
         value={name}
@@ -154,7 +169,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
           validName(name);
         }}
         onChangeText={name => {
-          setUser(prevState => ({...prevState, name}));
+          setUser(prevState => ({ ...prevState, name }));
         }}
         errorMessage={!nameValidation.isValid ? nameValidation.errorMsg : ''}
       />
@@ -162,12 +177,12 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
       <SelectModal
         label={'Tipo do documento'}
         items={[
-          {key: 'cpf', value: 'CPF'},
-          {key: 'passport', value: 'Passaporte'},
+          { key: 'cpf', value: 'CPF' },
+          { key: 'passport', value: 'Passaporte' },
         ]}
         setValue={value => {
           setDocumentType(value);
-          setUser(prev => ({...prev, cpf: ''}));
+          setUser(prev => ({ ...prev, cpf: '' }));
         }}
         value={documentType}
       />
@@ -187,7 +202,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
         <Input
           label="Passaporte"
           value={cpf}
-          onChangeText={text => setUser(prev => ({...prev, cpf: text}))}
+          onChangeText={text => setUser(prev => ({ ...prev, cpf: text }))}
           onBlur={validPassport}
           errorMessage={
             !passportValidation.isValid ? passportValidation.errorMsg : ''
@@ -200,7 +215,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
         items={itemsDay}
         setValue={value => {
           setEventDay(value);
-          setUser(prev => ({...prev, day: value}));
+          setUser(prev => ({ ...prev, day: value }));
         }}
         value={eventDay}
       />
@@ -210,7 +225,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
         items={itemsSector}
         setValue={value => {
           setSectorId(value);
-          setUser(prev => ({...prev, sectorId: sectorId}));
+          setUser(prev => ({ ...prev, sectorId: sectorId }));
         }}
         value={sectorId}
       />
@@ -220,10 +235,21 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
         items={itemsSponsors}
         setValue={value => {
           setSponsorId(value);
-          setUser(prev => ({...prev, sponsorId: sponsorId}));
+          setUser(prev => ({ ...prev, sponsorId: sponsorId }));
         }}
         value={sponsorId}
       />
+
+
+      {authContext.selectedEventId == 505 && (
+        <SelectModal
+          label="Selecione a carga horária"
+          items={hourItems}
+          value={workingHours}
+          setValue={setWorkingHours}
+        />
+
+      )}
 
       <View
         style={{
@@ -234,7 +260,7 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
           <Button
             type="outline"
             onPress={onReturn}
-            containerStyle={{paddingRight: 16, width: '50%'}}>
+            containerStyle={{ paddingRight: 16, width: '50%' }}>
             Voltar
           </Button>
         )}
@@ -242,13 +268,13 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
           <Button
             type="outline"
             onPress={onCancel}
-            containerStyle={{paddingRight: 16, width: '50%'}}>
+            containerStyle={{ paddingRight: 16, width: '50%' }}>
             Voltar ao início
           </Button>
         )}
         <Button
           containerStyle={
-            !!onReturn || !!onCancel ? {width: '50%'} : {width: '100%'}
+            !!onReturn || !!onCancel ? { width: '50%' } : { width: '100%' }
           }
           onPress={handleComplete}>
           Avançar
