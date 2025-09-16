@@ -171,7 +171,7 @@ export const updateEmail = async (data, userToken) => {
 export const completeFastTicketRegister = async (eventId, data, userToken) => {
   try {
     var response = await axios({
-      url: BASE_URL_V2 + '/tickets/fast',
+      url: BASE_URL_V2 + '/tickets',
       method: 'POST',
       data: { eventId: eventId, ...data },
       headers: {
