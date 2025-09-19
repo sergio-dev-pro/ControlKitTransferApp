@@ -130,9 +130,9 @@ function Navigators() {
           {/* {eventPermissions.includes("page.delivery.kit") && (
             <Drawer.Screen name="Novo ingresso" component={NewTicket} />
           )} */}
-          {/* {eventPermissions.includes("page.ticket.add") && (
+          {eventPermissions.includes("page.ticket.add") && (
             <Drawer.Screen name="Cadastro rápido" component={NewFastTicket} />
-          )} */}
+          )}
           {eventPermissions.includes("page.user.update.email") && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
           )}
