@@ -13,7 +13,7 @@ const inputErrorMsgs = {
   },
 };
 
-const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSectors, sponsors, onReturn, onCancel, initialDocument, initialFirstName, initialLastName}) => {
+const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSectors, sponsors, onReturn, onCancel, initialDocument, initialFirstName, initialLastName, selectType}) => {
   const [user, setUser] = useState({
     name: initialFirstName,
     cpf: initialDocument, // usado para amazenar cpf ou passport
@@ -145,6 +145,8 @@ const BasicFastRegisterForm = ({onUserFormCompleted, availableDays, availableSec
   {
     itemsSponsors.push({key: sponsors[h].id, value: sponsors[h].name});
   }
+
+  console.log(selectType)
 
   return (
     <View style={{flex: 1, marginBottom: 40}}>
