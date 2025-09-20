@@ -169,28 +169,23 @@ export const updateEmail = async (data, userToken) => {
 
 
 export const completeFastTicketRegister = async (eventId, data, userToken) => {
-  try {
-    var response = await axios({
-      url: BASE_URL_V2 + '/tickets',
-      method: 'POST',
-      data: { eventId: eventId, ...data },
-      headers: {
-        Accept: 'application/json',
-        Authorization: 'Bearer ' + userToken,
-      },
-    });
-    console.log('response returned=' + JSON.stringify(response.data));
-    return true;
-  } catch (error) {
-    console.log('error', error);
-    console.log('error error.response.data', error.response.data);
-    alert(error.response.data.errors);
-    return null;
-  }
+
+  var response = await axios({
+    url: BASE_URL_V2 + '/tickets',
+    method: 'POST',
+    data: { eventId: eventId, ...data },
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + userToken,
+    },
+  });
+  console.log('response returned=' + JSON.stringify(response.data));
+  return true;
+
 };
 
 export const completeManualRegisterByTickets = async (data, userToken) => {
- axios({
+  axios({
     url: BASE_URL_V2 + '/users/manual',
     method: 'PUT',
     data,

@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
 import { Button, Divider, Text } from '@rneui/themed';
-import { getEventDays, getEventSectors, getSponsors } from '../api/EventApi';
 import { AuthContext } from '../context/AuthContext';
 import Loading from '../components/Loading';
 import BasicFastRegisterForm from './ManualRegisterScreen/BasicFastRegisterForm';
@@ -18,9 +17,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import SelectModal from '../components/SelectModal';
 
 const NewFastTicket = ({ navigation }) => {
-  const [days, setDays] = useState([]);
-  const [sectors, setSectors] = useState([]);
-  const [sponsors, setSponsors] = useState([]);
   const [tempToken, setTempToken] = useState(false);
   const [takePhoto, setTakePhoto] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -28,7 +24,7 @@ const NewFastTicket = ({ navigation }) => {
   const [userData, setUserData] = useState();
 
   // TODO: setado true temporariamente
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const authContext = useContext(AuthContext);
 
@@ -41,35 +37,15 @@ const NewFastTicket = ({ navigation }) => {
   const [cpfValue, setCpfValue] = useState('')
   const [valueInitialFirstName, setValueInitialFirstName] = useState('')
   const [valueInitialLastname, setValueInitialLastname] = useState('')
-  const [selectedType, setSelectedType] = useState(null);
 
 
-  useEffect(() => {
-    (async () => {
-      try {
-        console.log("selectedEventId=" + authContext.selectedEventId);
-        const { data: days } = await getEventDays(authContext.selectedEventId);
-        setDays(days);
-
-        const { data: sectors } = await getEventSectors(authContext.selectedEventId);
-        setSectors(sectors);
-
-        const { data: sponsors } = await getSponsors(authContext.selectedEventId, authContext.userToken);
-        setSponsors(sponsors)
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
 
   const handleUserFormCompleted = data => {
     console.log(`@@@@@ data`, data);
     setUserData(data.user);
 
     // Remove pontos e traços do CPF
-    const cleanedCpf = data.user.document.replace(/[.-]/g, '');
+    const cleanedCpf = data.user.userDocument.replace(/[.-]/g, '');
     setDocument(cleanedCpf);
   };
 
@@ -120,23 +96,18 @@ const NewFastTicket = ({ navigation }) => {
   const completeRegister = async () => {
     try {
       setLoading(true);
-      const data = {
-        ...userData,
-      };
+      const data = { ...userData };
+
       console.log(
         'NewTicket completeRegister',
         JSON.stringify(data),
-        'Event id:' +
-        authContext.selectedEventId,
-        'Auth token: ' +
-        authContext.userToken,
       );
 
-      console.log('data: ' + data)
-      console.log('data: ', data)
-
-      var result = await completeFastTicketRegister(authContext.selectedEventId, data, authContext.userToken);
-
+      var result = await completeFastTicketRegister(
+        authContext.selectedEventId,
+        data,
+        authContext.userToken
+      );
 
       if (result) {
         setAlertMessage('Ingresso cadastrado com sucesso!');
@@ -146,9 +117,24 @@ const NewFastTicket = ({ navigation }) => {
         console.log('Ingresso cadastrado com sucesso!');
       }
     } catch (error) {
-      console.error(error);
-      console.error('error error.response.data', error.response.data);
-      alert('Erro ao cadastrar ingresso!');
+      console.error('❌ Erro ao cadastrar ingresso');
+
+      if (error.response) {
+        // A requisição foi feita e o servidor respondeu com status != 2xx
+        console.error('Status:', error.response.status);
+        console.error('Headers:', error.response.headers);
+        console.error('Data:', error.response.data);
+        console.error('Config da requisição:', error.config);
+      } else if (error.request) {
+        // A requisição foi feita mas não houve resposta
+        console.error('Requisição feita mas sem resposta:', error.request);
+      } else {
+        // Alguma outra coisa aconteceu ao configurar a requisição
+        console.error('Erro ao configurar a requisição:', error.message);
+      }
+
+      console.error('Stack trace:', error.stack);
+      alert('Erro ao cadastrar ingresso! Veja o console para detalhes.');
     } finally {
       setLoading(false);
       setSearchUserTicket(false);
@@ -157,11 +143,10 @@ const NewFastTicket = ({ navigation }) => {
     }
   };
 
+
   const canFinishRegistration = !!userData;
 
   const handleUserFound = user => {
-    console.log(user)
-
     if (user.tickets && user.tickets.length > 0) {
       navigation.navigate('ManualRegisterByTickets', { user, cpf: user.id });
     } else {
@@ -179,7 +164,6 @@ const NewFastTicket = ({ navigation }) => {
   };
 
   const handleCpfNotFound = (cpf) => {
-    console.log('ENTROU')
     setCpfValue(cpf)
     setCreateNewFastTicket(true);
     setShowSearchModalByCPF(false);
@@ -196,16 +180,9 @@ const NewFastTicket = ({ navigation }) => {
       setTakePhoto(false);
       setRegistered(false);
       setCpfValue(null)
-      setSelectedType(null)
     }, [])
   );
 
-  const typeItems = [
-    { key: 1, value: 'Ingresso' },
-    { key: 2, value: 'Credencial' },
-  ];
-
-  console.log(cpfValue)
 
   return (
     <RegisterStateContext.Provider
@@ -250,30 +227,17 @@ const NewFastTicket = ({ navigation }) => {
               onClose={() => {
                 setShowSearchModalByCPF(false);
               }}
-              cpfValueNotFound={handleCpfNotFound} 
-            />
-          )}
-
-          {cpfValue && (
-            <SelectModal
-              label="Tipo"
-              items={typeItems}
-              value={selectedType}
-              setValue={setSelectedType}
+              cpfValueNotFound={handleCpfNotFound}
             />
           )}
 
 
-          {!userData && !takePhoto && createNewFastTicket && selectedType && (
+          {!userData && !takePhoto && createNewFastTicket && (
             <BasicFastRegisterForm
               onUserFormCompleted={handleUserFormCompleted}
-              availableDays={days}
-              availableSectors={sectors}
-              sponsors={sponsors}
               initialDocument={cpfValue}
               initialFirstName={valueInitialFirstName}
               initialLastName={valueInitialLastname}
-              selectType={selectedType}
             />
           )}
 

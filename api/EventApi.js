@@ -12,48 +12,58 @@ export const getEventRequiredFields = async eventId =>
     },
   });
 
-  export const getSponsors = async (eventId, token) =>
-  await axios({
+export const getSponsors = async (eventId, token) => {
+  const response = await axios({
     url: BASE_URL_V2 + `/events/${eventId}/sponsors`,
     method: 'GET',
     headers: {
       Accept: 'text/plain',
+      'Content-Type': 'application/json-patch+json',
+      'Authorization': 'Bearer ' + token
+    },
+  });
+  return response.data
+}
+
+export const getEventDays = async (eventId, token) => {
+  const response = await axios({
+    url: BASE_URL_V2 + `/Events/${eventId}/Days`,
+    method: 'GET',
+    headers: {
+      Accept: 'text/plain',
+      'Content-Type': 'application/json-patch+json',
       'Authorization': 'Bearer ' + token
     },
   });
 
-export const getEventDays = async eventId =>
-  axios({
-    url: BASE_URL_V2 + `/events/${eventId}/days`,
+  return response.data
+}
+
+export const getEventSectors = async (eventId, token) => {
+  const response = await axios({
+    url: BASE_URL_V2 + `/Events/${eventId}/Sectors`,
     method: 'GET',
     headers: {
-      Accept: 'text/plain',
+      Accept: 'application/json',
       'Content-Type': 'application/json-patch+json',
+      'Authorization': 'Bearer ' + token
     },
   });
 
-  export const getEventSectors = async eventId =>
-  await axios({
-    url: BASE_URL_V2 + `/events/${eventId}/sectors`,
+  return response.data
+}
+
+export const getKitDelivery = async (code) => {
+  var response = await axios({
+    url: BASE_URL + `/api/events/${code}/kitDelivery`,
     method: 'GET',
     headers: {
-      Accept: 'text/plain',
+      Accept: 'application/json',
       'Content-Type': 'application/json-patch+json',
     },
   });
+  return response.data;
 
-  export const getKitDelivery = async (code) => {
-    
-    var response = await axios({
-      url: BASE_URL + `/api/events/${code}/kitDelivery`,
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json-patch+json',
-      },
-    });
-    return response.data;
-  
 };
 
 export const getEventsList = async (token, companiesId) => {
@@ -68,4 +78,19 @@ export const getEventsList = async (token, companiesId) => {
   });
   return response.data;
 
+};
+
+
+export const getAccessPolicies = async (eventId, token) => {
+  const response = await axios({
+    url: `${BASE_URL_V2}/Events/${eventId}/accessPolicies`,
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json-patch+json',
+      'Authorization': 'Bearer ' + token
+    },
+  });
+
+  return response.data;
 };
