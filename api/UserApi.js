@@ -20,23 +20,13 @@ export const getUserByCpf = async (cpf, eventId) =>
   });
 export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false, fromBlaceletRegistration = false) => {
   const cleanCpf = cpf.replace(/\D/g, '');
-
-   try {
-    var response = await axios({ url: BASE_URL_V2 + `/users?searchTerm=${cleanCpf}&eventid=${eventId}`,
+   return axios({ url: BASE_URL_V2 + `/users?searchTerm=${cleanCpf}&eventid=${eventId}`,
                                 method: 'GET',
                                 headers: {
                                   Accept: 'application/json',
                                   Authorization: 'Bearer ' + token,
                                 }, 
     });
-    var users = response.data;
-    return users.length > 0 ? users[0] : null;
-  } catch (error) {
-    console.log('error', error);
-    console.log('error error.response.data', error.response.data);
-    alert(error.response.data.errors);
-    return null;
-  }
 }
 
 export const getUserByEmail = async (email, eventId, token) =>
