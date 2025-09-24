@@ -50,44 +50,54 @@ const NewFastTicket = ({ navigation }) => {
   };
 
   const savePhoto = async (picturePath) => {
-    if (!picturePath) return;
+  if (!picturePath) return;
 
-    const formData = new FormData();
-    formData.append('file', {
-      uri: picturePath,
-      type: 'image/jpeg',
-      name: 'userImage.jpg',
-    });
-    formData.append("eventId", authContext.selectedEventId);
-    formData.append("document", document);
+  const formData = new FormData();
+  formData.append('file', {
+    uri: picturePath,
+    type: 'image/jpeg',
+    name: 'userImage.jpg',
+  });
+  formData.append("eventId", authContext.selectedEventId);
+  formData.append("document", document);
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      // Chamada da API
-      const response = await saveUserPhotoAgain(formData, authContext.userToken);
+    // Chamada da API
+    const response = await saveUserPhotoAgain(formData, authContext.userToken);
 
-      // Sucesso
-      setAlertMessage('Foto salva com sucesso!');
-      clearStates();
-      setTakePhoto(false);
-      setRegistered(false);
+    // Sucesso
+    setAlertMessage('Foto salva com sucesso!');
+    clearStates();
+    setTakePhoto(false);
+    setRegistered(false);
 
-    } catch (error) {
-      // Log para debug
-      console.error('Erro ao enviar foto:', error);
+  } catch (error) {
+    // --- BLOCO CATCH MELHORADO ---
 
-      // Tenta extrair a mensagem da API
-      const apiMessage = error?.response?.data?.message;
-      const fallbackMessage = 'Erro ao enviar imagem, tente novamente.';
-      const finalMessage = apiMessage || fallbackMessage;
+    if (error.response) {
+      const status = error.response.status;
+      const apiMessage = error.response.data?.message || error.response.data;
 
-      setAlertMessage(finalMessage);
-
-    } finally {
-      setLoading(false);
+      // Log detalhado para o programador
+      console.error("❌ Erro de resposta da API:", {
+        status: status,
+        data: error.response.data,
+        headers: error.response.headers,
+        url: error.config?.url,
+      });
+    }else {
+      console.error("❌ Erro ao configurar a requisição:", error.message);
+      userMessage = "Ocorreu um erro inesperado na aplicação.";
     }
-  };
+    
+    setAlertMessage(userMessage);
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   const clearStates = () => {
     setUserData(undefined);
