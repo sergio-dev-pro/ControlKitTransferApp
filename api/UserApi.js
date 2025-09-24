@@ -19,9 +19,8 @@ export const getUserByCpf = async (cpf, eventId) =>
     },
   });
 export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false, fromBlaceletRegistration = false) => {
-  console.log('entrou')
   const cleanCpf = cpf.replace(/\D/g, '');
-  var result = await axios({
+  return axios({
     url:
       BASE_URL_V2 + `/users?searchTerm=${cleanCpf}&eventid=${eventId}`,
     method: 'GET',
@@ -31,8 +30,6 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery 
     },
 
   });
-
-  console.log('retorno: ', result.data)
 }
 
 export const getUserByEmail = async (email, eventId, token) =>

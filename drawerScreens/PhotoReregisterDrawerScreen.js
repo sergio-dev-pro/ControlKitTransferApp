@@ -30,6 +30,11 @@ function PhotoReregisterDrawerScreen({ navigation }) {
   const [documentUser, setDocumentUser] = useState("");
 
   const handleUserFound = userFounded => {
+
+    if(!userFounded){
+      return setAlertMessage('Usuário não encontrado');
+    }
+
     if (!userFounded.isActive && !userFounded.useFacialWeb)
       return setAlertMessage('Usuário precisa realizar o cadastro inicial.');
 
