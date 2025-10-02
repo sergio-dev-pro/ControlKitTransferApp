@@ -17,7 +17,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import SelectModal from '../components/SelectModal';
 
 const NewFastTicket = ({ navigation }) => {
-  const [tempToken, setTempToken] = useState(false);
   const [takePhoto, setTakePhoto] = useState(false);
   const [registered, setRegistered] = useState(false);
   // TODO: setado temporariamente
@@ -37,7 +36,7 @@ const NewFastTicket = ({ navigation }) => {
   const [cpfValue, setCpfValue] = useState('')
   const [valueInitialFirstName, setValueInitialFirstName] = useState('')
   const [valueInitialLastname, setValueInitialLastname] = useState('')
-
+  const [valuePicturePath, setValuePicturePath] = useState(null)
 
 
   const handleUserFormCompleted = data => {
@@ -50,79 +49,47 @@ const NewFastTicket = ({ navigation }) => {
   };
 
   const savePhoto = async (picturePath) => {
-  if (!picturePath) return;
+    if (!picturePath) return;
 
-  const formData = new FormData();
-  formData.append('file', {
-    uri: picturePath,
-    type: 'image/jpeg',
-    name: 'userImage.jpg',
-  });
-  formData.append("eventId", authContext.selectedEventId);
-  formData.append("document", document);
+    setValuePicturePath(picturePath)
 
-  try {
-    setLoading(true);
-
-    // Chamada da API
-    const response = await saveUserPhotoAgain(formData, authContext.userToken);
-
-    // Sucesso
-    setAlertMessage('Foto salva com sucesso!');
-    clearStates();
-    setTakePhoto(false);
-    setRegistered(false);
-
-  } catch (error) {
-    // --- BLOCO CATCH MELHORADO ---
-
-    if (error.response) {
-      const status = error.response.status;
-      const apiMessage = error.response.data?.message || error.response.data;
-
-      // Log detalhado para o programador
-      console.error("❌ Erro de resposta da API:", {
-        status: status,
-        data: error.response.data,
-        headers: error.response.headers,
-        url: error.config?.url,
-      });
-    }else {
-      console.error("❌ Erro ao configurar a requisição:", error.message);
-      userMessage = "Ocorreu um erro inesperado na aplicação.";
-    }
-    
-    setAlertMessage(userMessage);
-
-  } finally {
-    setLoading(false);
-  }
-};
+    setTakePhoto(false)
+  };
 
   const clearStates = () => {
-    setUserData(undefined);
+    setValuePicturePath(null)
+    setSearchUserTicket(false);
+    setShowSearchModalByCPF(false);
+    setCreateNewFastTicket(false);
+    setUserData(null);
+    setTakePhoto(false);
+    setRegistered(false);
+    setCpfValue('');
+    setValueInitialFirstName('');
+    setValueInitialLastname('');
+
   };
 
   const completeRegister = async () => {
+    const formData = convertJsonToFormData();
+
+    console.log(formData)
+
+    if (!formData) {
+      console.log("Erro", "Não há dados de utilizador para registar.");
+      return;
+    }
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const data = { ...userData };
 
-      console.log(
-        'NewTicket completeRegister',
-        JSON.stringify(data),
-      );
-
-      var result = await completeFastTicketRegister(
-        authContext.selectedEventId,
-        data,
+      const result = await completeFastTicketRegister(
+        formData,
         authContext.userToken
       );
 
       if (result) {
         setAlertMessage('Ingresso cadastrado com sucesso!');
-        setTempToken(result);
-        setTakePhoto(true);
         setRegistered(true);
         console.log('Ingresso cadastrado com sucesso!');
       }
@@ -147,9 +114,7 @@ const NewFastTicket = ({ navigation }) => {
       alert('Erro ao cadastrar ingresso! Veja o console para detalhes.');
     } finally {
       setLoading(false);
-      setSearchUserTicket(false);
-      setShowSearchModalByCPF(false);
-      setCreateNewFastTicket(false);
+      clearStates()
     }
   };
 
@@ -157,6 +122,9 @@ const NewFastTicket = ({ navigation }) => {
   const canFinishRegistration = !!userData;
 
   const handleUserFound = user => {
+
+    console.log(user)
+
     if (user.tickets && user.tickets.length > 0) {
       navigation.navigate('ManualRegisterByTickets', { user, cpf: user.id });
     } else {
@@ -190,9 +158,29 @@ const NewFastTicket = ({ navigation }) => {
       setTakePhoto(false);
       setRegistered(false);
       setCpfValue(null)
+      setValuePicturePath(null)
     }, [])
   );
 
+
+  const convertJsonToFormData = () => {
+    const formData = new FormData();
+
+
+    for (const key in userData) {
+      if (Object.prototype.hasOwnProperty.call(userData, key) && userData[key] !== null) {
+        formData.append(key, userData[key]);
+      }
+    }
+    
+    formData.append('Face', {
+      uri: valuePicturePath,
+      type: 'image/jpeg',
+      name: 'userImage.jpg',
+    });
+
+    return formData
+  }
 
   return (
     <RegisterStateContext.Provider
@@ -241,7 +229,6 @@ const NewFastTicket = ({ navigation }) => {
             />
           )}
 
-
           {!userData && !takePhoto && createNewFastTicket && (
             <BasicFastRegisterForm
               onUserFormCompleted={handleUserFormCompleted}
@@ -251,9 +238,30 @@ const NewFastTicket = ({ navigation }) => {
             />
           )}
 
+          {!takePhoto && canFinishRegistration && !valuePicturePath && (
+            <>
+              <Button
+                type="solid"
+                size="lg"
+                containerStyle={{ marginTop: 20 }}
+                onPress={() => {
+                  setTakePhoto(true)
+                }}>
+                Cadastrar foto
+              </Button>
+              <Button
+                containerStyle={{ marginTop: 10 }}
+                type="outline"
+                onPress={() => {
+                  clearStates();
+                  setRegistered(false);
+                }}>
+                Cancelar
+              </Button>
+            </>
+          )}
 
-
-          {canFinishRegistration && !takePhoto && !registered && (
+          {canFinishRegistration && !takePhoto && !registered && valuePicturePath && (
             <>
               <Button
                 type="solid"
@@ -273,30 +281,11 @@ const NewFastTicket = ({ navigation }) => {
               </Button>
             </>
           )}
-          {registered && !takePhoto && (
-            <>
-              <Button
-                type="solid"
-                size="lg"
-                containerStyle={{ marginTop: 20 }}
-                onPress={() => {
-                  setTakePhoto(true);
-                }}>
-                Cadastrar foto
-              </Button>
-              <Button
-                containerStyle={{ marginTop: 10 }}
-                type="outline"
-                onPress={() => {
-                  clearStates();
-                  setRegistered(false);
-                }}>
-                Cancelar
-              </Button>
-            </>
-          )}
+
+
+
         </ScrollView>
-        {takePhoto && tempToken && <TakePictureScreen />}
+        {takePhoto && <TakePictureScreen />}
         <Loading isActive={loading} />
       </View>
     </RegisterStateContext.Provider >

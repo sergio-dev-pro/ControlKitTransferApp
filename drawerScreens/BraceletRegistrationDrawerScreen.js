@@ -73,6 +73,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setUser(userState);
   };
 
+  console.log(user)
   const handleQRCodeRead = async ticketCode => {
     // #
     const isCodeWithHashtag = ticketCode.includes('#');
@@ -234,7 +235,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
               placeholder="Selecione um evento"
               items={(user?.tickets || []).map(ticket => ({
                 key: ticket.id, // Usando `accessKey` como identificador único
-                value: [ticket.sector || '', ticket.category || '', ticket.day || ''].filter(Boolean).join(' - ')
+                value: [ticket.sector || '', ticket.category || '', ticket.day || '', ticket.accessPolicy || ''].filter(Boolean).join(' - ')
               }))}
               value={selectedEventKey}
               setValue={eventKey => {

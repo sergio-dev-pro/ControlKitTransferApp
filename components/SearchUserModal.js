@@ -69,6 +69,7 @@ const SearchUserModal = ({
         ? await getUserByEmail(inputValue, authContext.selectedEventId, authContext.userToken)
         : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken, fromKitDelivery, fromBlaceletRegistration);
       const searchedFor = {};
+      console.log(user)
       if (isEmailSearch) searchedFor.email = inputValue;
       else searchedFor.cpf = inputValue;
       onUserFound({ ...user, id: inputValue }, searchedFor);
