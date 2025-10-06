@@ -37,6 +37,7 @@ const NewFastTicket = ({ navigation }) => {
   const [valueInitialFirstName, setValueInitialFirstName] = useState('')
   const [valueInitialLastname, setValueInitialLastname] = useState('')
   const [valuePicturePath, setValuePicturePath] = useState(null)
+  const [isUserActive, setIsUserActive] = useState(false);
 
 
   const handleUserFormCompleted = data => {
@@ -49,6 +50,8 @@ const NewFastTicket = ({ navigation }) => {
   };
 
   const savePhoto = async (picturePath) => {
+    console.log('picturePath: ', picturePath)
+
     if (!picturePath) return;
 
     setValuePicturePath(picturePath)
@@ -67,13 +70,19 @@ const NewFastTicket = ({ navigation }) => {
     setCpfValue('');
     setValueInitialFirstName('');
     setValueInitialLastname('');
+    setIsUserActive(false);
+
 
   };
 
   const completeRegister = async () => {
+
+    if (!isUserActive && !valuePicturePath) {
+      return Alert.alert("Foto Obrigatória", "É necessário cadastrar uma foto para finalizar o registo.");
+    }
+
     const formData = convertJsonToFormData();
 
-    console.log(formData)
 
     if (!formData) {
       console.log("Erro", "Não há dados de utilizador para registar.");
@@ -92,53 +101,43 @@ const NewFastTicket = ({ navigation }) => {
         setAlertMessage('Ingresso cadastrado com sucesso!');
         setRegistered(true);
         console.log('Ingresso cadastrado com sucesso!');
+        clearStates();
       }
     } catch (error) {
       console.error('❌ Erro ao cadastrar ingresso');
 
       if (error.response) {
-        // A requisição foi feita e o servidor respondeu com status != 2xx
         console.error('Status:', error.response.status);
-        console.error('Headers:', error.response.headers);
         console.error('Data:', error.response.data);
-        console.error('Config da requisição:', error.config);
-      } else if (error.request) {
-        // A requisição foi feita mas não houve resposta
-        console.error('Requisição feita mas sem resposta:', error.request);
+        setAlertMessage(error.response.data.message, '#dc143c');
       } else {
-        // Alguma outra coisa aconteceu ao configurar a requisição
-        console.error('Erro ao configurar a requisição:', error.message);
+        alert('Erro ao cadastrar ingresso!');
+      }
+
+      if (error.response) {
+        setValuePicturePath(null);
       }
 
       console.error('Stack trace:', error.stack);
-      alert('Erro ao cadastrar ingresso! Veja o console para detalhes.');
+
     } finally {
       setLoading(false);
-      clearStates()
     }
   };
 
-
-  const canFinishRegistration = !!userData;
-
   const handleUserFound = user => {
 
-    console.log(user)
 
-    if (user.tickets && user.tickets.length > 0) {
-      navigation.navigate('ManualRegisterByTickets', { user, cpf: user.id });
-    } else {
-      const nameParts = user.name?.split(' ') || [];
-      const firstName = nameParts[0] || '';
-      const lastname = nameParts.slice(1).join(' ') || '';
-      setValueInitialFirstName(firstName)
-      setValueInitialLastname(lastname)
-      setCpfValue(user.id)
-      setCreateNewFastTicket(true);
-      setShowSearchModalByCPF(false);
-      setSearchUserTicket(true);
-
-    }
+    setIsUserActive(user.isActive || false);
+    const nameParts = user.name?.split(' ') || [];
+    const firstName = nameParts[0] || '';
+    const lastname = nameParts.slice(1).join(' ') || '';
+    setValueInitialFirstName(firstName)
+    setValueInitialLastname(lastname)
+    setCpfValue(user.id)
+    setCreateNewFastTicket(true);
+    setShowSearchModalByCPF(false);
+    setSearchUserTicket(true);
   };
 
   const handleCpfNotFound = (cpf) => {
@@ -159,6 +158,8 @@ const NewFastTicket = ({ navigation }) => {
       setRegistered(false);
       setCpfValue(null)
       setValuePicturePath(null)
+      setIsUserActive(false);
+
     }, [])
   );
 
@@ -172,15 +173,19 @@ const NewFastTicket = ({ navigation }) => {
         formData.append(key, userData[key]);
       }
     }
-    
-    formData.append('Face', {
-      uri: valuePicturePath,
-      type: 'image/jpeg',
-      name: 'userImage.jpg',
-    });
+
+    if (!isUserActive && valuePicturePath) {
+      formData.append('Face', {
+        uri: valuePicturePath,
+        type: 'image/jpeg',
+        name: 'userImage.jpg',
+      });
+    }
 
     return formData
   }
+
+  console.log('isUserActive: ' + isUserActive)
 
   return (
     <RegisterStateContext.Provider
@@ -229,7 +234,7 @@ const NewFastTicket = ({ navigation }) => {
             />
           )}
 
-          {!userData && !takePhoto && createNewFastTicket && (
+          {!userData && createNewFastTicket && (
             <BasicFastRegisterForm
               onUserFormCompleted={handleUserFormCompleted}
               initialDocument={cpfValue}
@@ -238,7 +243,7 @@ const NewFastTicket = ({ navigation }) => {
             />
           )}
 
-          {!takePhoto && canFinishRegistration && !valuePicturePath && (
+          {userData && !isUserActive && !valuePicturePath && (
             <>
               <Button
                 type="solid"
@@ -261,7 +266,7 @@ const NewFastTicket = ({ navigation }) => {
             </>
           )}
 
-          {canFinishRegistration && !takePhoto && !registered && valuePicturePath && (
+          {userData && (isUserActive || valuePicturePath) && (
             <>
               <Button
                 type="solid"

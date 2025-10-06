@@ -91,6 +91,8 @@ export default function TakePictureModal({
       });
       setPicture(photo);
       setIsTakingPhoto(false);
+
+      console.log(picture)
     } catch (error) {
       console.error(error);
     }

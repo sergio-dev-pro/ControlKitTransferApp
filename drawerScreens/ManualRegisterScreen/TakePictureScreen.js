@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,15 +7,15 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import {Camera, useCameraDevices} from 'react-native-vision-camera';
+import { Camera, useCameraDevices } from 'react-native-vision-camera';
 
 import Loading from '../../components/Loading';
-import {useRegisterState} from './registerContext';
-import {Button, Icon} from '@rneui/themed';
+import { useRegisterState } from './registerContext';
+import { Button, Icon } from '@rneui/themed';
 import ReactNativeModal from 'react-native-modal';
 import THEME from '../../style/theme';
-import {useAlert} from '../../context/AlertContext';
-import {detectFace} from '../../api/FaceApi';
+import { useAlert } from '../../context/AlertContext';
+import { detectFace } from '../../api/FaceApi';
 
 export default function TakePictureScreen() {
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState('');
@@ -24,7 +24,7 @@ export default function TakePictureScreen() {
   const [isTakingPhoto, setIsTakingPhoto] = useState(false);
   const [isInitializedCamera, setIsInitializedCamera] = useState(false);
   const camera = useRef(null);
-  const {cancelPhoto, savePhoto, isSavingPhoto} = useRegisterState();
+  const { cancelPhoto, savePhoto, isSavingPhoto } = useRegisterState();
   const setAlertMessage = useAlert();
 
   const devices = useCameraDevices();
@@ -41,7 +41,7 @@ export default function TakePictureScreen() {
         Alert.alert(
           '',
           'Precisamos do acesso a camera para finalizar o cadastro.',
-          [{text: 'Ok', onPress: askCameraPermission}],
+          [{ text: 'Ok', onPress: askCameraPermission }],
         );
     }
   }, [cameraPermissionStatus]);
@@ -99,6 +99,8 @@ export default function TakePictureScreen() {
         flash: 'off',
       });
       setPicture(photo);
+      console.log('photo: ', photo)
+
 
       const isValidPicture = await pictureValidation(photo.path);
       !isValidPicture && setPicture(null);
@@ -112,6 +114,8 @@ export default function TakePictureScreen() {
 
   const picturePath =
     Platform.OS === 'android' ? 'file://' + picture?.path : picture?.path;
+
+
   return (
     <ReactNativeModal isVisible>
       <View style={[styles.container, StyleSheet.absoluteFill]}>
@@ -134,14 +138,14 @@ export default function TakePictureScreen() {
                   cancelPhoto();
                 }}
                 type="clear"
-                style={[styles.camButton, {width: '40%'}]}>
+                style={[styles.camButton, { width: '40%' }]}>
                 Voltar
               </Button>
               <Button
                 type="solid"
                 loading={isSavingPhoto || isTakingPhoto}
                 onPress={() => savePhoto(picturePath)}
-                style={[styles.camButton, {width: '40%'}]}>
+                style={[styles.camButton, { width: '40%' }]}>
                 Salvar
               </Button>
             </View>
@@ -159,13 +163,13 @@ export default function TakePictureScreen() {
             {isTakingPhoto ? (
               <Loading size="large" />
             ) : (
-              <View style={{flex: 1, justifyContent: 'space-between'}}>
-                <View style={{width: '100%', justifyContent: 'flex-start'}}>
+              <View style={{ flex: 1, justifyContent: 'space-between' }}>
+                <View style={{ width: '100%', justifyContent: 'flex-start' }}>
                   <Button
                     onPress={cancelPhoto}
                     type="clear"
                     size="lg"
-                    containerStyle={[styles.camButton, {width: 50}]}>
+                    containerStyle={[styles.camButton, { width: 50 }]}>
                     <Icon
                       type="antdesign"
                       name="arrowleft"
