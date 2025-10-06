@@ -50,8 +50,6 @@ const NewFastTicket = ({ navigation }) => {
   };
 
   const savePhoto = async (picturePath) => {
-    console.log('picturePath: ', picturePath)
-
     if (!picturePath) return;
 
     setValuePicturePath(picturePath)

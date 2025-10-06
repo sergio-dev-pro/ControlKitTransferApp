@@ -64,7 +64,6 @@ export default function TakePictureScreen() {
     try {
       toggleLoading();
       const cameraPermission = await Camera.requestCameraPermission();
-      console.log('cameraPermission', cameraPermission);
       setCameraPermissionStatus(cameraPermission);
     } catch (error) {
       console.error(error);
@@ -99,8 +98,6 @@ export default function TakePictureScreen() {
         flash: 'off',
       });
       setPicture(photo);
-      console.log('photo: ', photo)
-
 
       const isValidPicture = await pictureValidation(photo.path);
       !isValidPicture && setPicture(null);
