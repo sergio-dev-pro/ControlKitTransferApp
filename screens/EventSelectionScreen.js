@@ -26,7 +26,6 @@ function EventSelectionScreen() {
     saveCompanyId();
   }, [selectedCompanyId]);
 
-  
   return (
     <View style={GStyles.view}>
       <AuthHeader />
@@ -52,7 +51,7 @@ function EventSelectionScreen() {
               <Button
                 onPress={() => {
                   if (selectedCompanyId) {
-                    setSelectedEventId(item.id); 
+                    setSelectedEventId(item.id, item.kitDeliveryMode);
                     setPermission(item.permissions);
                   } else {
                     setSelectedCompanyId(item.id); // Aqui seleciona a empresa

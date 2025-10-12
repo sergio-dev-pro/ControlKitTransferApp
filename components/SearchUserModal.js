@@ -75,6 +75,9 @@ const SearchUserModal = ({
       onUserFound({ ...user, id: inputValue }, searchedFor);
     } catch (error) {
 
+      console.error('Erro response:', error.response);
+
+
       const status = error.response.status;
 
       if (status === 404) {

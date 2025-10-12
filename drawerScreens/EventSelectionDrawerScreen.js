@@ -42,6 +42,7 @@ function EventSelectionDrawerScreen({ navigation }) {
   const { setSelectedEventId, selectedEventId, permissions, userToken, setPermission } = useContext(AuthContext);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [kitDelivery, setKitDelivery] = useState(null)
 
 
 
@@ -52,6 +53,7 @@ function EventSelectionDrawerScreen({ navigation }) {
         const storedCompanyId = await AsyncStorage.getItem('userCompanyId'); // <--- CORRETO
         const parsedCompanyId = JSON.parse(storedCompanyId);
         const eventsData = await getEventsList(userToken, parsedCompanyId);
+        setKitDelivery(eventsData.kitDeliveryMode)
         setEvents(eventsData);
       } catch (error) {
         console.error('Erro ao buscar eventos:', error);
@@ -66,7 +68,7 @@ function EventSelectionDrawerScreen({ navigation }) {
 
   const handleEventSelection = async eventId => {
     if (eventId !== selectedEventId) {
-      await setSelectedEventId(eventId);
+      await setSelectedEventId(eventId, kitDelivery);
     }
 
     const selectedEvent = events.find(event => event.id === eventId);

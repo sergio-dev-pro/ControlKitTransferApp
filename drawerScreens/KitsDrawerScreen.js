@@ -837,7 +837,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
 
   const handleUserFound = (user, searchedFor) => {
-    console.log('searchedFor', searchedFor.cpf)
     console.log('@@@@@@@@user', user);
     user && setUser(user);
   };
@@ -1032,7 +1031,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.filter(item => user.tickets[item].includes(day))[0];
     // setShirtCodesRead(prevState => ({ ...prevState, [getTicketIdByDayOfCodeRead(showResponseCamisa.day)]: { code: currentTicketCode, ...showResponseCamisa } }))
     console.log('@@currentTicketCode', ticketCode)
-    setShirtCodesRead(prevState => ({ ...prevState, [selectedTicketsAvailable[0]] : { code: ticketCode } }))
+    setShirtCodesRead(prevState => ({ ...prevState, [selectedTicketsAvailable[0]]: { code: ticketCode } }))
   };
 
   useEffect(() => {
@@ -1044,7 +1043,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       console.log("User está indefinido");
     }
 
-    if (authContext.selectedEventId === '5db21f36-f4e3-42a9-87c4-2506a37de28c') {
+    //if (authContext.selectedEventId === '5db21f36-f4e3-42a9-87c4-2506a37de28c') {
+    //if (authContext.selectedEventId === '6b6a264b-040a-4808-a550-87983fdcb5dc') {
+    if (authContext.kitDeliveryMode === 1) {
       setEventAllowed(true);
     }
   }, [user, authContext.selectedEventId]);
@@ -1058,10 +1059,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setIncompleteRegistrationReason(justification);
     setIsValidBoolean(false);
   };
-
-  console.log('Ticket IDs selecionados:', selectedTicketCodes);
-  console.log('eventAllowed:', eventAllowed);
-
 
   return (
     <View style={{ flex: 1 }}>

@@ -124,7 +124,7 @@ const NewFastTicket = ({ navigation }) => {
   };
 
   const handleUserFound = user => {
-
+    console.log('userFound: ', user)
 
     setIsUserActive(user.isActive || false);
     const nameParts = user.name?.split(' ') || [];

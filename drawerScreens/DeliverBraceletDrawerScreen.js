@@ -189,9 +189,6 @@ function DeliverBraceletDrawerScreen({ navigation }) {
           ticketCodes.includes(ticket.id) && ticket.braceletDeliveredAt
         );
         
-        console.log('userTickets='+userTickets)
-        console.log('alreadyDelivered='+alreadyDelivered)
-
         console.log()
 
         if (alreadyDelivered.length > 0 && !reason) {

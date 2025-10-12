@@ -4,7 +4,7 @@ import jwt_decode from 'jwt-decode';
 import axios from 'axios';
 import { BASE_URL } from '../constants/api';
 import { useAlert } from './AlertContext';
-import { getEventRequiredFields } from '../api/EventApi';
+import { getEventRequiredFields, getKitDelivery } from '../api/EventApi';
 import BASE_URL_V2 from '../constants/api2';
 
 export const AuthContext = createContext();
@@ -68,6 +68,7 @@ const initialState = {
   isAuthenticated: false,
   events: null,
   requiredForms: null,
+  kitDeliveryMode: null
 };
 
 export function AuthProvider({ children }) {
@@ -88,9 +89,9 @@ export function AuthProvider({ children }) {
       const eventInJsonFormat = await AsyncStorage.getItem('event');
       const event = JSON.parse(eventInJsonFormat);
       var decodedToken = jwt_decode(token);
-      console.log('@@@decodedToken', decodedToken);
-     // const events = decodedToken?.Events ? JSON.parse(decodedToken.Events) : [];
-     const companies = companiesString ? JSON.parse(companiesString) : [];
+      // const events = decodedToken?.Events ? JSON.parse(decodedToken.Events) : [];
+      const companies = companiesString ? JSON.parse(companiesString) : [];
+      const kitdelivery = await AsyncStorage.getItem('');
       setAuthState({
         userToken: token,
         hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true",
@@ -109,9 +110,11 @@ export function AuthProvider({ children }) {
         isAuthenticated: true,
         selectedEventId: parseInt(event?.id),
         //requiredForms: event?.requiredForms,
-       // events,
+        // events,
         permissions: decodedToken.Permissions ? JSON.parse(decodedToken.Permissions) : null,
-        companies: companies        
+        companies: companies,
+        kitDeliveryMode: event?.kitDeliveryMode,
+
       });
     } else {
       console.log('sem token')
@@ -119,9 +122,8 @@ export function AuthProvider({ children }) {
     setIsAuthenticating(false);
   };
 
-  const setSelectedEventId = async id => {
+  const setSelectedEventId = async (id, kitdeliveryMode) => {
     try {
-      console.log('selectedEventIdNow=' + id)
       setIsSearchingEventSettings(true);
       //const { data: requiredFieldsForUserRegistration } = await getEventRequiredFields(id);
 
@@ -129,13 +131,15 @@ export function AuthProvider({ children }) {
         'event',
         JSON.stringify({
           id: id.toString(),
-          //requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
+          kitDeliveryMode: kitdeliveryMode
+
         }),
       );
       setIsSearchingEventSettings(false);
       setAuthState(prevState => ({
         ...prevState,
         selectedEventId: id,
+        kitDeliveryMode: kitdeliveryMode
         //requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
       }));
     } catch (e) {
@@ -150,7 +154,7 @@ export function AuthProvider({ children }) {
       token,
     }));
   };
-  
+
 
   const authenticateUser = async loginData => {
     setIsAuthenticating(true);
@@ -165,6 +169,7 @@ export function AuthProvider({ children }) {
           'Content-Type': 'application/json-patch+json',
         },
       });
+
       var token = dataResponse.data.accessToken;
       // save token in async storage.
       await AsyncStorage.setItem('userToken', token);
@@ -216,7 +221,7 @@ export function AuthProvider({ children }) {
       //     console.error(error);
       //   }
       // }
-     
+
       setAuthState(prevState => ({
         ...prevState,
         ...authStateChanges,
@@ -264,7 +269,7 @@ export function AuthProvider({ children }) {
         logout,
         setUserToken,
         isSearchingEventSettings,
-        
+
       }}>
       {children}
     </AuthContext.Provider>
