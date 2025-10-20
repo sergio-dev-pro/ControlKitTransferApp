@@ -51,7 +51,7 @@ function EventSelectionScreen() {
               <Button
                 onPress={() => {
                   if (selectedCompanyId) {
-                    setSelectedEventId(item.id, item.kitDeliveryMode);
+                    setSelectedEventId(item.id, item.kitDeliveryMode, item.canManageBraceletDelivery);
                     setPermission(item.permissions);
                   } else {
                     setSelectedCompanyId(item.id); // Aqui seleciona a empresa

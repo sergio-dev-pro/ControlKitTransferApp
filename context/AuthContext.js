@@ -114,7 +114,7 @@ export function AuthProvider({ children }) {
         permissions: decodedToken.Permissions ? JSON.parse(decodedToken.Permissions) : null,
         companies: companies,
         kitDeliveryMode: event?.kitDeliveryMode,
-
+        canManageBraceletDelivery: event?.canManageBraceletDelivery
       });
     } else {
       console.log('sem token')
@@ -122,7 +122,7 @@ export function AuthProvider({ children }) {
     setIsAuthenticating(false);
   };
 
-  const setSelectedEventId = async (id, kitdeliveryMode) => {
+  const setSelectedEventId = async (id, kitdeliveryMode, canManageBraceletDelivery) => {
     try {
       setIsSearchingEventSettings(true);
       //const { data: requiredFieldsForUserRegistration } = await getEventRequiredFields(id);
@@ -131,15 +131,16 @@ export function AuthProvider({ children }) {
         'event',
         JSON.stringify({
           id: id.toString(),
-          kitDeliveryMode: kitdeliveryMode
-
+          kitDeliveryMode: kitdeliveryMode,
+          canManageBraceletDelivery: canManageBraceletDelivery
         }),
       );
       setIsSearchingEventSettings(false);
       setAuthState(prevState => ({
         ...prevState,
         selectedEventId: id,
-        kitDeliveryMode: kitdeliveryMode
+        kitDeliveryMode: kitdeliveryMode,
+        canManageBraceletDelivery: canManageBraceletDelivery
         //requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
       }));
     } catch (e) {

@@ -54,6 +54,7 @@ function Navigators() {
     selectedEventId,
     events,
     permissions,
+    canManageBraceletDelivery,
     logout,
   } = React.useContext(AuthContext);
 
@@ -87,7 +88,7 @@ function Navigators() {
           {eventPermissions.includes("page.delivery.kit") && (
             <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
           )}
-          {eventPermissions.includes("page.delivery.bracelet") && (
+          {eventPermissions.includes("page.delivery.bracelet") && canManageBraceletDelivery && (
             <Drawer.Screen
               name="Entregar pulseira"
               component={DeliverBraceletDrawerScreen}
