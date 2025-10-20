@@ -51,7 +51,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     complement: '',
     city: '',
     state: '',
-    country: 'BRA',
+    country: 27,
   });
 
   const [stateSuggestions, setStateSuggestions] = useState([]);
@@ -94,7 +94,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
       complement: '',
       city: '',
       state: '',
-      country: 'BRA',
+      country: 27,
     });
   };
 
@@ -260,7 +260,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
       formData.append('Address.Number', address.number);
       formData.append('Address.Neighborhood', address.neighborhood);
       formData.append('Address.Complement', address.complement);
-      formData.append('Address.Country', address.country)
+      formData.append('Address.CountryId', address.country)
     }
 
 
@@ -319,14 +319,14 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     }
   };
 
-  const countryOptions = listCountries.map(({ code, name }) => ({
-    key: code,
-    value: `${code} - ${name}`,
-    rawValue: code
+  const countryOptions = listCountries.map(({ id, name }) => ({
+    key: id,
+    value: `${name}`,
+    rawValue: id
   }));
 
 
-  console.log(address)
+  console.log(address.country)
   return (
     <View style={{ ...GStyles.view }}>
       <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
@@ -453,9 +453,9 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
             <SelectModal
               label="País"
               placeholder="Selecione um país"
-              items={countryOptions}  // [{key, value, label}]
+              items={countryOptions}  
               value={address.country} // ex: "BRA"
-              setValue={(code) => setAddress(prev => ({ ...prev, country: code }))}
+              setValue={(id) => setAddress(prev => ({ ...prev, country: id }))}
             />
 
             <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
