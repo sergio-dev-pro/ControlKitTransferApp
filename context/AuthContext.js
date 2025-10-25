@@ -156,15 +156,14 @@ export function AuthProvider({ children }) {
     }));
   };
 
-
-  const authenticateUser = async loginData => {
+  const confirmLogin = async (code, document) => {
     setIsAuthenticating(true);
     try {
-      const url = BASE_URL_V2 + '/companyusers/login';
+      const url = BASE_URL_V2 + '/companyusers/loginConfirm';
       const dataResponse = await axios({
         url,
         method: 'POST',
-        data: loginData,
+        data: {code, document},
         headers: {
           Accept: 'text/plain',
           'Content-Type': 'application/json-patch+json',
@@ -178,17 +177,8 @@ export function AuthProvider({ children }) {
       // decode token to get events.
       var decodedToken = jwt_decode(token);
       console.log('decodedToken=' + JSON.stringify(decodedToken));
-      //const events = JSON.parse(decodedToken.Events);
-      // Se tiver apenas um evento, nao precisa ir para tela de selecao.
+
       const selectedEventId = null;
-
-      // const eventRequiredFields = selectedEventId
-      //   ? await getEventRequiredFields(selectedEventId)
-      //   : null;
-      // const requiredForms = eventRequiredFields
-      //   ? getRequiredForms(eventRequiredFields.data)
-      //   : null;
-
 
       let authStateChanges = {
         userToken: token,
@@ -208,25 +198,36 @@ export function AuthProvider({ children }) {
         canCreateTicket: decodedToken.CanCreateTicket === 'True',
         canChangeEmail: decodedToken.CanChangeEmail === 'True',
       };
-      // if (requiredForms) {
-      //   authStateChanges.requiredForms = requiredForms;
-      //   try {
-      //     await AsyncStorage.setItem(
-      //       'event',
-      //       JSON.stringify({
-      //         id: selectedEventId.toString(),
-      //         requiredForms,
-      //       }),
-      //     );
-      //   } catch (error) {
-      //     console.error(error);
-      //   }
-      // }
 
       setAuthState(prevState => ({
         ...prevState,
         ...authStateChanges,
       }));
+    } catch (error) {
+      console.log(error);
+      setAlertMessage(error.response.data.message);
+      return null;
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+
+  const authenticateUser = async loginData => {
+    setIsAuthenticating(true);
+    try {
+      const url = BASE_URL_V2 + '/companyusers/login';
+      const dataResponse = await axios({
+        url,
+        method: 'POST',
+        data: loginData,
+        headers: {
+          Accept: 'text/plain',
+          'Content-Type': 'application/json-patch+json',
+        },
+      });
+      
+      return true;
     } catch (error) {
       console.log(error);
       setAlertMessage(error.response.data.message);
@@ -261,6 +262,7 @@ export function AuthProvider({ children }) {
       value={{
         ...authState,
         isAuthenticating,
+        confirmLogin,
         authenticateUser,
         resetInitialState,
         setAuthState,
