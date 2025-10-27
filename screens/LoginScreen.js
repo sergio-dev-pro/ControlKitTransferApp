@@ -1,127 +1,184 @@
-import {StyleSheet, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useState, useContext, createRef } from 'react'; // Adicionado useContext e createRef
 import Button from '../components/Button';
-import {Text, Input} from '@rneui/themed';
-import {isValidEmail} from '../helpers/validation';
+import { Text, Input } from '@rneui/themed';
 import AuthHeader from '../components/AuthHeader';
 import GStyles from '../style/global';
-import {AuthContext} from '../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 
 const inputErrorMsgs = {
-  email: 'email inválido.',
-  password: {
-    minimumQuantity: 'Deve ter mínimo 8 caracteres.',
-    spaceNotAllowed: 'Não deve haver espaço em branco.',
-  },
   global: {
     empty: 'campo obrigatório.',
   },
+  cpf: 'CPF inválido.',
+  code: 'Código inválido.',
 };
 
-const LoginScreen = ({navigation}) => {
-  const emailInput = React.createRef();
+const LoginScreen = ({ navigation }) => {
+  const emailInput = createRef();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [emailValidation, setEmailValidation] = useState({
-    isValid: true,
-    errorMsg: '',
-  });
-  const [passwordValidation, setPasswordValidation] = useState({
-    isValid: true,
-    errorMsg: '',
-  });
+  const [code, setCode] = useState('');
 
-  const auth = React.useContext(AuthContext);
+  const [emailValidation, setEmailValidation] = useState({ isValid: true, errorMsg: '' });
+  const [passwordValidation, setPasswordValidation] = useState({ isValid: true, errorMsg: '' });
+  const [codeValidation, setCodeValidation] = useState({ isValid: true, errorMsg: '' });
+
+  const [showValidationStep, setShowValidationStep] = useState(false); // Renomeado para clareza
+
+  const auth = useContext(AuthContext);
 
   useEffect(() => {
-    emailInput.current.focus();
+    emailInput.current?.focus(); // Adiciona '?' para segurança
   }, []);
 
-  const validEmail = currentEmail => {
-    const isValid = isValidEmail(currentEmail);
-    const invalidEmail = () => {
-      const errorMsg = currentEmail.length
-        ? inputErrorMsgs.email
-        : inputErrorMsgs.global.empty;
-      setEmailValidation({errorMsg, isValid: false});
-    };
-    !isValid && invalidEmail();
-    const valid = () => setEmailValidation({isValid: true});
-    !emailValidation.isValid && valid();
+  // Adapte esta função para validar CPF se necessário
+  const validCPF = currentCPF => {
+    const isValid = currentCPF.length >= 11;
+    setEmailValidation({
+      isValid,
+      errorMsg: !isValid ? (currentCPF.length ? inputErrorMsgs.cpf : inputErrorMsgs.global.empty) : ''
+    });
+    return isValid;
   };
 
   const validPassword = valueToValidate => {
+    // ... sua função validPassword (está boa)
     let errorMsg = valueToValidate.length ? null : inputErrorMsgs.global.empty;
     if (!errorMsg && valueToValidate.length < 6)
-      errorMsg = inputErrorMsgs.password.minimumQuantity;
+      errorMsg = 'Deve ter mínimo 6 caracteres.'; // Ajuste se necessário
     if (!errorMsg && /\s/g.test(valueToValidate))
-      errorMsg = inputErrorMsgs.password.spaceNotAllowed;
+      errorMsg = 'Não deve haver espaço em branco.';
 
     const isValid = !errorMsg;
-    const invalid = () => {
-      setPasswordValidation({errorMsg, isValid: false});
-    };
-    if (!isValid) {
-      invalid();
-      return false;
-    }
-    const valid = () => setPasswordValidation({isValid: true});
-    !passwordValidation.isValid && valid();
-    return true;
+    setPasswordValidation({ errorMsg: isValid ? '' : errorMsg, isValid });
+    return isValid;
   };
 
+  // NOVO: Função para validar o código/token
+  const validCode = currentCode => {
+    const isValid = currentCode.length > 0; // Exemplo: só verifica se não está vazio
+    setCodeValidation({
+      isValid,
+      errorMsg: !isValid ? inputErrorMsgs.global.empty : ''
+    });
+    return isValid;
+  };
+
+
   const handleEmailChange = emailChanged => {
-    !emailValidation.isValid && validEmail(emailChanged);
-    setEmail(emailChanged);
+    const cleanedCPF = emailChanged.replace(/[^\d]/g, '');
+    if (!emailValidation.isValid) validCPF(cleanedCPF);
+    setEmail(cleanedCPF);
   };
 
   const handlePasswordChange = passwordChanged => {
-    !passwordValidation.isValid && validPassword(passwordChanged);
+    if (!passwordValidation.isValid) validPassword(passwordChanged);
     setPassword(passwordChanged);
   };
 
-  const isLoginButtonDisabled =
-    !emailValidation.isValid ||
-    !passwordValidation.isValid ||
-    !email.length ||
-    !password.length;
+  const handleCodeChange = codeChanged => {
+    if (!codeValidation.isValid) validCode(codeChanged);
+    setCode(codeChanged);
+  };
+
+  const isLoginButtonDisabled = !emailValidation.isValid || !passwordValidation.isValid || !email.length || !password.length;
+  const isValidateButtonDisabled = !codeValidation.isValid || !code.length;
+
+
+  const handleInitialLogin = async () => {
+    const isCPFValid = validCPF(email);
+    const isPasswordValid = validPassword(password);
+    if (!isCPFValid || !isPasswordValid) return;
+
+    const success = await auth.authenticateUser({ document: email, password });
+
+    if (success) {
+      setShowValidationStep(true);
+      setCode('');
+      setCodeValidation({ isValid: true, errorMsg: '' });
+    } else {
+      setPassword('');
+    }
+  };
+
+  const handleCodeValidation = async () => {
+    if (!validCode(code)) return;
+
+    await auth.confirmLogin(code, email);
+  };
+
 
   return (
     <View style={GStyles.view}>
       <AuthHeader />
-      <View style={GStyles.container}>
-        <View style={styles.formContainer}>
-          <Text h4 style={styles.formTitle}>
-            Entrar
-          </Text>
-          <Input
-            ref={emailInput}
-            keyboardType="numeric"
-            onChangeText={handleEmailChange}
-            placeholder="Digite seu CPF"
-            errorMessage={
-              !emailValidation.isValid ? emailValidation.errorMsg : ''
-            }
-          />
-          <Input
-            placeholder="Digite sua senha"
-            onChangeText={handlePasswordChange}
-            onBlur={() => validPassword(password)}
-            secureTextEntry={true}
-            errorMessage={
-              !passwordValidation.isValid ? passwordValidation.errorMsg : ''
-            }
-          />
-          <Button
-            size="lg"
-            title="ENTRAR"
-            disabled={isLoginButtonDisabled}
-            loading={auth.isAuthenticating}
-            onPress={() => auth.authenticateUser({document: email, password})}
-            containerStyle={{width: '100%', paddingHorizontal: 10}}
-          />
-        </View>
-      </View>
+      <>
+        {/* Passo 1: Formulário de CPF e Senha */}
+        {!showValidationStep ? (
+          <View style={GStyles.container}>
+            <View style={styles.formContainer}>
+              <Text h4 style={styles.formTitle}>Entrar</Text>
+              <Input
+                ref={emailInput}
+                label="CPF"
+                keyboardType="numeric"
+                onChangeText={handleEmailChange}
+                onBlur={() => validCPF(email)}
+                value={email}
+                placeholder="Digite seu CPF"
+                errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
+              />
+              <Input
+                label="Senha"
+                placeholder="Digite sua senha"
+                onChangeText={handlePasswordChange}
+                onBlur={() => validPassword(password)}
+                value={password}
+                secureTextEntry={true}
+                errorMessage={!passwordValidation.isValid ? passwordValidation.errorMsg : ''}
+              />
+              <Button
+                size="lg"
+                title="ENTRAR"
+                disabled={isLoginButtonDisabled}
+                loading={auth.isAuthenticating}
+                onPress={handleInitialLogin}
+                containerStyle={{ width: '100%', paddingHorizontal: 10 }}
+              />
+            </View>
+          </View>
+        ) : (
+          /* Passo 2: Formulário de Validação de Código */
+          <View style={GStyles.container}>
+            <View style={styles.formContainer}>
+              <Text h4 style={styles.formTitle}>Validação</Text>
+              <Input
+                label="Código de Validação"
+                onChangeText={handleCodeChange}
+                onBlur={() => validCode(code)}
+                value={code}
+                placeholder="Digite o token recebido"
+                errorMessage={!codeValidation.isValid ? codeValidation.errorMsg : ''}
+              />
+              <Button
+                size="lg"
+                title="VALIDAR"
+                disabled={isValidateButtonDisabled}
+                loading={auth.isAuthenticating}
+                onPress={handleCodeValidation}
+                containerStyle={{ width: '100%', paddingHorizontal: 10 }}
+              />
+              <Button
+                type="outline" 
+                size="lg"
+                title="VOLTAR"
+                onPress={() => setShowValidationStep(false)} 
+                containerStyle={{ width: '100%', paddingHorizontal: 10, marginTop: 10, }}
+              />
+            </View>
+          </View>
+        )}
+      </>
     </View>
   );
 };
@@ -129,16 +186,7 @@ const LoginScreen = ({navigation}) => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    width: '100%',
-    alignItems: 'center',
-    padding: 10,
-  },
-  formContainer: {
-    width: '100%',
-    maxWidth: 450,
-  },
-  formTitle: {
-    marginBottom: 4,
-  },
+  headerContainer: { width: '100%', alignItems: 'center', padding: 10 },
+  formContainer: { width: '100%', maxWidth: 450 },
+  formTitle: { marginBottom: 4 },
 });

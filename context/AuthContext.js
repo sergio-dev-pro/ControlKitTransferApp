@@ -163,7 +163,7 @@ export function AuthProvider({ children }) {
       const dataResponse = await axios({
         url,
         method: 'POST',
-        data: {code, document},
+        data: { code, document },
         headers: {
           Accept: 'text/plain',
           'Content-Type': 'application/json-patch+json',
@@ -217,7 +217,7 @@ export function AuthProvider({ children }) {
     setIsAuthenticating(true);
     try {
       const url = BASE_URL_V2 + '/companyusers/login';
-      const dataResponse = await axios({
+      await axios({
         url,
         method: 'POST',
         data: loginData,
@@ -226,7 +226,7 @@ export function AuthProvider({ children }) {
           'Content-Type': 'application/json-patch+json',
         },
       });
-      
+
       return true;
     } catch (error) {
       console.log(error);
