@@ -350,7 +350,7 @@ function KitsDrawerScreen({ navigation }) {
   useEffect(() => {
 
 
-    if (authContext.selectedEventId === 10 || authContext.selectedEventId === 435) {
+    if (authContext.kitDeliveryMode === 1) {
       setEventAllowed(true);
     }
   }, [authContext.selectedEventId]);
