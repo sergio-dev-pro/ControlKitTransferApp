@@ -87,28 +87,26 @@ function DeliverBraceletDrawerScreen({ navigation }) {
         authContext.userToken, 'Bracelet'
       );
 
-      console.log('@@@@@ticketReturned='+ ticket)
+      console.log('@@@@@ticketReturned=' + ticket)
 
-      if(!ticket)
-      {
+      if (!ticket) {
         throw new Error("Ingresso não encontrado na api!");
       }
 
       if (ticket.braceletDeliveredAt && !reason) {
-          const message = `A pulseira para o setor ${ticket.sector} no dia ${ticket.day} já foi entregue.`;
-          setTicketCodesReuse([ticket.ticketId]);
-          setJustificationMessage(message);
-          setIsModalVisible(true);
-          return;
+        const message = `A pulseira para o setor ${ticket.sector} no dia ${ticket.day} já foi entregue.`;
+        setTicketCodesReuse([ticket.ticketId]);
+        setJustificationMessage(message);
+        setIsModalVisible(true);
+        return;
       }
 
       const formData = new FormData();
-        formData.append('EventId', authContext.selectedEventId);
-        formData.append('Type', 'Bracelet');
-        formData.append(`Tickets[0].TicketId`, ticket.ticketId);
+      formData.append('EventId', authContext.selectedEventId);
+      formData.append('Type', 'Bracelet');
+      formData.append(`Tickets[0].TicketId`, ticket.ticketId);
 
-      if(reason)
-      {
+      if (reason) {
         formData.append(`Tickets[0].Reason`, reason);
         formData.append(`Tickets[0].ReasonType`, 'Exchange');
       }
@@ -182,13 +180,13 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       setLoading(true);
       setOperationCancelled(false);
 
-      console.log('ticketCodes='+ticketCodes)
+      console.log('ticketCodes=' + ticketCodes)
 
       if (userTickets) {
         const alreadyDelivered = userTickets.filter(ticket =>
           ticketCodes.includes(ticket.id) && ticket.braceletDeliveredAt
         );
-        
+
         console.log()
 
         if (alreadyDelivered.length > 0 && !reason) {
@@ -212,126 +210,130 @@ function DeliverBraceletDrawerScreen({ navigation }) {
       }
 
       const formData = new FormData();
-        formData.append('EventId', authContext.selectedEventId);
-        formData.append('Type', 'Bracelet');
+      formData.append('EventId', authContext.selectedEventId);
+      formData.append('Type', 'Bracelet');
 
-        ticketCodes.forEach((ticketId, index) => {
-          formData.append(`Tickets[${index}].TicketId`, ticketId);
-          if(reason)
-          {
-            formData.append(`Tickets[${index}].Reason`, reason);
-            formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
-          }
-        });
+      ticketCodes.forEach((ticketId, index) => {
+        formData.append(`Tickets[${index}].TicketId`, ticketId);
+        if (reason) {
+          formData.append(`Tickets[${index}].Reason`, reason);
+          formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
+        }
+      });
 
-        console.log('formData='+ JSON.stringify(formData));
+      console.log('formData=' + JSON.stringify(formData));
 
-        try {
-          const response = await registerBraceletDelivery(
-            authContext.userToken,
-            formData
-          );
+      try {
+        const response = await registerBraceletDelivery(
+          authContext.userToken,
+          formData
+        );
 
-          if (response) {
-            console.log(`✅ Entrega registrada para ticket: `, response.data);
+        if (response) {
+          console.log(`✅ Entrega registrada para ticket: `, response.data);
 
-            const { data: ticket } = response;
-            setAlertMessage(`Entrega registrada com sucesso!`, '#32cd32');
-          }
-
-        } catch (error) {
-          console.error(`❌ Erro ao registrar entrega do ticket: `, error);
-
-          if (error.response) {
-            console.error("🔴 Resposta do servidor:", error.response.data);
-          } else {
-            console.error("⚠️ Erro sem resposta do servidor:", error.message);
-          }
-
-          setAlertMessage("Erro ao registrar entrega da pulseira", "#dc143c");
+          const { data: ticket } = response;
+          setAlertMessage(`Entrega registrada com sucesso!`, '#32cd32');
         }
 
-      setReason('');
+      } catch (error) {
+        let errorMessage = "Erro ao registrar entrega da pulseira";
 
+        console.error(`❌ Erro ao registrar entrega do ticket: `, error);
+        if (error.response) {
+          console.error("🔴 Resposta do servidor:", error.response.data);
 
-      if (!isModalVisible && !operationCancelled) {
-        setUserTickets(undefined);
-        setUserDocument(null);
+          if (error.response.data && error.response.data.message) {
+            errorMessage = error.response.data.message; 
+          }
+        } else {
+          console.error("⚠️ Erro sem resposta do servidor:", error.message);
+        }
+
+        setAlertMessage(errorMessage, "#dc143c");
       }
 
-    } catch (error) {
-      console.error("🔥 Erro inesperado:", error);
-      setAlertMessage("Erro ao registrar entrega da pulseira");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setReason('');
 
-  return (
-    <View style={{ ...GStyles.view }}>
-      <Header
-        style={{ marginBottom: 0 }}
-        openDrawer={() => navigation.openDrawer()}
-      />
-      <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
-        <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
-          Entrega de pulseiras
-        </Text>
-        <Divider />
-      </View>
-      <View style={[GStyles.container]}>
-        <Button
-          loading={loading}
-          onPress={() => {
-            setShowQrcodereader(true);
-          }}>
-          Ler código do ingresso
-        </Button>
-        <Button
-          containerStyle={{ marginTop: 10 }}
-          type="outline"
-          onPress={() => {
-            setShowSearchModalByCPF(true);
-          }}>
-          Buscar por CPF
-        </Button>
-        {showSearchModalByCPF && (
-          <SearchUserModal
-            title="Buscar"
-            onUserFound={handleUserFound}
-            placeholderText="Busque pelo CPF"
-            isVisible={showSearchModalByCPF}
-            onClose={() => {
-              setShowSearchModalByCPF(false);
-            }}
-          />
-        )}
-        {userTickets && (
-          <TicketCodeSelectionModal
-            isVisible
-            tickets={userTickets}
-            onClose={() => setUserTickets(undefined)}
-            onConfirm={confirmTicketCodeSelection}
-            isConfirming={loading}
-          />
-        )}
-      </View>
-      {showQrCodeReader && (
-        <QrCodeReader
-          onRead={handleQRCodeRead}
-          onClose={() => setShowQrcodereader(false)}
+
+    if (!isModalVisible && !operationCancelled) {
+      setUserTickets(undefined);
+      setUserDocument(null);
+    }
+
+  } catch (error) {
+    console.error("🔥 Erro inesperado:", error);
+    setAlertMessage("Erro ao registrar entrega da pulseira");
+  } finally {
+    setLoading(false);
+  }
+};
+
+return (
+  <View style={{ ...GStyles.view }}>
+    <Header
+      style={{ marginBottom: 0 }}
+      openDrawer={() => navigation.openDrawer()}
+    />
+    <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
+      <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
+        Entrega de pulseiras
+      </Text>
+      <Divider />
+    </View>
+    <View style={[GStyles.container]}>
+      <Button
+        loading={loading}
+        onPress={() => {
+          setShowQrcodereader(true);
+        }}>
+        Ler código do ingresso
+      </Button>
+      <Button
+        containerStyle={{ marginTop: 10 }}
+        type="outline"
+        onPress={() => {
+          setShowSearchModalByCPF(true);
+        }}>
+        Buscar por CPF
+      </Button>
+      {showSearchModalByCPF && (
+        <SearchUserModal
+          title="Buscar"
+          onUserFound={handleUserFound}
+          placeholderText="Busque pelo CPF"
+          isVisible={showSearchModalByCPF}
+          onClose={() => {
+            setShowSearchModalByCPF(false);
+          }}
         />
       )}
-
-      <JustificationModal
-        modalVisible={isModalVisible}
-        setModalVisible={setIsModalVisible}
-        onSubmit={handleJustificationSubmit}
-        onCancel={handleJustificationCancel}
-        message={`${justificationMessage}\nPara registrar uma nova entrega, por favor, forneça uma justificativa detalhada.`}
-      />
+      {userTickets && (
+        <TicketCodeSelectionModal
+          isVisible
+          tickets={userTickets}
+          onClose={() => setUserTickets(undefined)}
+          onConfirm={confirmTicketCodeSelection}
+          isConfirming={loading}
+        />
+      )}
     </View>
-  );
+    {showQrCodeReader && (
+      <QrCodeReader
+        onRead={handleQRCodeRead}
+        onClose={() => setShowQrcodereader(false)}
+      />
+    )}
+
+    <JustificationModal
+      modalVisible={isModalVisible}
+      setModalVisible={setIsModalVisible}
+      onSubmit={handleJustificationSubmit}
+      onCancel={handleJustificationCancel}
+      message={`${justificationMessage}\nPara registrar uma nova entrega, por favor, forneça uma justificativa detalhada.`}
+    />
+  </View>
+);
 }
 // tickets = [[code, name]...]
 const TicketCodeSelectionModal = ({
@@ -392,7 +394,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15 }}>
-                {[ ticket.sector || '', ticket.day || '', ticket.braceletDeliveredAt ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
+                {[ticket.sector || '', ticket.day || '', ticket.braceletDeliveredAt ? "ENTREGUE" : null].filter(Boolean).join(' - ')}
               </Text>
             </View>
           );
