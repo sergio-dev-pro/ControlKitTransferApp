@@ -1,13 +1,14 @@
 import { Input, Text } from '@rneui/themed';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { View, Alert, ActivityIndicator } from 'react-native';
+import { View, Alert, ActivityIndicator, StyleSheet, FlatList, Keyboard } from 'react-native';
 import { useMaskedInputProps } from 'react-native-mask-input';
 import Button from '../../components/Button';
 import SelectModal from '../../components/SelectModal';
-import { cpfValidation } from '../../helpers/validation';
+import { cpfValidation, isValidationEmail } from '../../helpers/validation';
 import { getAccessPolicies, getEventDays, getEventSectors, getSponsors } from '../../api/EventApi';
 import { AuthContext } from '../../context/AuthContext';
 import uuid from 'react-native-uuid';
+import { TouchableOpacity } from 'react-native';
 
 const inputErrorMsgs = {
   cpf: 'CPF inválido.',
@@ -16,12 +17,25 @@ const inputErrorMsgs = {
   },
 };
 
+const DOMAINS = [
+  'gmail.com',
+  'outlook.com',
+  'hotmail.com',
+  'yahoo.com',
+  'icloud.com',
+  'live.com',
+  'bol.com.br',
+  'uol.com.br',
+];
+
+
 const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initialDocument, initialFirstName, initialLastName, selectType }) => {
 
   const [user, setUser] = useState({
     name: initialFirstName || '',
     cpf: initialDocument || '',
-    lastname: initialLastName || ''
+    lastname: initialLastName || '',
+    email: ''
   });
   const [sectorId, setSectorId] = useState(null);
   const [sponsorId, setSponsorId] = useState(null);
@@ -44,12 +58,14 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   const [lastnameValidation, setLastnameValidation] = useState({ isValid: true, errorMsg: '' });
   const [passportValidation, setPassportValidation] = useState({ isValid: true, errorMsg: '' });
 
-  const { name, lastname, cpf } = user;
+  const { name, lastname, cpf, email } = user;
   const authContext = useContext(AuthContext);
   const [selectedType, setSelectedType] = useState(1);
   const [days, setDays] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [sponsors, setSponsors] = useState([]);
+  const [suggestionsEmail, setSuggestionsEmail] = useState([]);
+  const [emailValidation, setEmailValidation] = useState({ isValid: true, errorMsg: '' });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,7 +84,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
           const sponsorsData = await getSponsors(authContext.selectedEventId, authContext.userToken);
           setSponsors(sponsorsData);
         } catch (sponsorError) {
-          setSponsors([]); 
+          setSponsors([]);
         }
 
         const policiesData = await getAccessPolicies(authContext.selectedEventId, authContext.userToken);
@@ -116,8 +132,8 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     if (!sectorId && selectedType === 1) {
       return Alert.alert('Campo Obrigatório', 'Selecione o setor.');
     }
-    const uniqueValue = generateUniqueId();
-    const userEmail = `${uniqueValue}@spr.com`;
+  
+    const userEmail = email;
 
 
     const payload = {
@@ -190,7 +206,6 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     return isValid;
   };
 
-  // CORRIGIDO: Função de validação para sobrenome
   const validLastname = currentLastname => {
     const isValid = currentLastname.length >= 3;
     setLastnameValidation({
@@ -227,12 +242,49 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     { key: 2, value: 'Credencial' },
   ];
 
-  function generateUniqueId() {
-    return uuid.v4().replace(/-/g, '');
-  }
 
+  const handleEmailChange = (text) => {
+    // 1. Atualiza o estado do 'user.email'
+    setUser(prev => ({ ...prev, email: text }));
 
+    // 2. Lógica de autocomplete que você sugeriu
+    if (text.includes('@')) {
+      const [localPart, domainPart] = text.split('@');
+      if (localPart.length > 0) {
+        const filteredDomains = DOMAINS.filter((domain) =>
+          domain.startsWith(domainPart.toLowerCase())
+        );
+        const newSuggestions = filteredDomains.map((domain) => `${localPart}@${domain}`);
+        setSuggestionsEmail(newSuggestions.slice(0, 5));
+      } else {
+        setSuggestionsEmail([]);
+      }
+    } else {
+      setSuggestionsEmail([]);
+    }
 
+    // Valida em tempo real
+    if (!emailValidation.isValid) {
+      validEmail(text);
+    }
+  };
+
+  const onSuggestionPress = (suggestion) => {
+    setUser(prev => ({ ...prev, email: suggestion })); 
+    setSuggestionsEmail([]); // Limpa sugestões
+    validEmail(suggestion); // Valida o email selecionado
+  };
+
+  const validEmail = (currentEmail) => {
+    const isValid = isValidationEmail(currentEmail);
+    setEmailValidation({
+      isValid,
+      errorMsg: !isValid ? (currentEmail.length ? inputErrorMsgs.email : inputErrorMsgs.global.empty) : '',
+    });
+    return isValid;
+  };
+
+  
 
   return (
     <View style={{ flex: 1, marginBottom: 40 }}>
@@ -291,6 +343,38 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
           errorMessage={!passportValidation.isValid ? passportValidation.errorMsg : ''}
         />
       )}
+
+      <View style={styles.autocompleteContainer}>
+        <Input
+          label="Email"
+          value={email}
+          onBlur={() => {
+            validEmail(email);
+          }}
+          onChangeText={handleEmailChange}
+          errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          containerStyle={{ paddingHorizontal: 0 }}
+        />
+
+        {suggestionsEmail.length > 0 && (
+          <View style={styles.listContainer}>
+            {suggestionsEmail.map((item, index) => (
+              <TouchableOpacity
+                key={item}
+                onPress={() => onSuggestionPress(item)}
+                style={[
+                  styles.listItem,
+                  index < suggestionsEmail.length - 1 && styles.bottomDivider,
+                ]}
+              >
+                <Text style={styles.suggestionText}>{item}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
 
       <SelectModal
         label={'Selecione o setor'}
@@ -376,3 +460,82 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
 
 export default BasicFastRegisterForm;
 
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#f5f5f5', // Um fundo suave
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+    marginTop: 30,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  // Estilos para o Input, imitando o @rneui/themed
+  inputContainer: {
+    width: '100%',
+    marginBottom: 5,
+    zIndex: 10, // Garante que o input fica por cima
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#86939e',
+    marginBottom: 8,
+    marginLeft: 10,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 2,
+    borderColor: '#86939e', // Cor cinzenta padrão
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    fontSize: 16,
+    borderRadius: 5,
+  },
+  inputFocused: {
+    borderColor: '#007bff', // Cor de foco (azul)
+  },
+  inputError: {
+    borderColor: '#ef4444', // Cor de erro (vermelho)
+  },
+  errorMessage: {
+    color: '#ef4444',
+    fontSize: 12,
+    marginLeft: 10,
+    marginTop: 5,
+  },
+  // Estilo para o "dropdown" de sugestões
+  listContainer: {
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderTopWidth: 0, // Remove a borda de cima
+    borderRadius: 5,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    backgroundColor: '#fff',
+    // Move a lista para cima para "colar" no input
+    marginTop: -5,
+    marginHorizontal: 1, // Pequena margem para alinhar com o input
+    zIndex: 5, // Fica abaixo do input mas acima do resto
+  },
+  listItem: {
+    backgroundColor: 'transparent',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+  },
+  bottomDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee', // Divisor mais suave
+  },
+  suggestionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+});

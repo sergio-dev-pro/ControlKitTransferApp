@@ -86,3 +86,16 @@ export const isDateGreaterThanOrEqualToToday = date => {
     return true;
   }
 };
+
+export function isValidationEmail(email){
+   if (!email || typeof email !== 'string') {
+    return false; 
+  }
+  const emailRegex = new RegExp(
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+    'i'
+  );
+
+  // .test() retorna true se houver uma correspondência, false caso contrário.
+  return emailRegex.test(String(email).toLowerCase());
+}
