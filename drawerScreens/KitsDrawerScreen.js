@@ -727,8 +727,8 @@ function KitsDrawerScreen({ navigation }) {
 
       {showQrCodeCamisa && (
         <QrCodeReader
-          onRead={handleQRCodeRead}
-          onClose={() => setShowQrcodereader(false)} // Fecha o QR Code
+          onRead={handleQRCodeCamisa}
+          onClose={() => setShowQrCodeCamisa(false)} // Fecha o QR Code
         />
       )}
       {showModalResponse && (
