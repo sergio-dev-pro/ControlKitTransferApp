@@ -97,34 +97,6 @@ function KitsDrawerScreen({ navigation }) {
     })();
   }, [authContext.selectedEventId]);
 
-  const syncTickets = async () => {
-    try {
-      const getTickets = async () => {
-        return new Promise(async (resolve, reject) => {
-          try {
-            let deviceId = getDeviceId();
-            const { data: tickets } = await fetchTickets(
-              deviceId,
-              authContext.selectedEventId,
-              authContext.userToken,
-            );
-            resolve(tickets);
-          } catch (error) {
-            console.error(JSON.stringify(error));
-            reject();
-          }
-        });
-      };
-      const tickets = await getTickets();
-      tickets.length && (await realmApi.saveTickets(tickets));
-      await realmApi.sendLocallySavedPendingRegisteredTickets(
-        authContext.userToken,
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
 
   const handleQRCodeRead = async ticketCode => {
 
@@ -231,6 +203,10 @@ function KitsDrawerScreen({ navigation }) {
         //formData.append('kitCodes', JSON.stringify(kitCodes));
         ticketFounds.forEach((ticket, index) => {
           formData.append(`Tickets[${index}].TicketId`, ticket.ticketId);
+          if(kitCodes.length > 0)
+          {
+            formData.append(`Tickets[${index}].Code`, kitCodes[index]);
+          }
           if (reasonForKitDelivery) {
             formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
             formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
@@ -313,11 +289,9 @@ function KitsDrawerScreen({ navigation }) {
   const addToArray = () => {
     setShowModalResponse(false);
     setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
-    setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
   };
 
   useEffect(() => {
-
 
     if (authContext.kitDeliveryMode === 1) {
       setEventAllowed(true);
@@ -339,6 +313,22 @@ function KitsDrawerScreen({ navigation }) {
     setIsValidBoolean(false);
   };
 
+  const handleQRCodeCamisa = async (ticketCode) => {
+    if (!ticketCode) {
+      console.error("ticketCode está indefinido ou nulo");
+      return;
+    }
+
+    if (kitCodes.includes(ticketCode)) {
+      setShowQrCodeCamisa(false);
+      setAlertMessage('Erro: Código já escaneado.', '#dc143c');
+      return;
+    }
+    setShowQrCodeCamisa(false);
+    console.log('@@ticketCode', ticketCode);
+    setCurrentTicketCode(ticketCode);
+    addToArray(ticketCode);
+  };
 
 
   return (
@@ -954,9 +944,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         }, {})
     );
 
-
-
-
   const handleQRCodeCamisa = async (ticketCode) => {
     if (!ticketCode) {
       console.error("ticketCode está indefinido ou nulo");
@@ -972,22 +959,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     console.log('@@ticketCode', ticketCode);
     setCurrentTicketCode(ticketCode);
     addToArray(ticketCode);
-    // try {
-    //   const response = await getKitDelivery(ticketCode);
-    //   if (response) {
-    //     setShowQrCodeCamisa(false);
-    //     setShowResponseCamisa(response);
-    //     setCurrentTicketCode(ticketCode);
-    //     setShowModalResponse(true);
-    //   } else {
-    //     setShowQrCodeCamisa(false);
-    //     setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
-    //   }
-    // } catch (error) {
-    //   setShowQrCodeCamisa(false);
-    //   console.error("Erro em handleQRCodeCamisa:", error);
-    //   setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
-    // }
   };
 
   // const ticketsWithReadCodes = Object.keys(shirtCodesRead);
