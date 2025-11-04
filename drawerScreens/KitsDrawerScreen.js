@@ -310,37 +310,6 @@ function KitsDrawerScreen({ navigation }) {
     return [day, month, year].join('/');
   };
 
-
-  const handleQRCodeCamisa = async (ticketCode) => {
-    if (!ticketCode) {
-      console.error("ticketCode está indefinido ou nulo");
-      return;
-    }
-
-    if (kitCodes.includes(ticketCode)) {
-      setShowQrCodeCamisa(false);
-      setAlertMessage('Erro: Código já escaneado.', '#dc143c');
-      return;
-    }
-
-    try {
-      const response = await getKitDelivery(ticketCode);
-      if (response) {
-        setShowQrCodeCamisa(false);
-        setShowResponseCamisa(response);
-        setCurrentTicketCode(ticketCode);
-        setShowModalResponse(true);
-      } else {
-        setShowQrCodeCamisa(false);
-        setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
-      }
-    } catch (error) {
-      setShowQrCodeCamisa(false);
-      console.error("Erro em handleQRCodeCamisa:", error);
-      setAlertMessage('Erro: Dados do kit não encontrados.', '#dc143c');
-    }
-  };
-
   const addToArray = () => {
     setShowModalResponse(false);
     setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
@@ -758,8 +727,8 @@ function KitsDrawerScreen({ navigation }) {
 
       {showQrCodeCamisa && (
         <QrCodeReader
-          onRead={handleQRCodeCamisa}
-          onClose={() => setShowQrCodeCamisa(false)} // Fecha o QR Code
+          onRead={handleQRCodeRead}
+          onClose={() => setShowQrcodereader(false)} // Fecha o QR Code
         />
       )}
       {showModalResponse && (

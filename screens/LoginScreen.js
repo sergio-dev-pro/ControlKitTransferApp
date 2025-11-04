@@ -157,7 +157,7 @@ const LoginScreen = ({ navigation }) => {
                 onChangeText={handleCodeChange}
                 onBlur={() => validCode(code)}
                 value={code}
-                placeholder="Digite o token recebido"
+                placeholder="Digite o código recebido"
                 errorMessage={!codeValidation.isValid ? codeValidation.errorMsg : ''}
               />
               <Button
