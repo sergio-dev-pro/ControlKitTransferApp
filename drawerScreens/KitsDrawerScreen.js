@@ -286,9 +286,9 @@ function KitsDrawerScreen({ navigation }) {
     return [day, month, year].join('/');
   };
 
-  const addToArray = () => {
+  const addToArray = (ticketCode) => {
     setShowModalResponse(false);
-    setKitCodes(prevKitCodes => [...prevKitCodes, currentTicketCode]);
+    setKitCodes(prevKitCodes => [...prevKitCodes, ticketCode]);
   };
 
   useEffect(() => {
@@ -476,7 +476,7 @@ function KitsDrawerScreen({ navigation }) {
                           marginBottom: 8,
                         }}>
                         <Text h4>Código da camisa</Text>
-                        <Text h4>{kitCodes[ticketFounds.indexOf(ticketFound)] + '(' + shirtSizes[ticketFounds.indexOf(ticketFound)] + ')'}</Text>
+                        <Text h4>{kitCodes[ticketFounds.indexOf(ticketFound)]}</Text>
                       </View>
                     )}
                     {checkingIfNeedSelectShirtSize && (
@@ -846,7 +846,10 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       // formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
       selectedTicketCodes.forEach((ticketId, index) => {
         formData.append(`Tickets[${index}].TicketId`, ticketId);
-        formData.append(`Tickets[${index}].Code`, kitCodes[index]);
+        if(kitCodes.length > 0)
+        {
+          formData.append(`Tickets[${index}].Code`, kitCodes[index]);
+        }
         if (hasKitAlreadyDelivered) {
           formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
           formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
