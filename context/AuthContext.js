@@ -6,6 +6,7 @@ import { BASE_URL } from '../constants/api';
 import { useAlert } from './AlertContext';
 import { getEventRequiredFields, getKitDelivery } from '../api/EventApi';
 import BASE_URL_V2 from '../constants/api2';
+import { setupAxiosInterceptor } from '../api/InterceptorApi';
 
 export const AuthContext = createContext();
 
@@ -78,12 +79,28 @@ export function AuthProvider({ children }) {
     useState(false);
   const setAlertMessage = useAlert();
 
+  const updateTokens = async ({ accessToken, refreshToken }) => {
+    await AsyncStorage.setItem('userToken', accessToken);
+    await AsyncStorage.setItem('refreshToken', refreshToken);
+
+    setAuthState((prev) => ({
+      ...prev,
+      userToken: accessToken,
+      refreshToken: refreshToken,
+    }));
+  };
+
   useEffect(() => {
-    getUserToken();
+  getUserToken().then(() => {
+    setupAxiosInterceptor(updateTokens);
+  });
   }, []);
+
+  
 
   const getUserToken = async () => {
     const token = await AsyncStorage.getItem('userToken');
+    const refreshToken = await AsyncStorage.getItem('refreshToken');
     const companiesString = await AsyncStorage.getItem('userCompanies');
     if (token) {
       const eventInJsonFormat = await AsyncStorage.getItem('event');
@@ -94,6 +111,7 @@ export function AuthProvider({ children }) {
       const kitdelivery = await AsyncStorage.getItem('');
       setAuthState({
         userToken: token,
+        refreshToken,
         hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true",
         hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true",
         hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true",
@@ -171,8 +189,10 @@ export function AuthProvider({ children }) {
       });
 
       var token = dataResponse.data.accessToken;
+      var refreshToken = dataResponse.data.refreshToken;
       // save token in async storage.
       await AsyncStorage.setItem('userToken', token);
+      await AsyncStorage.setItem('refreshToken', refreshToken);
       await AsyncStorage.setItem('userCompanies', JSON.stringify(dataResponse.data.companies));
       // decode token to get events.
       var decodedToken = jwt_decode(token);
@@ -182,6 +202,7 @@ export function AuthProvider({ children }) {
 
       let authStateChanges = {
         userToken: token,
+        refreshToken,
         isAuthenticated: true,
         //events,
         selectedEventId,

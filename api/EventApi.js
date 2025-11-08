@@ -1,6 +1,7 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
 import BASE_URL_V2 from '../constants/api2';
+import { api } from './InterceptorApi';
 
 export const getEventRequiredFields = async eventId =>
   axios({
@@ -66,18 +67,12 @@ export const getKitDelivery = async (code) => {
 
 };
 
-export const getEventsList = async (token, companiesId) => {
-  var response = await axios({
-    url: `${BASE_URL_V2}/events?companyId=${companiesId}`,
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json-patch+json',
-      'Authorization': 'Bearer ' + token
-    },
+export const getEventsList = async (_token, companyId) => {
+  const response = await api.get('/events', {
+    params: { companyId },
   });
-  return response.data;
 
+  return response.data;
 };
 
 

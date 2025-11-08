@@ -3,6 +3,7 @@ import BASE_URL from '../constants/api';
 import { getModel } from 'react-native-device-info';
 import { Alert } from 'react-native';
 import BASE_URL_V2 from '../constants/api2';
+import { api } from './InterceptorApi';
 
 
 export const getUserByCpf = async (cpf, eventId) =>
@@ -22,17 +23,10 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery 
   console.log('ENTROU')
 
   const cleanCpf = cpf.replace(/\D/g, '');
-  return axios({
-    url:
-      BASE_URL_V2 + `/users?searchTerm=${cleanCpf}&eventid=${eventId}`,
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: 'Bearer ' + token,
-    },
 
+  return api.get(`/users?searchTerm=${cleanCpf}&eventid=${eventId}`, {
+    headers: { Authorization: `Bearer ${token}` },
   });
-
 }
 
 export const getUserByEmail = async (email, eventId, token) =>
