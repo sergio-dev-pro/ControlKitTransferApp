@@ -73,6 +73,11 @@ const SearchUserModal = ({
       if (isEmailSearch) searchedFor.email = inputValue;
       else searchedFor.cpf = inputValue;
       onUserFound({ ...user, id: inputValue }, searchedFor);
+      
+      if(user?.newToken)
+      {
+        authContext.updateTokens({accessToken: user?.newToken, refreshToken: user?.refreshToken})
+      }
     } catch (error) {
 
       console.error('Erro response:', error.response);

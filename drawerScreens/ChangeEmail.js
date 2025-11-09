@@ -53,6 +53,10 @@ const ChangeEmail = ({ navigation }) => {
         authContext.selectedEventId,
         authContext.userToken,
       );
+      if(data.newToken)
+      {
+          authContext.updateTokens({accessToken: updatedUser.newToken, refreshToken: updatedUser.refreshToken})
+      }
       setUserEmailFound(data.email);
       setUserEmailFoundUpdated(data.email);
       setToken(data.token);

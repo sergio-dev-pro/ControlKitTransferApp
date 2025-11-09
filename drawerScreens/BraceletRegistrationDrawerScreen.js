@@ -27,7 +27,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [ticketCode, setTicketCode] = useState();
   const [loading, setLoading] = useState(false);
   const isFocused = useIsFocused();
-  const { userToken, selectedEventId } = useContext(AuthContext);
+  const { userToken, selectedEventId, updateTokens } = useContext(AuthContext);
   const setAlertMessage = useAlert();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -167,6 +167,10 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
       if (updatedUser) {
         const searchedFor = { cpf: guardarCpf };
+        if(updatedUser.newToken)
+        {
+            updateTokens({accessToken: updatedUser.newToken, refreshToken: updatedUser.refreshToken})
+        }
         handleUserFound({ ...updatedUser, id: guardarCpf }, searchedFor);
       } else {
         console.warn('Usuário não encontrado ou resposta inválida.');

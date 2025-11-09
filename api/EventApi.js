@@ -93,7 +93,7 @@ export const getEventsList = async (token, companyId) => {
             Authorization: `Bearer ${tokens.accessToken}`,
           },
         });
-        return retryResponse.data;
+         return {newToken: tokens?.accessToken, refreshToken: tokens?.refreshToken, ...retryResponse.data}
       }
     }
 

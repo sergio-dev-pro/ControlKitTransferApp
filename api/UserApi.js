@@ -28,9 +28,17 @@ export const refreshAccessToken = async () => {
       return null;
     }
 
-    const response = await axios.post(`${BASE_URL_V2}/CompanyUsers/RefreshToken`, {
+    const response = await axios({
+    url:
+      `${BASE_URL_V2}/CompanyUsers/RefreshToken`,
+    data: {
       refreshToken: oldRefreshToken,
-    });
+    },
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
 
     const newAccessToken = response.data?.accessToken;
     const newRefreshToken = response.data?.refreshToken || oldRefreshToken;
@@ -81,7 +89,9 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
             Authorization: `Bearer ${tokens.accessToken}`,
           },
         });
-        return retryResponse.data;
+        var result = retryResponse.data;
+
+        return {newToken: tokens?.accessToken, refreshToken: tokens?.refreshToken, ...result}
       }
     }
 

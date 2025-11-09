@@ -79,10 +79,7 @@ export function AuthProvider({ children }) {
     useState(false);
   const setAlertMessage = useAlert();
 
-  const updateTokens = async ({ accessToken, refreshToken }) => {
-    await AsyncStorage.setItem('userToken', accessToken);
-    await AsyncStorage.setItem('refreshToken', refreshToken);
-
+  const updateTokens = ({ accessToken, refreshToken }) => {
     setAuthState((prev) => ({
       ...prev,
       userToken: accessToken,
