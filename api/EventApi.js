@@ -67,13 +67,39 @@ export const getKitDelivery = async (code) => {
 
 };
 
-export const getEventsList = async (_token, companyId) => {
-  const response = await api.get('/events', {
-    params: { companyId },
-    headers: { Authorization: `Bearer ${token}` }
-  });
+export const getEventsList = async (token, companyId) => {
+  const url = `${BASE_URL_V2}/events?companyId=${companyId}`;
 
-  return response.data;
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.warn('⚠️ Token expirado, tentando atualizar...');
+
+      const tokens = await refreshAccessToken();
+
+      if (tokens?.accessToken) {
+        // tenta novamente com o novo access token
+        const retryResponse = await axios.get(url, {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${tokens.accessToken}`,
+          },
+        });
+        return retryResponse.data;
+      }
+    }
+
+    console.error('❌ Erro ao buscar lista de eventos:', error);
+    throw error;
+  }
 };
 
 

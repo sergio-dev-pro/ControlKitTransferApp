@@ -108,10 +108,9 @@ export function AuthProvider({ children }) {
       var decodedToken = jwt_decode(token);
       // const events = decodedToken?.Events ? JSON.parse(decodedToken.Events) : [];
       const companies = companiesString ? JSON.parse(companiesString) : [];
-      const kitdelivery = await AsyncStorage.getItem('');
       setAuthState({
         userToken: token,
-        refreshToken,
+        refreshToken: refreshToken,
         hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true",
         hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true",
         hasChangeEmailPermission: decodedToken?.hasChangeEmailPermission === "true",
@@ -202,7 +201,7 @@ export function AuthProvider({ children }) {
 
       let authStateChanges = {
         userToken: token,
-        refreshToken,
+        refreshToken: refreshToken,
         isAuthenticated: true,
         //events,
         selectedEventId,

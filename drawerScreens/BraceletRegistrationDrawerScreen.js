@@ -163,10 +163,9 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
   const attListTickets = async () => {
     try {
-      const response = await getUserByCpfWithAuth(guardarCpf, selectedEventId, userToken, false, true);
+      const updatedUser = await getUserByCpfWithAuth(guardarCpf, selectedEventId, userToken, false, true);
 
-      if (response && response.data) {
-        const updatedUser = response.data;
+      if (updatedUser) {
         const searchedFor = { cpf: guardarCpf };
         handleUserFound({ ...updatedUser, id: guardarCpf }, searchedFor);
       } else {

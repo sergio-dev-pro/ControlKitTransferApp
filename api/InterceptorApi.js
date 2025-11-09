@@ -54,12 +54,10 @@ export const setupAxiosInterceptor = (onTokensRefreshed) => {
             });
           }
 
-          // Reenvia a requisição original
           return api(originalRequest);
         } catch (refreshError) {
           console.error('Erro ao tentar atualizar token:', refreshError);
 
-          // Remove tokens inválidos
           await AsyncStorage.multiRemove(['userToken', 'refreshToken']);
         }
       }

@@ -19,18 +19,80 @@ export const getUserByCpf = async (cpf, eventId) =>
       Accept: 'application/json',
     },
   });
-export const getUserByCpfWithAuth = async (cpf, eventId, token, fromKitDelivery = false, fromBlaceletRegistration = false) => {
-  console.log('ENTROU')
+
+export const refreshAccessToken = async () => {
+  try {
+    const oldRefreshToken = await AsyncStorage.getItem('refreshToken');
+    if (!oldRefreshToken) {
+      console.warn('Nenhum refreshToken encontrado no AsyncStorage');
+      return null;
+    }
+
+    const response = await axios.post(`${BASE_URL_V2}/CompanyUsers/RefreshToken`, {
+      refreshToken: oldRefreshToken,
+    });
+
+    const newAccessToken = response.data?.accessToken;
+    const newRefreshToken = response.data?.refreshToken || oldRefreshToken;
+
+    if (!newAccessToken) {
+      console.error('Resposta inválida da API de refreshToken');
+      return null;
+    }
+
+    // Salva novos tokens
+    await AsyncStorage.setItem('userToken', newAccessToken);
+    await AsyncStorage.setItem('refreshToken', newRefreshToken);
+
+    console.log('✅ Token atualizado com sucesso');
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  } catch (error) {
+    console.error('❌ Erro ao atualizar o token:', error);
+    return null;
+  }
+};
+
+
+
+export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
+  console.log('ENTROU getUserByCpfWithAuth');
 
   const cleanCpf = cpf.replace(/\D/g, '');
+  const url = `${BASE_URL_V2}/users?searchTerm=${cleanCpf}&eventid=${eventId}`;
 
-  return api.get(`/users?searchTerm=${cleanCpf}&eventid=${eventId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-}
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.warn('⚠️ Token expirado, tentando atualizar...');
+      const tokens = await refreshAccessToken();
+
+      if (tokens?.accessToken) {
+        // tenta novamente com o novo token
+        const retryResponse = await axios.get(url, {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${tokens.accessToken}`,
+          },
+        });
+        return retryResponse.data;
+      }
+    }
+
+    console.error('Erro ao buscar usuário por CPF:', error);
+    throw error;
+  }
+};
 
 export const getUserByEmail = async (email, eventId, token) =>
-  axios({
+{
+  var response = await axios({
     url:
       BASE_URL_V2 +
       '/users?searchTerm=' +
@@ -43,6 +105,9 @@ export const getUserByEmail = async (email, eventId, token) =>
       Authorization: 'Bearer ' + token
     },
   });
+
+  return response.data;
+}
 
 export const saveUserPhoto = async formData => {
   formData.append('deviceInfo', getModel());

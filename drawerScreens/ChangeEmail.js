@@ -48,7 +48,7 @@ const ChangeEmail = ({ navigation }) => {
     if (!isValid) return;
     try {
       setLoading(true);
-      const { data } = await getUserByCpfWithAuth(
+      const data  = await getUserByCpfWithAuth(
         inputValue,
         authContext.selectedEventId,
         authContext.userToken,
