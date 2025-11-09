@@ -70,6 +70,7 @@ export const getKitDelivery = async (code) => {
 export const getEventsList = async (_token, companyId) => {
   const response = await api.get('/events', {
     params: { companyId },
+    headers: { Authorization: `Bearer ${token}` }
   });
 
   return response.data;
