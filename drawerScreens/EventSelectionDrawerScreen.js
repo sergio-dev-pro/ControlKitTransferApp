@@ -66,9 +66,9 @@ function EventSelectionDrawerScreen({ navigation }) {
   }, [userToken]);
 
 
-  const handleEventSelection = async (eventId, kitDeliveryMode, canManageBraceletDelivery) => {
+  const handleEventSelection = async (eventId, kitDeliveryMode, canManageBraceletDelivery, braceletDeliveryMode) => {
     if (eventId !== selectedEventId) {
-      await setSelectedEventId(eventId, kitDeliveryMode, canManageBraceletDelivery);
+      await setSelectedEventId(eventId, kitDeliveryMode, canManageBraceletDelivery, braceletDeliveryMode);
     }
 
     const selectedEvent = events.find(event => event.id === eventId);
@@ -126,7 +126,7 @@ function EventSelectionDrawerScreen({ navigation }) {
               renderItem={({ item }) => (
                 <ListItem containerStyle={GStyles.maxWidth}>
                   <Button
-                    onPress={() => handleEventSelection(item.id, item.kitDeliveryMode, item.canManageBraceletDelivery)}
+                    onPress={() => handleEventSelection(item.id, item.kitDeliveryMode, item.canManageBraceletDelivery, item.braceletDeliveryMode)}
                     type={selectedEventId === item.id ? 'solid' : 'outline'}
                     size="lg"
                     containerStyle={{ width: '100%' }}

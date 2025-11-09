@@ -105,7 +105,7 @@ const LoginScreen = ({ navigation }) => {
   const handleCodeValidation = async () => {
     if (!validCode(code)) return;
 
-    await auth.confirmLogin(code, email);
+    await auth.confirmLogin(code.toUpperCase(), email);
   };
 
 

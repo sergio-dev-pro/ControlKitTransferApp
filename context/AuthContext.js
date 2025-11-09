@@ -69,7 +69,8 @@ const initialState = {
   isAuthenticated: false,
   events: null,
   requiredForms: null,
-  kitDeliveryMode: null
+  kitDeliveryMode: null,
+  braceletDeliveryMode: null
 };
 
 export function AuthProvider({ children }) {
@@ -89,7 +90,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
   getUserToken().then(() => {
-    setupAxiosInterceptor(updateTokens);
+    //setupAxiosInterceptor(updateTokens);
   });
   }, []);
 
@@ -128,6 +129,7 @@ export function AuthProvider({ children }) {
         permissions: decodedToken.Permissions ? JSON.parse(decodedToken.Permissions) : null,
         companies: companies,
         kitDeliveryMode: event?.kitDeliveryMode,
+        braceletDeliveryMode: event?.braceletDeliveryMode,
         canManageBraceletDelivery: event?.canManageBraceletDelivery
       });
     } else {
@@ -136,7 +138,7 @@ export function AuthProvider({ children }) {
     setIsAuthenticating(false);
   };
 
-  const setSelectedEventId = async (id, kitdeliveryMode, canManageBraceletDelivery) => {
+  const setSelectedEventId = async (id, kitdeliveryMode, canManageBraceletDelivery, braceletDeliveryMode) => {
     try {
       setIsSearchingEventSettings(true);
       //const { data: requiredFieldsForUserRegistration } = await getEventRequiredFields(id);
@@ -146,6 +148,7 @@ export function AuthProvider({ children }) {
         JSON.stringify({
           id: id.toString(),
           kitDeliveryMode: kitdeliveryMode,
+          braceletDeliveryMode: braceletDeliveryMode,
           canManageBraceletDelivery: canManageBraceletDelivery
         }),
       );
@@ -154,6 +157,7 @@ export function AuthProvider({ children }) {
         ...prevState,
         selectedEventId: id,
         kitDeliveryMode: kitdeliveryMode,
+        braceletDeliveryMode: braceletDeliveryMode,
         canManageBraceletDelivery: canManageBraceletDelivery
         //requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
       }));
