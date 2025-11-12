@@ -29,13 +29,13 @@ const DOMAINS = [
 ];
 
 
-const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initialDocument, initialFirstName, initialLastName, selectType }) => {
+const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initialDocument, initialFirstName, initialLastName, selectType, initialEmail }) => {
 
   const [user, setUser] = useState({
     name: initialFirstName || '',
     cpf: initialDocument || '',
     lastname: initialLastName || '',
-    email: ''
+    email: initialEmail || '',
   });
   const [sectorId, setSectorId] = useState(null);
   const [sponsorId, setSponsorId] = useState(null);
@@ -344,7 +344,6 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
         />
       )}
 
-      <View style={styles.autocompleteContainer}>
         <Input
           label="Email"
           value={email}
@@ -355,7 +354,6 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
           errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
           autoCapitalize="none"
           keyboardType="email-address"
-          containerStyle={{ paddingHorizontal: 0 }}
         />
 
         {suggestionsEmail.length > 0 && (
@@ -374,7 +372,6 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
             ))}
           </View>
         )}
-      </View>
 
       <SelectModal
         label={'Selecione o setor'}

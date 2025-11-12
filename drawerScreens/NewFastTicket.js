@@ -38,7 +38,7 @@ const NewFastTicket = ({ navigation }) => {
   const [valueInitialLastname, setValueInitialLastname] = useState('')
   const [valuePicturePath, setValuePicturePath] = useState(null)
   const [isUserActive, setIsUserActive] = useState(false);
-
+  const [emaiValue, setEmailValue] = useState('')
 
   const handleUserFormCompleted = data => {
     console.log(`@@@@@ data`, data);
@@ -69,7 +69,7 @@ const NewFastTicket = ({ navigation }) => {
     setValueInitialFirstName('');
     setValueInitialLastname('');
     setIsUserActive(false);
-
+    setEmailValue('')
 
   };
 
@@ -124,8 +124,7 @@ const NewFastTicket = ({ navigation }) => {
   };
 
   const handleUserFound = user => {
-    console.log('userFound: ', user)
-
+    console.log(user.email)
     setIsUserActive(user.isActive || false);
     const nameParts = user.name?.split(' ') || [];
     const firstName = nameParts[0] || '';
@@ -136,6 +135,7 @@ const NewFastTicket = ({ navigation }) => {
     setCreateNewFastTicket(true);
     setShowSearchModalByCPF(false);
     setSearchUserTicket(true);
+    setEmailValue(user.email)
   };
 
   const handleCpfNotFound = (cpf) => {
@@ -157,7 +157,6 @@ const NewFastTicket = ({ navigation }) => {
       setCpfValue(null)
       setValuePicturePath(null)
       setIsUserActive(false);
-
     }, [])
   );
 
@@ -238,6 +237,7 @@ const NewFastTicket = ({ navigation }) => {
               initialDocument={cpfValue}
               initialFirstName={valueInitialFirstName}
               initialLastName={valueInitialLastname}
+              initialEmail={emaiValue}
             />
           )}
 
