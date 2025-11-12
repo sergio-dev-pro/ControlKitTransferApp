@@ -132,7 +132,7 @@ function Navigators() {
             <Drawer.Screen name="Novo ingresso" component={NewTicket} />
           )} */}
           {eventPermissions.includes("page.ticket.add") && (
-            <Drawer.Screen name="Cadastro rápido" component={NewFastTicket} />
+            <Drawer.Screen name="Gerar ingresso" component={NewFastTicket} />
           )}
           {eventPermissions.includes("page.user.update.email") && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />

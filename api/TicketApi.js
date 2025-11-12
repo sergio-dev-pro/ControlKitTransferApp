@@ -29,9 +29,20 @@ export const fetchTickets = async (deviceId, eventId, userToken) =>
   };
 
   export const getTicketDelivery = async (eventId, accessKey, token, type) => {
-    const payload = { eventId, accessKey };
     return await axios({
       url: BASE_URL_V2 + `/Deliveries?eventId=${eventId}&accessKey=${accessKey}&type=${type}`,
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json-patch+json',
+        Authorization: 'Bearer ' + token,
+      },
+    });
+  };
+
+  export const getDeliveryByCode = async (eventId, code, token, type) => {
+    return await axios({
+      url: BASE_URL_V2 + `/Deliveries/${code}?eventId=${eventId}&type=${type}`,
       method: 'GET',
       headers: {
         Accept: 'application/json',

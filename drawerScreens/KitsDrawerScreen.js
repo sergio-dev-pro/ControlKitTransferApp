@@ -9,14 +9,14 @@ import {
   Text,
 } from '@rneui/themed';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Modal, Platform, ScrollView, View } from 'react-native';
+import { Alert, Modal, Platform, ScrollView, View } from 'react-native';
 import Header from '../components/Header';
 import QrCodeReader from '../components/QrCodeReader';
 import { useAlert } from '../context/AlertContext';
 import { AuthContext } from '../context/AuthContext';
 import { getDeviceId } from 'react-native-device-info';
 import GStyles from '../style/global';
-import { fetchTickets, getTicketDelivery, registerTicket } from '../api/TicketApi';
+import { fetchTickets, getDeliveryByCode, getTicketDelivery, registerTicket } from '../api/TicketApi';
 import * as realmApi from '../api/realmApi';
 import useNetinfo from './hooks/useNetinfo';
 import THEME from '../style/theme';
@@ -80,14 +80,14 @@ function KitsDrawerScreen({ navigation }) {
     (async () => {
       try {
         setCheckingIfNeedSelectShirtSize(true);
-        const response = await getEventRequiredFields(
-          authContext.selectedEventId,
-        );
-        console.log(
-          'KitsDrawerScreen useEffect getEventRequiredFields.data',
-          response.data,
-        );
-        setMustSelectShirtSize(response.data.shirtSizeIsRequired);
+        // const response = await getEventRequiredFields(
+        //   authContext.selectedEventId,
+        // );
+        // console.log(
+        //   'KitsDrawerScreen useEffect getEventRequiredFields.data',
+        //   response.data,
+        // );
+        // setMustSelectShirtSize(response.data.shirtSizeIsRequired);
       } catch (error) {
         console.log('KitsDrawerScreen useEffect getEventRequiredFields', error);
         //alert('Erro ao buscar campos requeridos, saia e entre novamente.');
@@ -958,10 +958,60 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       setAlertMessage('Erro: Código já escaneado.', '#dc143c');
       return;
     }
-    setShowQrCodeCamisa(false);
-    console.log('@@ticketCode', ticketCode);
-    setCurrentTicketCode(ticketCode);
-    addToArray(ticketCode);
+    
+    if(showQrCodeCamisa == false)
+      return;
+
+    var currentTicketId = selectedTicketCodes[kitCodes.length];
+    console.log('currentTicketId='+ currentTicketId);
+    var currentTicket =  user.tickets.filter(ticket => ticket.id == currentTicketId)[0];
+    console.log('Current ticket: '+ JSON.stringify(currentTicket))
+    console.log('Current ticket day: '+ currentTicket?.day)
+
+    try{
+      var deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 1);
+
+      console.log('deliveryItemResponse.data.day = '+ deliveryItemResponse.data?.day);
+
+      var currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
+
+      var codeIsValid = true;
+
+      if(!currentDeliveryItemEventDay)
+      {
+        Alert.alert('', 'QR CODE não encontrado.');
+        codeIsValid = false;
+      }
+      else if(deliveryItemResponse.data.day != currentTicket?.day)
+      {
+        Alert.alert('', 'QR CODE de outro dia.');
+        codeIsValid = false;
+      }
+      else if(deliveryItemResponse.data.deliveredAt)
+      {
+        Alert.alert('', 'QR Code já escaneado.');
+        codeIsValid = false;
+      }
+
+      setShowQrCodeCamisa(false);
+      console.log('@@ticketCode', ticketCode);
+      if(codeIsValid)
+      {
+        setCurrentTicketCode(ticketCode);
+        addToArray(ticketCode);
+      }
+    }
+    catch(error){
+      console.log('error', error);
+      if (error.response?.data?.message) {
+      console.log('error.response.data', error.response.data);
+      Alert.alert('', error.response.data.message);
+      } 
+      else {
+        Alert.alert('', 'Erro ao consultar no estoque.');
+      }
+      setShowQrCodeCamisa(false);
+    }
   };
 
   // const ticketsWithReadCodes = Object.keys(shirtCodesRead);

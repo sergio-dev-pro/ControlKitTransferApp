@@ -201,7 +201,7 @@ const NewFastTicket = ({ navigation }) => {
         />
         <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
           <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
-            Cadastro rápido
+            Gerar ingresso
           </Text>
           <Divider />
         </View>
