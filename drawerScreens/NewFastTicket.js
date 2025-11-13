@@ -271,7 +271,7 @@ const NewFastTicket = ({ navigation }) => {
                 size="lg"
                 containerStyle={{ marginTop: 20 }}
                 onPress={completeRegister}>
-                Finalizar cadastro
+                Enviar ingresso
               </Button>
               <Button
                 containerStyle={{ marginTop: 10 }}
