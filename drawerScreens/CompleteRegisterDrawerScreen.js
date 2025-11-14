@@ -342,10 +342,14 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
 
         {step == null && (
-          <View style={[GStyles.container]}>
+          <View style={{
+              width: '100%',
+              padding: 20,
+              flex:1
+            }}>
             <Button
               size="lg"
-              containerStyle={{ width: '100%', marginTop: 30,  }}
+              containerStyle={{ width: '100%', marginTop: 30, alignItems: 'center' }}
               titleStyle={{ fontSize: 18 }}
               onPress={() => {
                 setShowSearchModalByCPF(true);
