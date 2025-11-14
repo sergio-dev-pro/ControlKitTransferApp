@@ -59,6 +59,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   const [passportValidation, setPassportValidation] = useState({ isValid: true, errorMsg: '' });
 
   const { name, lastname, cpf, email } = user;
+  console.log('email===='+ email)
   const authContext = useContext(AuthContext);
   const [selectedType, setSelectedType] = useState(1);
   const [days, setDays] = useState([]);

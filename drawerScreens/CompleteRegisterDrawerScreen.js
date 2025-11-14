@@ -300,6 +300,12 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
   };
 
   const handleUserFound = (user) => {
+    if(user.isActive)
+    {
+      setAlertMessage('CPF já tem cadastro ativo!', '#dc143c');
+      return;
+    }
+
     if (user.tickets && user.tickets.length > 0) {
       if (user.documentType === 1) {
         setDocumentType(1);
@@ -339,7 +345,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
           <View style={[GStyles.container]}>
             <Button
               size="lg"
-              containerStyle={{ width: '100%', marginTop: 30 }}
+              containerStyle={{ width: '100%', marginTop: 30,  }}
               titleStyle={{ fontSize: 18 }}
               onPress={() => {
                 setShowSearchModalByCPF(true);
