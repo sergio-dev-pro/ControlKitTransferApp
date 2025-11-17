@@ -8,8 +8,8 @@ import {
   Input,
   Text,
 } from '@rneui/themed';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Alert, Modal, Platform, ScrollView, View } from 'react-native';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Modal, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import Header from '../components/Header';
 import QrCodeReader from '../components/QrCodeReader';
 import { useAlert } from '../context/AlertContext';
@@ -76,39 +76,46 @@ function KitsDrawerScreen({ navigation }) {
   const [isValidBoolean, setIsValidBoolean] = useState();
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
 
+  const [shirtCodesRead, setShirtCodesRead] = useState({});
+
+  // ✅ --- ESTADOS PARA A LÓGICA DO "FLUXO 1" (Leitura Direta) ---
+  const [kitCodesRead, setKitCodesRead] = useState({}); // Substitui 'kitCodes'
+  const [nextTicketToScan, setNextTicketToScan] = useState(null); // Para o destaque verde
+
   useEffect(() => {
     (async () => {
       try {
         setCheckingIfNeedSelectShirtSize(true);
-        // const response = await getEventRequiredFields(
-        //   authContext.selectedEventId,
-        // );
-        // console.log(
-        //   'KitsDrawerScreen useEffect getEventRequiredFields.data',
-        //   response.data,
-        // );
-        // setMustSelectShirtSize(response.data.shirtSizeIsRequired);
       } catch (error) {
         console.log('KitsDrawerScreen useEffect getEventRequiredFields', error);
-        //alert('Erro ao buscar campos requeridos, saia e entre novamente.');
       } finally {
         setCheckingIfNeedSelectShirtSize(false);
       }
     })();
   }, [authContext.selectedEventId]);
 
+  const ticketsAvailableFlow1 = useMemo(() =>
+    ticketFounds
+      ? ticketFounds.filter(ticket => !kitCodesRead[ticket.ticketId]) // Usa o ticketId
+      : [],
+    [ticketFounds, kitCodesRead]
+  );
+
+  useEffect(() => {
+    if (ticketsAvailableFlow1.length > 0) {
+      setNextTicketToScan(ticketsAvailableFlow1[0].ticketId);
+    } else {
+      setNextTicketToScan(null); // Todos lidos
+    }
+  }, [ticketsAvailableFlow1]);
 
   const handleQRCodeRead = async ticketCode => {
 
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
 
-    //todo: vai precisar bater na api para pegar o ticketId, e assim conseguir buscar nos ticketFounds, agora tem que buscar por id
-    //Endpoint para conseguir o ticketId: GET /Deliveries passando por query string eventId e accessKey
-
     if (ticketFounds.length > 0) {
       const ticketCodeFounds = ticketFounds.map(ticket => ticket.code);
-      // Verifica se o codigo lido ja foi lido.
       if (ticketCodeFounds.includes(code))
         return setAlertMessage('Ingresso já adicionado.');
     }
@@ -131,15 +138,18 @@ function KitsDrawerScreen({ navigation }) {
         setHasKitAlreadyDelivered(true);
         setShowModalOfReasonForKitDelivery(true);
       }
-      const newTicketFound = {
-        ...ticket,
-        code,
-      };
+      const newTicketFound = { ...ticket, code };
       if (mustSelectShirtSize) newTicketFound.shirtSize = '';
-      setTicketFounds(prevTicketFounds => [
-        ...prevTicketFounds,
-        newTicketFound,
-      ]);
+
+      setTicketFounds(prevTicketFounds => {
+        const newTickets = [...prevTicketFounds, newTicketFound];
+        // Define este novo bilhete como o próximo a escanear (se for o primeiro)
+        if (newTickets.length === 1) {
+          setNextTicketToScan(newTicketFound.ticketId);
+        }
+        return newTickets;
+      });
+
     } catch (error) {
       console.error(error);
       console.error(JSON.stringify(error));
@@ -160,20 +170,11 @@ function KitsDrawerScreen({ navigation }) {
     setReasonForKitDelivery();
     setIsConfirmDelivery(false);
     setShowResponseCamisa(null);
-    setKitCodes([]);
+    setKitCodesRead({});
     setIsValidBoolean(false);
     setIncompleteRegistrationReason();
-
+    setNextTicketToScan(null);
   };
-
-  const logFormData = (formData) => {
-    console.log('Conteúdo do FormData:');
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-  };
-
-
 
   const registerDelivery = async () => {
     if (mustSelectShirtSize) {
@@ -195,17 +196,14 @@ function KitsDrawerScreen({ navigation }) {
     try {
       setIsLoading(true);
 
-      // Tentando registrar a assinatura do kit e documento
       try {
         const formData = new FormData();
-        console.log('Kit Codes antes de adicionar ao FormData:', JSON.stringify(kitCodes));
 
-        //formData.append('kitCodes', JSON.stringify(kitCodes));
         ticketFounds.forEach((ticket, index) => {
           formData.append(`Tickets[${index}].TicketId`, ticket.ticketId);
-          if(kitCodes.length > 0)
-          {
-            formData.append(`Tickets[${index}].Code`, kitCodes[index]);
+          const scannedCode = kitCodesRead[ticket.ticketId]?.code;
+          if (scannedCode) {
+            formData.append(`Tickets[${index}].Code`, scannedCode);
           }
           if (reasonForKitDelivery) {
             formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
@@ -232,7 +230,7 @@ function KitsDrawerScreen({ navigation }) {
         await ticketOwnerSignatureRegistration(authContext.userToken, formData);
         setAlertMessage('Entrega de kit registrada', '#32cd32');
         cancel();
-        setKitCodes([]);
+        setKitCodesRead({});
         setShowResponseCamisa(null);
       } catch (error) {
         console.error('Erro ao registrar a assinatura do kit:', error);
@@ -249,50 +247,17 @@ function KitsDrawerScreen({ navigation }) {
     }
   };
 
+  const requestSubscription = () => { setIsShow(true) };
 
-  const all = realmApi.getAllTickets().reduce((a, b) => {
-    return a[b.userDocument]
-      ? { ...a, [b.userDocument]: [...a[b.userDocument], b.ticketCode] }
-      : { ...a, [b.userDocument]: [b.ticketCode] };
-  }, {});
-  // console.log(
-  //   'alltickets',
-  //   JSON.stringify(
-  //     Object.keys(all)
-  //       .filter(a => all[a].length > 1)
-  //       .map(a => all[a]),
-  //   ),
-  // );
-  // console.log(`@@@ ticketFounds`, ticketFounds, ticketCode);
-  console.log('@@@@@ MOCK', ticketFounds);
-  console.log('checkingIfNeedSelectShirtSize', checkingIfNeedSelectShirtSize)
-  const inputNameErrorMsg =
-    (name.length === 0 && 'Campo de nome deve ser preenchido') ||
-    (name.length < 3 && 'Campo de nome deve ter no minímo 3 caracteres') ||
-    undefined;
-  const requestSubscription = () => {
-    setIsShow(true);
-  };
-
-  const formatDate = date => {
-    var d = new Date(date.split('T')[0] + 'T00:00:01'),
-      month = '' + (d.getMonth() + 1),
-      day = '' + d.getDate(),
-      year = d.getFullYear();
-
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
-
-    return [day, month, year].join('/');
-  };
-
-  const addToArray = (ticketCode) => {
+  const addToArray = (ticketCode, ticketId) => {
     setShowModalResponse(false);
-    setKitCodes(prevKitCodes => [...prevKitCodes, ticketCode]);
+    setKitCodesRead(prevKitCodes => ({
+      ...prevKitCodes,
+      [ticketId]: { code: ticketCode }
+    }));
   };
 
   useEffect(() => {
-
     if (authContext.kitDeliveryMode === 1) {
       setEventAllowed(true);
     }
@@ -306,7 +271,7 @@ function KitsDrawerScreen({ navigation }) {
   }, [ticketFounds]);
 
 
-  let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == ticketFounds?.length;
+  let enableTakeDocumentPicture = !eventAllowed || (ticketFounds.length > 0 && Object.keys(kitCodesRead).length === ticketFounds.length);
 
   const handleJustificationSubmit = justification => {
     setIncompleteRegistrationReason(justification);
@@ -314,20 +279,62 @@ function KitsDrawerScreen({ navigation }) {
   };
 
   const handleQRCodeCamisa = async (ticketCode) => {
-    if (!ticketCode) {
-      console.error("ticketCode está indefinido ou nulo");
-      return;
-    }
+    if (!ticketCode) return;
 
-    if (kitCodes.includes(ticketCode)) {
+    // Validação de duplicado
+    const isAlreadyScanned = Object.values(kitCodesRead).some(item => item.code === ticketCode);
+    if (isAlreadyScanned) {
       setShowQrCodeCamisa(false);
       setAlertMessage('Erro: Código já escaneado.', '#dc143c');
       return;
     }
-    setShowQrCodeCamisa(false);
-    console.log('@@ticketCode', ticketCode);
-    setCurrentTicketCode(ticketCode);
-    addToArray(ticketCode);
+
+    if (!showQrCodeCamisa) return;
+
+    // Pega o bilhete destacado (próximo da fila)
+    const currentTicketId = nextTicketToScan;
+
+    if (!currentTicketId) {
+      setShowQrCodeCamisa(false);
+      return setAlertMessage('Todos os bilhetes selecionados já têm um kit associado.', '#dc143c');
+    }
+
+    const currentTicket = ticketFounds.find(ticket => ticket.ticketId == currentTicketId);
+
+    setLoading(true);
+    try {
+      const deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 1);
+      const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
+      let codeIsValid = true;
+
+      if (!currentDeliveryItemEventDay) { Alert.alert('', 'QR CODE não encontrado.'); codeIsValid = false; }
+      else if (deliveryItemResponse.data.day != currentTicket?.day) { Alert.alert('', 'QR CODE de outro dia.'); codeIsValid = false; }
+      else if (deliveryItemResponse.data.deliveredAt) { Alert.alert('', 'QR Code já escaneado.'); codeIsValid = false; }
+
+      setShowQrCodeCamisa(false);
+      console.log('@@ticketCode', ticketCode);
+      if (codeIsValid) {
+        setCurrentTicketCode(ticketCode);
+        addToArray(ticketCode, currentTicketId); // Chama a função 'addToArray' corrigida
+      }
+    }
+    catch (error) {
+      console.log(error)
+    } finally {
+      setLoading(false);
+      setShowQrCodeCamisa(false);
+    }
+  };
+
+  const editKitCode = (ticketId) => {
+    setKitCodesRead(estadoAtual => {
+      const novoEstado = { ...estadoAtual };
+      if (novoEstado[ticketId]) {
+        delete novoEstado[ticketId];
+      }
+      return novoEstado;
+    });
+    setNextTicketToScan(ticketId);
   };
 
 
@@ -390,133 +397,133 @@ function KitsDrawerScreen({ navigation }) {
                   padding: 0,
                 }}
                 data={ticketFounds}
-                renderItem={({ item: ticketFound }) => (
-                  <Card containerStyle={{ flex: 1 }}>
-                    <Text
-                      h4
-                      h4Style={{
-                        fontSize: IS_MOBILE ? 14 : null,
-                        textAlign: 'center',
-                        marginBottom: 8,
-                      }}>
-                      {(() => {
-                        const { name } = ticketFound;
-                        return name;
-                      })()}
-                    </Text>
+                renderItem={({ item: ticketFound }) => {
+                  // A lógica de destaque ("fundo verde")
+                  // 'nextTicketToScan' é o estado que controla quem é o próximo
+                  const isHighlighted = nextTicketToScan === ticketFound.ticketId;
 
-                    <View
-                      style={{
-                        width: '100%',
-                        flexDirection: IS_MOBILE ? 'column' : 'row',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        marginBottom: 8,
-                      }}>
-                      <Text h4>Dia:</Text>
-                      <View>
-                        <Text style={{ fontSize: 18 }}>{ticketFound?.day}</Text>
-                      </View>
-                    </View>
-                    {ticketFound?.document && (
+                  return (
+                    <Card
+                      containerStyle={[
+                        styles.cardBase,
+                        isHighlighted && styles.highlightedCard, // Aplica o estilo verde
+                      ]}
+                    >
+                      <Text h4 h4Style={styles.cardTitle}>
+                        {ticketFound.name}
+                      </Text>
+
+                      {/* --- Detalhes do Bilhete (Dia, Documento, Setor) --- */}
                       <View
                         style={{
-                          flexDirection: 'column',
+                          width: '100%',
+                          flexDirection: IS_MOBILE ? 'column' : 'row',
                           justifyContent: 'space-between',
+                          flexWrap: 'wrap',
                           marginBottom: 8,
-                        }}>
-                        <Text h4>Documento:</Text>
-                        <Text style={{ fontSize: 18 }}>
-                          {(() => {
-                            const { document } = ticketFound;
-                            if (document.length === 11) {
-                              return document.replace(
-                                /(\d{3})(\d{3})(\d{3})(\d{2})/,
-                                '$1.$2.$3-$4',
-                              );
-                            } else if (document.length === 9) {
+                        }}
+                      >
+                        <Text h4>Dia:</Text>
+                        <View>
+                          <Text style={{ fontSize: 18 }}>{ticketFound?.day}</Text>
+                        </View>
+                      </View>
+                      {ticketFound?.document && (
+                        <View
+                          style={{
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            marginBottom: 8,
+                          }}
+                        >
+                          <Text h4>Documento:</Text>
+                          <Text style={{ fontSize: 18 }}>
+                            {(() => {
+                              const { document } = ticketFound;
+                              if (document.length === 11) {
+                                return document.replace(
+                                  /(\d{3})(\d{3})(\d{3})(\d{2})/,
+                                  '$1.$2.$3-$4',
+                                );
+                              }
                               return document;
-                            } else {
-                              return document;
-                            }
-                          })()}
-                        </Text>
-                      </View>
-                    )}
+                            })()}
+                          </Text>
+                        </View>
+                      )}
+                      {ticketFound?.sector && (
+                        <View
+                          style={{
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            marginBottom: 8,
+                          }}
+                        >
+                          <Text h4>Setor:</Text>
+                          <Text style={{ fontSize: 18 }}>{ticketFound.sector}</Text>
+                        </View>
+                      )}
+                      {ticketFound?.shirtSize && (
+                        <View
+                          style={{
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            marginBottom: 8,
+                          }}
+                        >
+                          <Text h4>Tamanho da camisa:</Text>
+                          <Text style={{ fontSize: 18 }}>{ticketFound.shirtSize}</Text>
+                        </View>
+                      )}
 
-                    {ticketFound?.sector && (
-                      <View
-                        style={{
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          marginBottom: 8,
-                        }}>
-                        <Text h4>Setor:</Text>
-                        <Text style={{ fontSize: 18 }}>{ticketFound.sector}</Text>
-                      </View>
-                    )}
-
-                    {ticketFound?.shirtSize && (
-                      <View
-                        style={{
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          marginBottom: 8,
-                        }}>
-                        <Text h4>Tamanho da camisa:</Text>
-                        <Text style={{ fontSize: 18 }}>{ticketFound.shirtSize}</Text>
-                      </View>
-                    )}
-
-                    {ticketFounds.indexOf(ticketFound) < kitCodes?.length && eventAllowed && (
-                      <View
-                        style={{
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          marginBottom: 8,
-                        }}>
-                        <Text h4>Código da camisa</Text>
-                        <Text h4>{kitCodes[ticketFounds.indexOf(ticketFound)]}</Text>
-                      </View>
-                    )}
-                    {checkingIfNeedSelectShirtSize && (
-                      <View
-                        style={{
-                          flex: 1,
-                          justifyContent: 'center',
-                          marginTop: 20,
-                          marginBottom: 10,
-                        }}>
-                        <Loading isActive />
-                      </View>
-                    )}
-                    {mustSelectShirtSize && (
-                      <SelectModal
-                        label="Tamanho da camisa"
-                        value={ticketFound.shirtSize}
-                        setValue={value =>
-                          setTicketFounds(prevState =>
-                            prevState.map(ticketInfo =>
-                              ticketInfo.code == ticketFound.code
-                                ? { ...ticketInfo, shirtSize: value }
-                                : ticketInfo,
-                            ),
-                          )
-                        }
-                        errorMessage={'Campo obrigatório'}
-                        placeholder="Selecione"
-                        items={[
-                          { key: 'P', value: 'P' },
-                          { key: 'M', value: 'M' },
-                          { key: 'G', value: 'G' },
-                          { key: 'GG', value: 'GG' },
-                          { key: 'EG1', value: 'EG1' },
-                          { key: 'EG2', value: 'EG2' },
-                        ]}
-                      />
-                    )}
-                  </Card>
-                )}
+                      {/* --- Lógica Condicional de Scan/Edição --- */}
+                      {kitCodesRead[ticketFound.ticketId] && (
+                        // 1. SE O CÓDIGO JÁ FOI LIDO: Mostra o código e o botão "Editar"
+                        <View style={styles.kitInfoContainer}>
+                          <Text style={styles.kitLabel}>Código do Kit:</Text>
+                          <Text style={styles.kitCode}>
+                            {kitCodesRead[ticketFound.ticketId].code}
+                          </Text>
+                          <Button
+                            title="Ler Novamente"
+                            type="clear"
+                            titleStyle={styles.editButtonTitle}
+                            containerStyle={styles.editButton}
+                            onPress={() => editKitCode(ticketFound.ticketId)} // Chama a função de editar
+                          />
+                        </View>
+                      )}
+                      
+                      {/* --- Seletor de Tamanho de Camisa (se necessário) --- */}
+                      {mustSelectShirtSize && (
+                        <SelectModal
+                          label="Tamanho da camisa"
+                          value={ticketFound.shirtSize}
+                          setValue={(value) =>
+                            setTicketFounds((prevState) =>
+                              prevState.map((ticketInfo) =>
+                                ticketInfo.code == ticketFound.code
+                                  ? { ...ticketInfo, shirtSize: value }
+                                  : ticketInfo,
+                              ),
+                            )
+                          }
+                          errorMessage={'Campo obrigatório'}
+                          placeholder="Selecione"
+                          items={[
+                            { key: 'P', value: 'P' },
+                            { key: 'M', value: 'M' },
+                            { key: 'G', value: 'G' },
+                            { key: 'GG', value: 'GG' },
+                            { key: 'EG1', value: 'EG1' },
+                            { key: 'EG2', value: 'EG2' },
+                          ]}
+                        />
+                      )}
+                    </Card>
+                  );
+                }}
+                keyExtractor={(item) => item.code} // Certifique-se que 'code' é único, ou use 'ticketId'
               />
               <Divider style={{ marginBottom: 8 }} />
             </View>
@@ -767,31 +774,29 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [selectedTicketCodes, setSelectedTicketCodes] = useState();
   const [documentImg, setDocumentImg] = useState();
   const [signature, setSignature] = useState();
-  const [showModalToTakePhotoOfDocument, setShowModalToTakePhotoOfDocument] =
-    useState(false);
+  const [showModalToTakePhotoOfDocument, setShowModalToTakePhotoOfDocument] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [isConfirmDelivery, setIsConfirmDelivery] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [ticketCodeAndShirtSize, setTicketCodeAndShirtSize] = useState({});
-  const [
-    isConfirmingTheTicketCodeSelection,
-    setIsConfirmingTheTicketCodeSelection,
-  ] = useState(false);
+  const [isConfirmingTheTicketCodeSelection, setIsConfirmingTheTicketCodeSelection] = useState(false);
   const [hasKitAlreadyDelivered, setHasKitAlreadyDelivered] = useState(false);
   const [reasonForKitDelivery, setReasonForKitDelivery] = useState();
-  const [showModalOfReasonForKitDelivery, setShowModalOfReasonForKitDelivery] =
-    useState(false);
+  const [showModalOfReasonForKitDelivery, setShowModalOfReasonForKitDelivery] = useState(false);
   const setAlertMessage = useAlert();
   const authContext = useContext(AuthContext);
 
-  const [showQrCodeCamisa, setShowQrCodeCamisa] = useState(false); // Controla a exibição do QR Code
-  const [showResponseCamisa, setShowResponseCamisa] = useState(null); // Armazena a resposta da requisição
-  const [showModalResponse, setShowModalResponse] = useState(false); // Controla a exibição do modal
-  const [kitCodes, setKitCodes] = useState([])
-  const [shirtSizes, setShirtSizes] = useState([])
+  const [showQrCodeCamisa, setShowQrCodeCamisa] = useState(false);
+  const [showResponseCamisa, setShowResponseCamisa] = useState(null);
+  const [showModalResponse, setShowModalResponse] = useState(false);
+
+  const [shirtSizes, setShirtSizes] = useState([]);
   const [currentTicketCode, setCurrentTicketCode] = useState(null);
   const [eventAllowed, setEventAllowed] = useState(false);
+
+  // ✅ ESTADO ÚNICO: Esta é agora a única fonte da verdade para os códigos lidos
   const [shirtCodesRead, setShirtCodesRead] = useState({});
+
   const [isValidBoolean, setIsValidBoolean] = useState(false);
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
 
@@ -799,6 +804,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     console.log('@@@@@@@@user', user);
     user && setUser(user);
   };
+
   const clearState = () => {
     setUser();
     setSelectedTicketCodes();
@@ -811,7 +817,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setShowQrCodeCamisa(false);
     setShowResponseCamisa();
     setShowModalResponse(false);
-    setKitCodes([]);
     setShirtCodesRead({})
     setShirtSizes([]);
     setCurrentTicketCode();
@@ -820,6 +825,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setIncompleteRegistrationReason()
   };
 
+  // ✅ FUNÇÃO CORRIGIDA: Envia os dados usando 'shirtCodesRead'
   const registerDelivery = async () => {
     console.log('selectedTicketCodes: ' + selectedTicketCodes)
     if (mustSelectShirtSize) {
@@ -837,24 +843,24 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         );
       }
     }
-
     try {
       setIsLoading(true);
-
       const formData = new FormData();
-      // const getQrcodeReads = () => selectedTicketCodes.map(code => shirtCodesRead[code]?.code || 'Código não encontrado');
-      // formData.append('kitCodes', JSON.stringify(getQrcodeReads()));
+
       selectedTicketCodes.forEach((ticketId, index) => {
         formData.append(`Tickets[${index}].TicketId`, ticketId);
-        if(kitCodes.length > 0)
-        {
-          formData.append(`Tickets[${index}].Code`, kitCodes[index]);
+
+        const scannedCode = shirtCodesRead[ticketId]?.code;
+        if (scannedCode) {
+          formData.append(`Tickets[${index}].Code`, scannedCode);
         }
+
         if (hasKitAlreadyDelivered) {
           formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
           formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
         }
       });
+
       formData.append('SignatureDocumentFile', {
         uri: documentImg,
         type: 'image/jpg',
@@ -867,10 +873,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       });
       formData.append('EventId', authContext.selectedEventId);
       formData.append('Type', 'Kit');
-
-      // if (incompleteRegistrationReason) {
-      //   formData.append('reasonInvalidUser', incompleteRegistrationReason);
-      // }
 
       console.log('Enviando dados para registrar a assinatura do kit...');
       await ticketOwnerSignatureRegistration(authContext.userToken, formData);
@@ -953,60 +955,60 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       return;
     }
 
-    if (kitCodes.includes(ticketCode)) {
+    const isAlreadyScanned = Object.values(shirtCodesRead).some(item => item.code === ticketCode);
+    if (isAlreadyScanned) {
       setShowQrCodeCamisa(false);
       setAlertMessage('Erro: Código já escaneado.', '#dc143c');
       return;
     }
-    
-    if(showQrCodeCamisa == false)
+
+    if (showQrCodeCamisa == false) return;
+
+    var currentTicketId = selectedTicketsAvailable[0];
+
+    if (!currentTicketId) {
+      console.warn("Código lido, mas não há mais bilhetes pendentes.");
+      setShowQrCodeCamisa(false);
+      setAlertMessage('Todos os bilhetes selecionados já têm um kit associado.', '#dc143c');
       return;
+    }
 
-    var currentTicketId = selectedTicketCodes[kitCodes.length];
-    console.log('currentTicketId='+ currentTicketId);
-    var currentTicket =  user.tickets.filter(ticket => ticket.id == currentTicketId)[0];
-    console.log('Current ticket: '+ JSON.stringify(currentTicket))
-    console.log('Current ticket day: '+ currentTicket?.day)
+    var currentTicket = user.tickets.find(ticket => ticket.id == currentTicketId);
 
-    try{
+    try {
       var deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 1);
 
-      console.log('deliveryItemResponse.data.day = '+ deliveryItemResponse.data?.day);
+      console.log('deliveryItemResponse.data.day = ' + deliveryItemResponse.data?.day);
 
       var currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
 
       var codeIsValid = true;
 
-      if(!currentDeliveryItemEventDay)
-      {
+      if (!currentDeliveryItemEventDay) {
         Alert.alert('', 'QR CODE não encontrado.');
         codeIsValid = false;
       }
-      else if(deliveryItemResponse.data.day != currentTicket?.day)
-      {
+      else if (deliveryItemResponse.data.day != currentTicket?.day) {
         Alert.alert('', 'QR CODE de outro dia.');
         codeIsValid = false;
       }
-      else if(deliveryItemResponse.data.deliveredAt)
-      {
+      else if (deliveryItemResponse.data.deliveredAt) {
         Alert.alert('', 'QR Code já escaneado.');
         codeIsValid = false;
       }
 
       setShowQrCodeCamisa(false);
-      console.log('@@ticketCode', ticketCode);
-      if(codeIsValid)
-      {
+      if (codeIsValid) {
         setCurrentTicketCode(ticketCode);
         addToArray(ticketCode);
       }
     }
-    catch(error){
+    catch (error) {
       console.log('error', error);
       if (error.response?.data?.message) {
-      console.log('error.response.data', error.response.data);
-      Alert.alert('', error.response.data.message);
-      } 
+        console.log('error.response.data', error.response.data);
+        Alert.alert('', error.response.data.message);
+      }
       else {
         Alert.alert('', 'Erro ao consultar no estoque.');
       }
@@ -1014,17 +1016,17 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     }
   };
 
-  // const ticketsWithReadCodes = Object.keys(shirtCodesRead);
   const selectedTicketsAvailable = selectedTicketCodes && selectedTicketCodes.filter(ticketId => !shirtCodesRead[ticketId]);
   const addToArray = (ticketCode) => {
-    // setShowModalResponse(false);
-    setKitCodes(prevKitCodes => [...prevKitCodes, ticketCode]);
-    // setShirtSizes(prevShirtSizes => [...prevShirtSizes, showResponseCamisa.shirtSize]);
-    // const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.map(code => ({code: user.tickets[code]})).filter(item => item.code.includes(day))[0];
-    const getTicketIdByDayOfCodeRead = (day) => selectedTicketsAvailable.filter(item => user.tickets[item].includes(day))[0];
-    // setShirtCodesRead(prevState => ({ ...prevState, [getTicketIdByDayOfCodeRead(showResponseCamisa.day)]: { code: currentTicketCode, ...showResponseCamisa } }))
-    console.log('@@currentTicketCode', ticketCode)
-    setShirtCodesRead(prevState => ({ ...prevState, [selectedTicketsAvailable[0]]: { code: ticketCode } }))
+    const nextTicketId = selectedTicketsAvailable[0];
+    if (nextTicketId) {
+      setShirtCodesRead(prevState => ({
+        ...prevState,
+        [nextTicketId]: { code: ticketCode }
+      }));
+    } else {
+      console.warn("addToArray foi chamada, mas não há mais tickets disponíveis para associar.");
+    }
   };
 
   useEffect(() => {
@@ -1044,13 +1046,28 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   }, [user, authContext.selectedEventId]);
 
 
-  let enableTakeDocumentPicture = !eventAllowed || kitCodes?.length == selectedTicketCodes?.length;
+  let enableTakeDocumentPicture = !eventAllowed || (selectedTicketCodes && Object.keys(shirtCodesRead).length === selectedTicketCodes.length);
 
   const hasSelectedTicketsForDay = selectedTicketCodes && showResponseCamisa && selectedTicketsAvailable.map(code => user.tickets[code]).filter(item => item.includes(showResponseCamisa.day)).length > 0
 
   const handleJustificationSubmit = justification => {
     setIncompleteRegistrationReason(justification);
     setIsValidBoolean(false);
+  };
+
+  const editCodeTicker = (ticketId) => {
+
+    setShirtCodesRead(estadoAtual => {
+      const novoEstado = { ...estadoAtual };
+
+      if (novoEstado[ticketId]) {
+        delete novoEstado[ticketId];
+      } else {
+        console.warn(`Tentativa de editar um ticketId (${ticketId}) que não existe em shirtCodesRead.`);
+      }
+
+      return novoEstado;
+    });
   };
 
   return (
@@ -1103,10 +1120,17 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
             data={selectedTicketCodes}
             renderItem={({ item: ticketId, index }) => {
               const ticket = user.tickets.find(t => t.id === ticketId);
-              if (!ticket) return null; // segurança extra
+              if (!ticket) return null;
+
+              const isNextTicketToScan = showQrCodeCamisa && selectedTicketsAvailable[0] === ticketId;
+
 
               return (
-                <Card containerStyle={{ alignItems: 'center' }} key={ticketId}>
+                <Card containerStyle={{
+                  alignItems: 'center',
+                  // A sintaxe correta: a chave recebe o valor da condição
+                  backgroundColor: isNextTicketToScan ? 'rgba(221, 240, 216, 0.7)' : 'white'
+                }} key={ticketId}>
                   <Text style={{ fontSize: 15, fontWeight: '700' }}>
                     {ticket.sector} - {ticket.day}
                   </Text>
@@ -1155,12 +1179,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                         {shirtCodesRead[ticketId].code || 'Não disponível'}
                       </Text>
 
-                      {/* <Text style={{ fontWeight: '700', fontSize: 16, color: '#333' }}>
-                        Tamanho da camisa:
-                      </Text>
-                      <Text style={{ fontSize: 14, color: '#555' }}>
-                        ({shirtCodesRead[ticketId].shirtSize || 'Não disponível'})
-                      </Text> */}
+                      {shirtCodesRead[ticketId] && (
+                        <Button containerStyle={{ margin: 10 }} onPress={() => { editCodeTicker(ticketId) }}>Editar</Button>
+                      )}
                     </View>
                   )}
                 </Card>
@@ -1187,7 +1208,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
           {eventAllowed && !documentImg && (
             <Text style={{ marginTop: 10, fontSize: 15, fontWeight: '900', textAlign: 'center', textDecorationLine: 'underline' }} >
-              Quantidade de kits escaneados {kitCodes.length} / {selectedTicketCodes.length}
+              Quantidade de kits escaneados {Object.keys(shirtCodesRead).length} / {selectedTicketCodes.length}
             </Text>
           )}
 
@@ -1388,7 +1409,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   );
 };
 
-// tickets = [[code, name]...]
 const TicketCodeSelectionModal = ({
   user,
   tickets,
@@ -1425,9 +1445,6 @@ const TicketCodeSelectionModal = ({
       setSelecteds(allTicketIds);
     }
   }
-
-
-  console.log('tickets: ', tickets)
 
   return (
     <ReactNativeModal
@@ -1543,3 +1560,51 @@ const TicketCodeSelectionModal = ({
 };
 
 export default KitsDrawerScreen;
+
+
+const styles = StyleSheet.create({
+  cardBase: {
+    alignItems: 'center',
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  highlightedCard: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(221, 240, 216, 0.9)', // Verde-claro
+    borderColor: '#5cb85c', // Verde mais escuro
+    borderWidth: 2,
+    elevation: 8,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  kitInfoContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    width: '100%',
+  },
+  kitLabel: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#555',
+  },
+  kitCode: {
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 10,
+  },
+  editButton: {
+    marginTop: 5,
+  },
+  editButtonTitle: {
+    color: THEME.cor.primary,
+    fontSize: 14,
+  },
+});
