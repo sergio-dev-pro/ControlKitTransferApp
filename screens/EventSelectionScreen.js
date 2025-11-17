@@ -19,7 +19,7 @@ function EventSelectionScreen() {
   useEffect(() => {
     const saveCompanyId = async () => {
       if (selectedCompanyId) {
-        await AsyncStorage.setItem('userCompanyId', JSON.stringify(selectedCompanyId));
+        await AsyncStorage.setItem('userCompanyId', selectedCompanyId.toString());
       }
     };
 

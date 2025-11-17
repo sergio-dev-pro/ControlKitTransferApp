@@ -11,6 +11,7 @@ import THEME from '../style/theme';
 import { getEventsList } from '../api/EventApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { event } from 'react-native-reanimated';
+import { TouchableOpacity } from 'react-native';
 
 
 const getRouteNameByPermission = permissions => {
@@ -41,17 +42,35 @@ const getRouteNameByPermission = permissions => {
 function EventSelectionDrawerScreen({ navigation }) {
   const { setSelectedEventId, selectedEventId, permissions, userToken, setPermission } = useContext(AuthContext);
   const [events, setEvents] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [currentCompanyId, setCurrentCompanyId] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [changingCompany, setChangingCompany] = useState(false);
   const [kitDelivery, setKitDelivery] = useState(null)
 
+ useEffect(() => {
+    const loadCompanies = async () => {
+      try {
+        const storedCompanyId = await AsyncStorage.getItem('userCompanyId'); 
+        setCurrentCompanyId(storedCompanyId);
 
+        const stored = await AsyncStorage.getItem('userCompanies');
+        if (stored) {
+          setCompanies(JSON.parse(stored));
+        }
+      } catch (error) {
+        console.error('Failed to load userCompanies:', error);
+      }
+    };
 
-  useEffect(() => {
-    const fetchEvents = async () => {
+    loadCompanies();
+  }, []);
+
+  const fetchEvents = async (companyId = null) => {
       setIsLoading(true);
       try {
         const storedCompanyId = await AsyncStorage.getItem('userCompanyId'); // <--- CORRETO
-        const parsedCompanyId = JSON.parse(storedCompanyId);
+        const parsedCompanyId = companyId != null ? companyId : storedCompanyId;
         const eventsData = await getEventsList(userToken, parsedCompanyId);
         setKitDelivery(eventsData.kitDeliveryMode)
         setEvents(eventsData);
@@ -60,10 +79,21 @@ function EventSelectionDrawerScreen({ navigation }) {
       } finally {
         setIsLoading(false);
       }
-    };
+  };
 
+  useEffect(() => {
     fetchEvents();
   }, [userToken]);
+
+  const changeCompany = async (companyId) => {
+    await AsyncStorage.setItem('userCompanyId', companyId.toString());
+
+    setCurrentCompanyId(companyId);
+
+    await fetchEvents(companyId);
+
+    setChangingCompany(false);
+  }
 
 
   const handleEventSelection = async (eventId, kitDeliveryMode, canManageBraceletDelivery, braceletDeliveryMode) => {
@@ -112,12 +142,17 @@ function EventSelectionDrawerScreen({ navigation }) {
         />
         <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
           <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
-            Eventos
+            Mudar evento
           </Text>
           <Divider />
         </View>
-        <View style={GStyles.container}>
-          {isLoading ? (
+        {changingCompany === false && (<View style={{
+                                        width: '100%',
+                                        padding: 10,
+                                        alignItems: 'center',
+                                        flex:0.6
+                                      }}>
+                                              {isLoading ? (
             <Loading isActive={true} />
           ) : (
             <FlatList
@@ -137,7 +172,48 @@ function EventSelectionDrawerScreen({ navigation }) {
               )}
             />
           )}
-        </View>
+        </View>)}
+
+        {changingCompany === false && (
+          <View style={{ marginTop: 10, justifyContent: 'center', alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={() => setChangingCompany(true)}
+                style={{
+                  backgroundColor: 'transparent',
+                  paddingVertical: 10,
+                }}
+              >
+                <Text style={{ color: 'black', fontSize: 16, fontWeight: 'bold' }}>
+                  Mudar empresa
+                </Text>
+              </TouchableOpacity>
+          </View>)}
+
+        {changingCompany && (<View style={GStyles.container}>
+          <Text h4 h4Style={{ padding: 8, textAlign: 'center' }}>
+            Empresas
+          </Text>
+          {isLoading ? (
+            <Loading isActive={true} />
+          ) : (
+            <FlatList
+              data={companies}
+              keyExtractor={item => item.id.toString()}
+              renderItem={({ item }) => (
+                <ListItem containerStyle={GStyles.maxWidth}>
+                  <Button
+                    onPress={() => changeCompany(item.id)}
+                    type={currentCompanyId === item.id ? 'solid' : 'outline'}
+                    size="lg"
+                    containerStyle={{ width: '100%' }}
+                    titleStyle={{ fontWeight: 'bold', fontSize: 20 }}>
+                    {item.name}
+                  </Button>
+                </ListItem>
+              )}
+            />
+          )}
+        </View>)}
       </View>
       <Loading isActive={isLoading} />
     </>
