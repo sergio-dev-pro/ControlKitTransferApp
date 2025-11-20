@@ -75,6 +75,9 @@ const NewFastTicket = ({ navigation }) => {
     setValueInitialLastname('');
     setIsUserActive(false);
     setEmailValue('')
+    setValueInitialSector(null)
+    setValueInitialSponsor(null)
+    setValueInitialDay(null)
 
   };
 
@@ -125,6 +128,7 @@ const NewFastTicket = ({ navigation }) => {
 
     } finally {
       setLoading(false);
+      clearStates()
     }
   };
 
@@ -273,7 +277,7 @@ const NewFastTicket = ({ navigation }) => {
             />
           )}
 
-      
+
           {userData && (
             <View style={{ paddingHorizontal: 10 }}>
               {(!isUserActive && !valuePicturePath) ? (
