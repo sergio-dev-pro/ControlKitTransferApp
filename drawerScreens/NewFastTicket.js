@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
@@ -39,9 +39,14 @@ const NewFastTicket = ({ navigation }) => {
   const [valuePicturePath, setValuePicturePath] = useState(null)
   const [isUserActive, setIsUserActive] = useState(false);
   const [emaiValue, setEmailValue] = useState('')
+  const [valueInitialSector, setValueInitialSector] = useState(null);
+  const [valueInitialSponsor, setValueInitialSponsor] = useState(null);
+  const [valueInitialDay, setValueInitialDay] = useState(null);
 
   const handleUserFormCompleted = data => {
-    console.log(`@@@@@ data`, data);
+
+    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ', data.user)
+
     setUserData(data.user);
 
     // Remove pontos e traços do CPF
@@ -157,6 +162,10 @@ const NewFastTicket = ({ navigation }) => {
       setCpfValue(null)
       setValuePicturePath(null)
       setIsUserActive(false);
+      setEmailValue('')
+      setValueInitialSector(null)
+      setValueInitialSponsor(null)
+      setValueInitialDay(null)
     }, [])
   );
 
@@ -182,7 +191,26 @@ const NewFastTicket = ({ navigation }) => {
     return formData
   }
 
-  console.log('isUserActive: ' + isUserActive)
+  const handleBack = () => {
+    if (userData) {
+      const firstName = userData.userFirstname || (userData.name ? userData.name.split(' ')[0] : '') || '';
+      const lastName = userData.userLastname || (userData.name ? userData.name.split(' ').slice(1).join(' ') : '') || '';
+      const email = userData.userEmail || userData.email || '';
+
+      setValueInitialFirstName(firstName);
+      setValueInitialLastname(lastName);
+      setEmailValue(email);
+
+      setValueInitialSector(userData.sectorId || null);
+      setValueInitialSponsor(userData.sponsorId || null);
+
+      setValueInitialDay(userData.dayId || null);
+    }
+
+    setValuePicturePath(null);
+    setUserData(null);
+  };
+
 
   return (
     <RegisterStateContext.Provider
@@ -238,52 +266,59 @@ const NewFastTicket = ({ navigation }) => {
               initialFirstName={valueInitialFirstName}
               initialLastName={valueInitialLastname}
               initialEmail={emaiValue}
+
+              initialSector={valueInitialSector}
+              initialSponsor={valueInitialSponsor}
+              initialDay={valueInitialDay}
             />
           )}
 
-          {userData && !isUserActive && !valuePicturePath && (
-            <>
+      
+          {userData && (
+            <View style={{ paddingHorizontal: 10 }}>
+              {(!isUserActive && !valuePicturePath) ? (
+                <Button
+                  type="solid"
+                  size="lg"
+                  containerStyle={{ marginTop: 20 }}
+                  onPress={() => setTakePhoto(true)}>
+                  Cadastrar foto
+                </Button>
+              ) : (
+                <Button
+                  type="solid"
+                  size="lg"
+                  containerStyle={{ marginTop: 20 }}
+                  onPress={completeRegister}>
+                  Enviar ingresso
+                </Button>
+              )}
+
+              {/* BOTÕES COMUNS (Agora escritos apenas uma vez) */}
               <Button
-                type="solid"
-                size="lg"
-                containerStyle={{ marginTop: 20 }}
-                onPress={() => {
-                  setTakePhoto(true)
-                }}>
-                Cadastrar foto
-              </Button>
-              <Button
-                containerStyle={{ marginTop: 10 }}
+                containerStyle={{ marginTop: 15 }}
                 type="outline"
-                onPress={() => {
-                  clearStates();
-                  setRegistered(false);
-                }}>
-                Cancelar
+                onPress={handleBack}>
+                Editar dados
               </Button>
-            </>
+
+              <Button
+                containerStyle={{ marginTop: 30 }} // Mais afastado
+                titleStyle={{ color: 'gray', fontSize: 14 }} // Texto discreto
+                type="clear" // Sem borda
+                onPress={() => {
+                  Alert.alert("Cancelar?", "Todos os dados serão perdidos.", [
+                    { text: "Não" },
+                    { text: "Sim, cancelar", onPress: () => { clearStates(); setRegistered(false); } }
+                  ])
+                }}>
+                Cancelar processo
+              </Button>
+
+            </View>
           )}
 
-          {userData && (isUserActive || valuePicturePath) && (
-            <>
-              <Button
-                type="solid"
-                size="lg"
-                containerStyle={{ marginTop: 20 }}
-                onPress={completeRegister}>
-                Enviar ingresso
-              </Button>
-              <Button
-                containerStyle={{ marginTop: 10 }}
-                type="outline"
-                onPress={() => {
-                  clearStates();
-                  setRegistered(false);
-                }}>
-                Cancelar
-              </Button>
-            </>
-          )}
+
 
 
 

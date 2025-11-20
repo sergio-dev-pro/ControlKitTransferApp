@@ -29,7 +29,8 @@ const DOMAINS = [
 ];
 
 
-const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initialDocument, initialFirstName, initialLastName, selectType, initialEmail }) => {
+const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initialDocument, initialFirstName, initialLastName,
+  selectType, initialEmail, initialSector, initialSponsor, initialDay }) => {
 
   const [user, setUser] = useState({
     name: initialFirstName || '',
@@ -37,29 +38,26 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     lastname: initialLastName || '',
     email: initialEmail || '',
   });
+
   const [sectorId, setSectorId] = useState(null);
   const [sponsorId, setSponsorId] = useState(null);
   const [documentType, setDocumentType] = useState('cpf');
-
-  // States for Ingresso (Type 1)
   const [eventDay, setEventDay] = useState(null);
 
-  // States for Credencial (Type 2)
+
   const [accessPolicies, setAccessPolicies] = useState([]);
   const [selectedPolicyId, setSelectedPolicyId] = useState(null);
   const [workingHours, setWorkingHours] = useState(null);
   const [workJobDescription, setWorkJobDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Validation States
   const [CPFValidation, setCPFValidation] = useState({ isValid: true, errorMsg: '' });
   const [nameValidation, setNameValidation] = useState({ isValid: true, errorMsg: '' });
-  // CORRIGIDO: Validação separada para sobrenome
+
   const [lastnameValidation, setLastnameValidation] = useState({ isValid: true, errorMsg: '' });
   const [passportValidation, setPassportValidation] = useState({ isValid: true, errorMsg: '' });
 
   const { name, lastname, cpf, email } = user;
-  console.log('email===='+ email)
   const authContext = useContext(AuthContext);
   const [selectedType, setSelectedType] = useState(1);
   const [days, setDays] = useState([]);
@@ -67,6 +65,21 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   const [sponsors, setSponsors] = useState([]);
   const [suggestionsEmail, setSuggestionsEmail] = useState([]);
   const [emailValidation, setEmailValidation] = useState({ isValid: true, errorMsg: '' });
+
+  useEffect(() => {
+    setUser(prevState => ({
+      ...prevState,
+      name: initialFirstName || prevState.name,
+      lastname: initialLastName || prevState.lastname,
+      email: initialEmail || prevState.email,
+      cpf: initialDocument || prevState.cpf,
+    }));
+
+    if (initialSector) setSectorId(initialSector);
+    if (initialSponsor) setSponsorId(initialSponsor);
+    if (initialDay) setEventDay(initialDay);
+
+  }, [initialFirstName, initialLastName, initialEmail, initialDocument, initialSector, initialSponsor, initialDay]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,7 +146,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     if (!sectorId && selectedType === 1) {
       return Alert.alert('Campo Obrigatório', 'Selecione o setor.');
     }
-  
+
     const userEmail = email;
 
 
@@ -271,7 +284,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   };
 
   const onSuggestionPress = (suggestion) => {
-    setUser(prev => ({ ...prev, email: suggestion })); 
+    setUser(prev => ({ ...prev, email: suggestion }));
     setSuggestionsEmail([]); // Limpa sugestões
     validEmail(suggestion); // Valida o email selecionado
   };
@@ -285,7 +298,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     return isValid;
   };
 
-  
+
 
   return (
     <View style={{ flex: 1, marginBottom: 40 }}>
@@ -345,57 +358,65 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
         />
       )}
 
-        <Input
-          label="Email"
-          value={email}
-          onBlur={() => {
-            validEmail(email);
-          }}
-          onChangeText={handleEmailChange}
-          errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        {suggestionsEmail.length > 0 && (
-          <View style={styles.listContainer}>
-            {suggestionsEmail.map((item, index) => (
-              <TouchableOpacity
-                key={item}
-                onPress={() => onSuggestionPress(item)}
-                style={[
-                  styles.listItem,
-                  index < suggestionsEmail.length - 1 && styles.bottomDivider,
-                ]}
-              >
-                <Text style={styles.suggestionText}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-      <SelectModal
-        label={'Selecione o setor'}
-        items={itemsSector}
-        setValue={setSectorId}
-        value={sectorId}
+      <Input
+        label="Email"
+        value={email}
+        onBlur={() => {
+          validEmail(email);
+        }}
+        onChangeText={handleEmailChange}
+        errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
 
-      <SelectModal
-        label={'Selecione o patrocinador'}
-        items={itemsSponsors}
-        setValue={setSponsorId}
-        value={sponsorId}
-      />
+      {suggestionsEmail.length > 0 && (
+        <View style={styles.listContainer}>
+          {suggestionsEmail.map((item, index) => (
+            <TouchableOpacity
+              key={item}
+              onPress={() => onSuggestionPress(item)}
+              style={[
+                styles.listItem,
+                index < suggestionsEmail.length - 1 && styles.bottomDivider,
+              ]}
+            >
+              <Text style={styles.suggestionText}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
-      {selectedType === 1 && (
+
+      {/* Se estiver carregando, mostre um loading, senão mostre o form */}
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />
+      ) : (
         <>
           <SelectModal
-            label={'Selecione o dia'}
-            items={itemsDay}
-            setValue={setEventDay}
-            value={eventDay}
+            label={'Selecione o setor'}
+            items={itemsSector}
+            setValue={setSectorId}
+            value={sectorId}
           />
+
+          <SelectModal
+            label={'Selecione o patrocinador'}
+            items={itemsSponsors}
+            setValue={setSponsorId}
+            value={sponsorId}
+          />
+
+          {selectedType === 1 && (
+            <>
+              <SelectModal
+                label={'Selecione o dia'}
+                items={itemsDay}
+                setValue={setEventDay}
+                value={eventDay}
+              />
+            </>
+          )}
         </>
       )}
 
