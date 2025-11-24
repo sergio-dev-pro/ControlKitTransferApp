@@ -73,7 +73,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setUser(userState);
   };
 
-  console.log(user)
   const handleQRCodeRead = async ticketCode => {
     // #
     const isCodeWithHashtag = ticketCode.includes('#');
@@ -89,7 +88,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
     try {
       const data = await hasBraceleteCode(bearerToken, keyAccess, selectedEventId);
-      console.log('estado: ' + data.exists);
       setIsTicketPreScanned(data.exists);
     } catch (error) {
       console.error('Erro ao verificar código da pulseira:', error);
@@ -121,11 +119,22 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         selectedEventId
       );
 
-      setRegisterNewTicket(true)
-
-      console.log('braceletRegister data', data);
-
       setAlertMessage(`Registrado`, '#32cd32');
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const temOutrosPendentes = user?.tickets?.some(
+        ticket => ticket.id !== selectedEventKey && !ticket.hasBraceletCode
+      );
+
+      if (temOutrosPendentes) {
+        setRegisterNewTicket(true);
+      } else {
+        resetState();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setAlertMessage(`Operação Finalizada`, '#32cd32');
+      }
+
     } catch (error) {
       console.error(error.response);
       console.log('error by api: ' + error?.response?.data);
@@ -167,9 +176,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
       if (updatedUser) {
         const searchedFor = { cpf: guardarCpf };
-        if(updatedUser.newToken)
-        {
-            updateTokens({accessToken: updatedUser.newToken, refreshToken: updatedUser.refreshToken})
+        if (updatedUser.newToken) {
+          updateTokens({ accessToken: updatedUser.newToken, refreshToken: updatedUser.refreshToken })
         }
         handleUserFound({ ...updatedUser, id: guardarCpf }, searchedFor);
       } else {
@@ -182,6 +190,9 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
   const hasTicketCodeRead = !!ticketCode;
   const hasAllDataToRegisterBracelet = selectedEvent && ticketCode;
+
+  console.log(user?.tickets)
+
   return (
     <View style={{ ...GStyles.view }}>
       <Header
@@ -238,7 +249,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
               placeholder="Selecione um evento"
               items={(user?.tickets || []).map(ticket => ({
                 key: ticket.id, // Usando `accessKey` como identificador único
-                value: [ticket.sector || '', ticket.category || '', ticket.day || '', ticket.accessPolicy || ''].filter(Boolean).join(' - ')
+                value: [ticket.sector || '', ticket.category || '', ticket.day || '',
+                ticket.accessPolicy || '', ticket.hasBraceletCode ? '(Registrado)' : '' || ''].filter(Boolean).join(' - ')
               }))}
               value={selectedEventKey}
               setValue={eventKey => {
