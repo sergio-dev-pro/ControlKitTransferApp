@@ -64,7 +64,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     mask: [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/],
   });
 
-  const regex = /^[\w.-]+@[\w.-]+\.\w+$/;
+  const regex = /^[\w.+-]+@[\w.-]+\.\w+$/;
 
   const handleClear = () => {
     setGuestDocument('');
