@@ -307,12 +307,21 @@ function KitsDrawerScreen({ navigation }) {
       const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
       let codeIsValid = true;
 
-      if (!currentDeliveryItemEventDay) { Alert.alert('', 'QR CODE não encontrado.'); codeIsValid = false; }
-      else if (deliveryItemResponse.data.day != currentTicket?.day) { Alert.alert('', 'QR CODE de outro dia.'); codeIsValid = false; }
-      else if (deliveryItemResponse.data.deliveredAt) { Alert.alert('', 'QR Code já escaneado.'); codeIsValid = false; }
+      if (!currentDeliveryItemEventDay) {
+        setAlertMessage('QR CODE não encontrado.', '#dc143c');
+        codeIsValid = false;
+      }
+      else if (deliveryItemResponse.data.day != currentTicket?.day) {
+        setAlertMessage('QR CODE de outro dia.', '#dc143c');
+        codeIsValid = false;
+      }
+      else if (deliveryItemResponse.data.deliveredAt) {
+        setAlertMessage('QR Code já escaneado.', '#dc143c');
+        codeIsValid = false;
+      }
 
       setShowQrCodeCamisa(false);
-      console.log('@@ticketCode', ticketCode);
+
       if (codeIsValid) {
         setCurrentTicketCode(ticketCode);
         addToArray(ticketCode, currentTicketId); // Chama a função 'addToArray' corrigida
@@ -493,7 +502,7 @@ function KitsDrawerScreen({ navigation }) {
                           />
                         </View>
                       )}
-                      
+
                       {/* --- Seletor de Tamanho de Camisa (se necessário) --- */}
                       {mustSelectShirtSize && (
                         <SelectModal
@@ -881,9 +890,31 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       onCancelDeliveryByCPF();
     } catch (error) {
       console.error('Erro durante o registro da entrega:', error);
-      console.error('Erro durante o registro da entrega:', error.response.data);
-      console.log('Detalhes do erro:', error?.response?.data || 'Sem resposta da API');
-      setAlertMessage('Entrega não registrada! KIT NÃO FOI ENTREGUE!');
+
+      let errorMessage = 'Não registrado, tente novamente'; 
+
+      if (error.response?.data) {
+        const data = error.response.data;
+        
+        if (data.message) {
+          errorMessage = data.message;
+        } else if (data.errors) {
+        
+          errorMessage = typeof data.errors === 'object' ? JSON.stringify(data.errors) : data.errors;
+        } 
+        else if (typeof data === 'string') {
+            errorMessage = data;
+        }
+        else {
+            errorMessage = JSON.stringify(data);
+        }
+      }
+
+      console.log('Mensagem de erro extraída:', errorMessage);
+      
+      setAlertMessage(errorMessage, '#dc143c');
+      
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -985,19 +1016,20 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       var codeIsValid = true;
 
       if (!currentDeliveryItemEventDay) {
-        Alert.alert('', 'QR CODE não encontrado.');
+        setAlertMessage('QR CODE não encontrado.', '#dc143c');
         codeIsValid = false;
       }
       else if (deliveryItemResponse.data.day != currentTicket?.day) {
-        Alert.alert('', 'QR CODE de outro dia.');
+        setAlertMessage('QR CODE de outro dia.', '#dc143c');
         codeIsValid = false;
       }
       else if (deliveryItemResponse.data.deliveredAt) {
-        Alert.alert('', 'QR Code já escaneado.');
+        setAlertMessage('QR Code já escaneado.', '#dc143c');
         codeIsValid = false;
       }
 
       setShowQrCodeCamisa(false);
+
       if (codeIsValid) {
         setCurrentTicketCode(ticketCode);
         addToArray(ticketCode);
@@ -1070,6 +1102,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     });
   };
 
+
   return (
     <View style={{ flex: 1 }}>
       <SearchUserModal
@@ -1122,8 +1155,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
               const ticket = user.tickets.find(t => t.id === ticketId);
               if (!ticket) return null;
 
-              const isNextTicketToScan = showQrCodeCamisa && selectedTicketsAvailable[0] === ticketId;
-
+              const isNextTicketToScan = selectedTicketsAvailable[0] === ticketId;
 
               return (
                 <Card containerStyle={{
