@@ -1,22 +1,30 @@
-import { Alert, ScrollView, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import React, { useState, useContext } from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
 import THEME from '../style/theme';
-import { Text, Divider, Input } from '@rneui/themed';
+import { Text, Divider, Input, Button } from '@rneui/themed';
 import { AuthContext } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
-import Button from '../components/Button';
 import { completeUserRegister } from '../api/UserApi';
 import { useMaskedInputProps } from 'react-native-mask-input';
 import SelectModal from '../components/SelectModal';
 import TakePictureModal from '../components/TakePictureModal';
-import { cpfValidation } from '../helpers/validation';
+import { cpfValidation, isValidationEmail } from '../helpers/validation';
 import SearchUserModal from '../components/SearchUserModal';
 import AddressForm from './ManualRegisterScreen/AdressForm';
 import AddressFormFields from '../components/forms/AddressFormFields';
 import { listCountries } from '../helpers/listCountries';
+import { DOMAINS_EMAILS } from '../helpers/emailDomains';
+import { TouchableOpacity } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
+const inputErrorMsgs = {
+  cpf: 'CPF inválido.',
+  global: {
+    empty: 'campo obrigatório.',
+  },
+};
 
 const CompleteRegisterDrawerScreen = ({ navigation }) => {
   const { userToken, selectedEventId } = useContext(AuthContext);
@@ -55,6 +63,9 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
   });
 
   const [stateSuggestions, setStateSuggestions] = useState([]);
+  const [emailValidation, setEmailValidation] = useState({ isValid: true, errorMsg: '' });
+  const [suggestionsEmail, setSuggestionsEmail] = useState([]);
+
 
 
   // Máscara apenas para CPF
@@ -300,8 +311,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
   };
 
   const handleUserFound = (user) => {
-    if(user.isActive)
-    {
+    if (user.isActive) {
       setAlertMessage('CPF já tem cadastro ativo!', '#dc143c');
       return;
     }
@@ -331,8 +341,92 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     rawValue: id
   }));
 
+  const validEmail = (currentEmail) => {
+    const isValid = isValidationEmail(currentEmail);
+    setEmailValidation({
+      isValid,
+      errorMsg: !isValid ? (currentEmail.length ? inputErrorMsgs.email : inputErrorMsgs.global.empty) : '',
+    });
+    return isValid;
+  };
 
-  console.log(address.country)
+  const handleEmailChange = (text) => {
+    setGuestEmail(text);
+
+    if (text.includes('@')) {
+      const [localPart, domainPart] = text.split('@');
+      if (localPart.length > 0) {
+        const filteredDomains = DOMAINS_EMAILS.filter((domain) =>
+          domain.startsWith(domainPart.toLowerCase())
+        );
+        const newSuggestions = filteredDomains.map((domain) => `${localPart}@${domain}`);
+        setSuggestionsEmail(newSuggestions.slice(0, 5));
+      } else {
+        setSuggestionsEmail([]);
+      }
+    } else {
+      setSuggestionsEmail([]);
+    }
+
+    // Valida em tempo real
+    if (!emailValidation.isValid) {
+      validEmail(text);
+    }
+  };
+
+  const onSuggestionPress = (suggestion) => {
+    setGuestEmail(suggestion);
+    setSuggestionsEmail([]);
+    validEmail(suggestion);
+  };
+
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reset de campos de texto simples
+      setGuestDocument('');
+      setGuestFirstname('');
+      setGuestLastname('');
+      setGuestEmail('');
+      setBirthDate('');
+
+      // Reset de objetos complexos
+      setGuestPhone({
+        countryCode: '',
+        dialCode: '',
+        nationalNumber: '',
+        internationalNumber: '',
+      });
+
+      setAddress({
+        street: '',
+        zipcode: '',
+        number: '',
+        neighborhood: '',
+        complement: '',
+        city: '',
+        state: '',
+        country: 27, // Mantém o valor padrão (Brasil?)
+      });
+
+      // Reset de validações e sugestões
+      setEmailValidation({ isValid: true, errorMsg: '' });
+      setSuggestionsEmail([]);
+      setStateSuggestions([]);
+
+      // Reset de fluxo e UI
+      setGender(null);
+      setDocumentType(1); // Valor padrão
+      setStep(null);
+      setTakePhoto(false);
+      setIsLoading(false);
+      setPhotoUri(null);
+      setShowSearchModalByCPF(false);
+
+    }, [])
+  );
+
+
   return (
     <View style={{ ...GStyles.view }}>
       <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
@@ -342,15 +436,11 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
 
         {step == null && (
-          <View style={{
-              width: '100%',
-              padding: 20,
-              flex:1
-            }}>
+          <View style={[GStyles.container]}>
             <Button
               size="lg"
-              containerStyle={{ width: '100%', marginTop: 30, alignItems: 'center' }}
               titleStyle={{ fontSize: 18 }}
+              type="outline"
               onPress={() => {
                 setShowSearchModalByCPF(true);
               }}>
@@ -398,7 +488,36 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
             <Input placeholder="Nome" value={guestFirstname} onChangeText={setGuestFirstname} />
             <Input placeholder="Sobrenome" value={guestLastname} onChangeText={setGuestLastname} />
-            <Input placeholder="Email" value={guestEmail} onChangeText={setGuestEmail} />
+
+            <Input
+              label="Email"
+              value={guestEmail}
+              onBlur={() => {
+                validEmail(guestEmail);
+              }}
+              onChangeText={handleEmailChange}
+              errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+            {suggestionsEmail.length > 0 && (
+              <View style={styles.listContainer}>
+                {suggestionsEmail.map((item, index) => (
+                  <TouchableOpacity
+                    key={item}
+                    onPress={() => onSuggestionPress(item)}
+                    style={[
+                      styles.listItem,
+                      index < suggestionsEmail.length - 1 && styles.bottomDivider,
+                    ]}
+                  >
+                    <Text style={styles.suggestionText}>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+
             <Input
               label="Data de nascimento"
               placeholder="DD/MM/AAAA"
@@ -463,7 +582,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
             <SelectModal
               label="País"
               placeholder="Selecione um país"
-              items={countryOptions}  
+              items={countryOptions}
               value={address.country} // ex: "BRA"
               setValue={(id) => setAddress(prev => ({ ...prev, country: id }))}
             />
@@ -536,3 +655,31 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 };
 
 export default CompleteRegisterDrawerScreen;
+
+const styles = StyleSheet.create({
+  listContainer: {
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderTopWidth: 0, // Remove a borda de cima
+    borderRadius: 5,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    backgroundColor: '#fff',
+    marginTop: -5,
+    marginHorizontal: 1,
+    zIndex: 5,
+  },
+  listItem: {
+    backgroundColor: 'transparent',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+  },
+  bottomDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee', // Divisor mais suave
+  },
+  suggestionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+});
