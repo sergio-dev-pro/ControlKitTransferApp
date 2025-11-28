@@ -277,7 +277,7 @@ return (
     />
     <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
       <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
-        Entrega de pulseiras
+        Checkin
       </Text>
       <Divider />
     </View>

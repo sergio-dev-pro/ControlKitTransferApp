@@ -90,7 +90,7 @@ function Navigators() {
           )}
           {eventPermissions.includes("page.delivery.bracelet") && canManageBraceletDelivery && (
             <Drawer.Screen
-              name="Entregar pulseira"
+              name="Checkin"
               component={DeliverBraceletDrawerScreen}
             />
           )}
