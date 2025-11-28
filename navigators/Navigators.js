@@ -88,39 +88,32 @@ function Navigators() {
           {eventPermissions.includes("page.delivery.kit") && (
             <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
           )}
-          {eventPermissions.includes("page.delivery.bracelet") && canManageBraceletDelivery && (
-            <Drawer.Screen
-              name="Checkin"
-              component={DeliverBraceletDrawerScreen}
-            />
-          )}
           {eventPermissions.includes("page.ticket.accesskeys.add") && (
             <Drawer.Screen
               name="Registrar Qr Code"
               component={BraceletRegistrationDrawerScreen}
             />
           )}
-          {/* {eventPermissions.hasManualRegistrationPermission && (
-            <Drawer.Screen
-              name="Cadastro manual"
-              component={ManualRegisterScreen}
-            />
-          )} */}
-
-          {/* {eventPermissions.hasManualBoxOfficeRegistrationPermission && (
-            <Drawer.Screen
-              name="Cadastro - Bilheteria"
-              component={TicketOfficeManualRegisterScreen}
-            />
-          )} */}
-          {/* {eventPermissions.hasItinerariesPermission && (
-            <Drawer.Screen name="Itinerários" component={ItinerariesScreen} />
-          )} */}
           {eventPermissions.includes("page.user.retake.photo") && (
             <Drawer.Screen
               name="Recadastrar foto"
               component={PhotoReregisterDrawerScreen}
             />
+          )}
+          {eventPermissions.includes("page.user.update.email") && (
+            <Drawer.Screen name="Completar cadastro" component={CompleteRegisterDrawerScreen} />
+          )}
+          {eventPermissions.includes("page.user.update.email") && (
+            <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
+          )}
+          {eventPermissions.includes("page.delivery.bracelet") && canManageBraceletDelivery && (
+            <Drawer.Screen
+              name="Checkin"
+              component={DeliverBraceletDrawerScreen}
+            />
+          )}
+          {eventPermissions.includes("page.ticket.add") && (
+            <Drawer.Screen name="Gerar ingresso" component={NewFastTicket} />
           )}
           {!hasOnlyOneEvent && (
             <Drawer.Screen
@@ -128,22 +121,9 @@ function Navigators() {
               component={EventSelectionDrawerScreen}
             />
           )}
-          {/* {eventPermissions.includes("page.delivery.kit") && (
-            <Drawer.Screen name="Novo ingresso" component={NewTicket} />
-          )} */}
-          {eventPermissions.includes("page.ticket.add") && (
-            <Drawer.Screen name="Gerar ingresso" component={NewFastTicket} />
-          )}
-          {eventPermissions.includes("page.user.update.email") && (
-            <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
-          )}
-          {eventPermissions.includes("page.user.update.email") && (
-            <Drawer.Screen name="Completar cadastro" component={CompleteRegisterDrawerScreen} />
-          )}
           {eventPermissions.includes("page.transport.boarding.add") && (
             <Drawer.Screen name="Embarque" component={BoardingDrawerScreen} />
           )}
-          {/* <Drawer.Screen name="ManualRegisterByTickets" component={ManualRegisterByTickets} options={{ drawerItemStyle: { display: 'none' } }} /> */}
         </Drawer.Navigator>
       ) : (
         <Stack.Navigator>
