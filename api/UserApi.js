@@ -63,12 +63,8 @@ export const refreshAccessToken = async () => {
 
 
 export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
-  console.log('ENTROU getUserByCpfWithAuth');
-
   const cleanCpf = cpf.replace(/\D/g, '');
   const url = `${BASE_URL_V2}/users?searchTerm=${cleanCpf}&eventid=${eventId}`;
-
-  try {
     const response = await axios.get(url, {
       headers: {
         Accept: 'application/json',
@@ -76,28 +72,6 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
       },
     });
     return response.data;
-  } catch (error) {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      console.warn('⚠️ Token expirado, tentando atualizar...');
-      const tokens = await refreshAccessToken();
-
-      if (tokens?.accessToken) {
-        // tenta novamente com o novo token
-        const retryResponse = await axios.get(url, {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${tokens.accessToken}`,
-          },
-        });
-        var result = retryResponse.data;
-
-        return {newToken: tokens?.accessToken, refreshToken: tokens?.refreshToken, ...result}
-      }
-    }
-
-    console.error('Erro ao buscar usuário por CPF:', error);
-    throw error;
-  }
 };
 
 export const getUserByEmail = async (email, eventId, token) =>

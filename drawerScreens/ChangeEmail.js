@@ -48,31 +48,64 @@ const ChangeEmail = ({ navigation }) => {
     if (!isValid) return;
     try {
       setLoading(true);
-      const data  = await getUserByCpfWithAuth(
+      const data = await getUserByCpfWithAuth(
         inputValue,
         authContext.selectedEventId,
         authContext.userToken,
       );
-      if(data.newToken)
-      {
-          authContext.updateTokens({accessToken: updatedUser.newToken, refreshToken: updatedUser.refreshToken})
+      if (data.newToken) {
+        authContext.updateTokens({ accessToken: updatedUser.newToken, refreshToken: updatedUser.refreshToken })
       }
       setUserEmailFound(data.email);
       setUserEmailFoundUpdated(data.email);
       setToken(data.token);
     } catch (error) {
-      console.error(error);
-      console.error(error.response.data.errors);
-      if (error?.request?.status == 404) {
-        alert('Usuário não encontrado.');
-        return;
+      console.error('Erro geral:', error);
+
+      if (error.response) {
+        console.error('Erro response:', error.response);
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 401) {
+          setAlertMessage('Sessão Expirada: A sua sessão expirou. Por favor, faça login novamente.');
+          authContext.logout();
+          return;
+        }
+
+        if (status === 404) {
+          Alert.alert('Aviso', 'Usuário não encontrado.');
+          cpfValueNotFound(inputValue);
+          return;
+        }
+
+        // --- 4. TRATAMENTO DO 400 (Erro de Validação) ---
+        if (status === 400 || data?.errors) {
+          const errors = data.errors;
+          const errorMessages = Array.isArray(errors)
+            ? errors.join('\n')
+            : typeof errors === 'string'
+              ? errors
+              : JSON.stringify(errors);
+
+          setAlertMessage('Erro de Validação', errorMessages || 'Dados inválidos.');
+          return;
+        }
+
+        setAlertMessage('Erro', `Erro inesperado do servidor (status ${status}). Tente novamente.`);
+
+      } else if (error.request) {
+        // --- 5. TRATAMENTO DE ERRO DE REDE ---
+        // A requisição foi feita mas não houve resposta
+        console.error('Erro de rede:', error.message);
+        setAlertMessage('Erro de Conexão', 'Verifique a sua internet e tente novamente.');
+
+      } else {
+        // Erro na configuração da requisição
+        console.error('Erro de configuração:', error.message);
+        setAlertMessage('Erro', 'Ocorreu um erro interno na aplicação.');
       }
-      if (error?.response?.data?.errors) {
-        console.error(error.response.data.errors);
-        alert(error.response.data.errors);
-        return;
-      }
-      alert('Erro ao procurar usuário');
+
     } finally {
       setLoading(false);
     }
@@ -96,8 +129,8 @@ const ChangeEmail = ({ navigation }) => {
     setLoading(true);
     try {
       const res = await updateEmail(
-        { 
-          document: inputValue.replace(/\D/g, ''), 
+        {
+          document: inputValue.replace(/\D/g, ''),
           email: userEmailFoundUpdated,
           eventId: authContext.selectedEventId  // ADICIONADO
         },

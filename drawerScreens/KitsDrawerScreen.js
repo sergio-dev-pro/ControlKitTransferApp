@@ -110,10 +110,10 @@ function KitsDrawerScreen({ navigation }) {
   }, [ticketsAvailableFlow1]);
 
   const handleQRCodeRead = async ticketCode => {
-
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
 
+    // Verificação de duplicados na lista atual
     if (ticketFounds.length > 0) {
       const ticketCodeFounds = ticketFounds.map(ticket => ticket.code);
       if (ticketCodeFounds.includes(code))
@@ -131,13 +131,15 @@ function KitsDrawerScreen({ navigation }) {
       );
 
       if (!ticket) {
-        throw new Error("Ingresso não encontrado na api!");
+        // Lança um erro manual para ser apanhado pelo catch se o objeto vier vazio
+        throw new Error("Ingresso não encontrado na resposta da API.");
       }
 
       if (ticket.kitDeliveredAt) {
         setHasKitAlreadyDelivered(true);
         setShowModalOfReasonForKitDelivery(true);
       }
+
       const newTicketFound = { ...ticket, code };
       if (mustSelectShirtSize) newTicketFound.shirtSize = '';
 
@@ -151,10 +153,48 @@ function KitsDrawerScreen({ navigation }) {
       });
 
     } catch (error) {
-      console.error(error);
-      console.error(JSON.stringify(error));
-      setAlertMessage('Ingresso não encontrado.', '#dc143c');
+      console.error('Erro ao ler QR Code:', error);
+
+      if (error.response) {
+        // --- 1. O Servidor Respondeu com Erro ---
+        const { status, data } = error.response;
+        console.log('Status:', status);
+        console.log('Data:', data);
+
+        if (status === 401) {
+          setAlertMessage('Sessão Expirada: A sua sessão expirou. Por favor, faça login novamente.');
+          authContext.logout();
+          return;
+        }
+
+        if (status === 404) {
+          setAlertMessage('Ingresso não encontrado.', '#dc143c');
+          return;
+        }
+
+        if (status === 400 || data?.message) {
+          const apiMessage = data?.message || 'Dados do ingresso inválidos.';
+          setAlertMessage(apiMessage, '#dc143c');
+          return;
+        }
+
+        setAlertMessage(`Erro do servidor (${status}). Tente novamente.`, '#dc143c');
+
+      } else if (error.request) {
+        // --- 2. Erro de Rede (Sem resposta) ---
+        console.error('Erro de Rede:', error.request);
+        setAlertMessage('Sem conexão com a internet.', '#dc143c');
+
+      } else {
+        console.error('Erro de Configuração:', error.message);
+        const msg = error.message === "Ingresso não encontrado na resposta da API."
+          ? error.message
+          : 'Ocorreu um erro ao processar o código.';
+        setAlertMessage(msg, '#dc143c');
+      }
+
       return null;
+
     } finally {
       setLoading(false);
     }
@@ -891,29 +931,29 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     } catch (error) {
       console.error('Erro durante o registro da entrega:', error);
 
-      let errorMessage = 'Não registrado, tente novamente'; 
+      let errorMessage = 'Não registrado, tente novamente';
 
       if (error.response?.data) {
         const data = error.response.data;
-        
+
         if (data.message) {
           errorMessage = data.message;
         } else if (data.errors) {
-        
+
           errorMessage = typeof data.errors === 'object' ? JSON.stringify(data.errors) : data.errors;
-        } 
+        }
         else if (typeof data === 'string') {
-            errorMessage = data;
+          errorMessage = data;
         }
         else {
-            errorMessage = JSON.stringify(data);
+          errorMessage = JSON.stringify(data);
         }
       }
 
       console.log('Mensagem de erro extraída:', errorMessage);
-      
+
       setAlertMessage(errorMessage, '#dc143c');
-      
+
       return null;
     } finally {
       setIsLoading(false);

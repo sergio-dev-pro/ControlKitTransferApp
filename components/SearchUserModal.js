@@ -62,64 +62,81 @@ const SearchUserModal = ({
   const handleSearch = async () => {
     const validatedInputValueType = validateInputValue();
     if (!validatedInputValueType) return;
+
     try {
       setLoading(true);
       const isEmailSearch = validatedInputValueType === INPUT_VALUE_TYPE.email;
-      const user = isEmailSearch
+      
+      const userResponse = isEmailSearch
         ? await getUserByEmail(inputValue, authContext.selectedEventId, authContext.userToken)
         : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken, fromKitDelivery, fromBlaceletRegistration);
+      
+      // Nota: Assumindo que a sua API retorna o objeto user diretamente ou dentro de .data
+      // Se as suas funções 'getUser...' já retornam response.data, então 'user' já é os dados.
+      // Se retornam o objeto axios completo, então use 'userResponse.data'.
+      const user = userResponse; // Ajuste conforme a sua API
+
       const searchedFor = {};
       if (isEmailSearch) searchedFor.email = inputValue;
       else searchedFor.cpf = inputValue;
+      
       onUserFound({ ...user, id: inputValue }, searchedFor);
       
-      if(user?.newToken)
-      {
+      if(user?.newToken) {
         authContext.updateTokens({accessToken: user?.newToken, refreshToken: user?.refreshToken})
       }
+
     } catch (error) {
-
-      console.error('Erro response:', error.response);
-
-
-      const status = error.response.status;
-
-      if (status === 404) {
-        alert('Usuário não encontrado.');
-        cpfValueNotFound(inputValue)
-        return;
-      }
-
       console.error('Erro geral:', error);
 
-      if (error.message === 'Network Error') {
-        alert('Erro de rede. Verifique sua conexão com a internet ou tente novamente mais tarde.');
-        return;
+      if (error.response) {
+        console.error('Erro response:', error.response);
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if(status === 401){
+          setAlertMessage('Sessão Expirada: A sua sessão expirou. Por favor, faça login novamente.');
+          authContext.logout(); 
+          return;
+        }
+
+        if (status === 404) {
+          Alert.alert('Aviso', 'Usuário não encontrado.');
+          cpfValueNotFound(inputValue);
+          return;
+        }
+
+        // --- 4. TRATAMENTO DO 400 (Erro de Validação) ---
+        if (status === 400 || data?.errors) {
+          const errors = data.errors;
+          const errorMessages = Array.isArray(errors)
+            ? errors.join('\n')
+            : typeof errors === 'string'
+              ? errors
+              : JSON.stringify(errors);
+          
+         setAlertMessage('Erro de Validação', errorMessages || 'Dados inválidos.');
+          return;
+        }
+
+       setAlertMessage('Erro', `Erro inesperado do servidor (status ${status}). Tente novamente.`);
+        
+      } else if (error.request) {
+        // --- 5. TRATAMENTO DE ERRO DE REDE ---
+        // A requisição foi feita mas não houve resposta
+        console.error('Erro de rede:', error.message);
+       setAlertMessage('Erro de Conexão', 'Verifique a sua internet e tente novamente.');
+      
+      } else {
+        // Erro na configuração da requisição
+        console.error('Erro de configuração:', error.message);
+        setAlertMessage('Erro', 'Ocorreu um erro interno na aplicação.');
       }
 
-      if (!error.response) {
-        alert('Não foi possível se conectar ao servidor. Tente novamente.');
-        return;
-      }
-
-      if (status === 400 || error?.response?.data?.errors) {
-        const errors = error.response.data.errors;
-        const errorMessages = Array.isArray(errors)
-          ? errors.join('\n')
-          : typeof errors === 'string'
-            ? errors
-            : JSON.stringify(errors);
-        alert(errorMessages);
-        return;
-      }
-
-      alert(`Erro inesperado (status ${status}). Tente novamente.`);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
-
   return (
     <ReactNativeModal
       isVisible={isVisible}
