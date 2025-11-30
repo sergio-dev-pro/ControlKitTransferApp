@@ -116,9 +116,10 @@ const LoginScreen = ({ navigation }) => {
         {/* Passo 1: Formulário de CPF e Senha */}
         {!showValidationStep ? (
           <View style={GStyles.container}>
-            {BASE_URL_V2.includes('-dev') && (<View style={{width: '100%', height: '20%', backgroundColor: '#FFEE8C', padding: 10, alignItems: 'center' }}>
-              <Text h3 style={{color: "#000"}}>AMBIENTE DE DESENVOLVIMENTO</Text>
-            </View>)}
+            {BASE_URL_V2.includes('-dev') && (
+              <View style={{ width: '100%', height: '20%', backgroundColor: '#FFEE8C', padding: 10, alignItems: 'center', justifyContent: 'center', alignItems: 'center' }}>
+                <Text h4 style={{ color: "#000", textAlign: 'center' }}>AMBIENTE DE DESENVOLVIMENTO</Text>
+              </View>)}
             <View style={styles.formContainer}>
               <Text h4 style={styles.formTitle}>Entrar</Text>
               <Input
@@ -172,10 +173,10 @@ const LoginScreen = ({ navigation }) => {
                 containerStyle={{ width: '100%', paddingHorizontal: 10 }}
               />
               <Button
-                type="outline" 
+                type="outline"
                 size="lg"
                 title="VOLTAR"
-                onPress={() => setShowValidationStep(false)} 
+                onPress={() => setShowValidationStep(false)}
                 containerStyle={{ width: '100%', paddingHorizontal: 10, marginTop: 10, }}
               />
             </View>

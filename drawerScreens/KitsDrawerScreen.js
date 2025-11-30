@@ -1033,10 +1033,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       return;
     }
 
-    if (showQrCodeCamisa == false) return;
+    if (!showQrCodeCamisa) return;
 
-    var currentTicketId = selectedTicketsAvailable[0];
-
+    const currentTicketId = selectedTicketsAvailable[0];
     if (!currentTicketId) {
       console.warn("Código lido, mas não há mais bilhetes pendentes.");
       setShowQrCodeCamisa(false);
@@ -1044,46 +1043,39 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       return;
     }
 
-    var currentTicket = user.tickets.find(ticket => ticket.id == currentTicketId);
+    const currentTicket = user.tickets.find(ticket => ticket.id == currentTicketId);
 
     try {
-      var deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 1);
+      const deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 1);
 
       console.log('deliveryItemResponse.data.day = ' + deliveryItemResponse.data?.day);
 
-      var currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
+      const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
 
-      var codeIsValid = true;
 
       if (!currentDeliveryItemEventDay) {
-        setAlertMessage('QR CODE não encontrado.', '#dc143c');
-        codeIsValid = false;
-      }
-      else if (deliveryItemResponse.data.day != currentTicket?.day) {
-        setAlertMessage('QR CODE de outro dia.', '#dc143c');
-        codeIsValid = false;
-      }
-      else if (deliveryItemResponse.data.deliveredAt) {
-        setAlertMessage('QR Code já escaneado.', '#dc143c');
-        codeIsValid = false;
+        throw new Error('QR CODE não encontrado.');
       }
 
-      setShowQrCodeCamisa(false);
+      if (deliveryItemResponse.data.day != currentTicket?.day) {
+        throw new Error(`Erro: QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
+      }
 
-      if (codeIsValid) {
-        setCurrentTicketCode(ticketCode);
-        addToArray(ticketCode);
+      if (deliveryItemResponse.data.deliveredAt) {
+        throw new Error('QR Code já escaneado.');
       }
-    }
-    catch (error) {
-      console.log('error', error);
-      if (error.response?.data?.message) {
-        console.log('error.response.data', error.response.data);
-        Alert.alert('', error.response.data.message);
-      }
-      else {
-        Alert.alert('', 'Erro ao consultar no estoque.');
-      }
+
+      setCurrentTicketCode(ticketCode);
+      addToArray(ticketCode);
+
+    } catch (error) {
+      console.log('Erro handleQRCodeCamisa:', error);
+
+      const errorMessage = error.response?.data?.message || error.message || 'Erro ao consultar no estoque.';
+
+      setAlertMessage(errorMessage, '#dc143c');
+
+    } finally {
       setShowQrCodeCamisa(false);
     }
   };
