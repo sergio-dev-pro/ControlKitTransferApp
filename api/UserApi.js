@@ -96,7 +96,13 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
     }
 
     console.error('Erro ao buscar usuário por CPF:', error);
-    throw error;
+    throw {
+      response: {
+        status: error?.response?.status ?? 500,
+        data: error?.response?.data
+      },
+      message: error.message
+    };
   }
 };
 
