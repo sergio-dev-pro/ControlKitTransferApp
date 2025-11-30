@@ -65,8 +65,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setRegisterNewTicket(false)
 
     console.log('selectedEventId=' + selectedEventId);
-    if (!userFounded.isActive && selectedEventId != 435)
-      return alert('Usuário não registrado, registre no cadastro manual.');
 
     const userState = { ...userFounded, ...searchedFor };
 
