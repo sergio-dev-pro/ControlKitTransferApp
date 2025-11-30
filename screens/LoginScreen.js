@@ -5,6 +5,7 @@ import { Text, Input } from '@rneui/themed';
 import AuthHeader from '../components/AuthHeader';
 import GStyles from '../style/global';
 import { AuthContext } from '../context/AuthContext';
+import BASE_URL_V2 from '../constants/api2';
 
 const inputErrorMsgs = {
   global: {
@@ -108,7 +109,6 @@ const LoginScreen = ({ navigation }) => {
     await auth.confirmLogin(code.toUpperCase(), email);
   };
 
-
   return (
     <View style={GStyles.view}>
       <AuthHeader />
@@ -116,6 +116,9 @@ const LoginScreen = ({ navigation }) => {
         {/* Passo 1: Formulário de CPF e Senha */}
         {!showValidationStep ? (
           <View style={GStyles.container}>
+            {BASE_URL_V2.includes('-dev') && (<View style={{width: '100%', height: '20%', backgroundColor: '#FFEE8C', padding: 10, alignItems: 'center' }}>
+              <Text h3 style={{color: "#000"}}>AMBIENTE DE DESENVOLVIMENTO</Text>
+            </View>)}
             <View style={styles.formContainer}>
               <Text h4 style={styles.formTitle}>Entrar</Text>
               <Input
