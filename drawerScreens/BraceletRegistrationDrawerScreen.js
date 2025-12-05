@@ -16,6 +16,7 @@ import { reduceArrayToJustDifferentDates } from '../helpers/reduceCallbacks';
 import JustificationModal from '../components/JustificationModal';
 import CustomModal from '../components/CustomModal';
 import { getUserByCpfWithAuth } from '../api/UserApi';
+import { getKitDelivery } from '../api/EventApi';
 
 
 function BraceletRegistrationDrawerScreen({ navigation }) {
@@ -27,7 +28,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [ticketCode, setTicketCode] = useState();
   const [loading, setLoading] = useState(false);
   const isFocused = useIsFocused();
-  const { userToken, selectedEventId, updateTokens, logout } = useContext(AuthContext);
+  const { userToken, selectedEventId, updateTokens, logout, braceletDeliveryMode } = useContext(AuthContext);
   const setAlertMessage = useAlert();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -64,21 +65,90 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
     setRegisterNewTicket(false)
 
-    console.log('selectedEventId=' + selectedEventId);
-
     const userState = { ...userFounded, ...searchedFor };
 
     setUser(userState);
   };
 
   const handleQRCodeRead = async ticketCode => {
-    // #
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
 
-    setTicketCode(code);
-    setShowQrcodereader(false);
+    // Verifica se o modo de entrega está correto (sua lógica original)
+    if (braceletDeliveryMode == 1) {
+
+      setShowQrcodereader(false);
+
+      try {
+        setLoading(true);
+
+        const response = await getTicketDelivery(
+          selectedEventId,
+          code,
+          userToken,
+          'bracelet' // ou 'Kit', confirme o tipo correto
+        );
+
+        console.log('Sucesso:', response.data);
+        setTicketCode(code);
+
+      } catch (error) {
+        console.error('Erro ao ler QR Code:', error);
+
+        if (error.response) {
+          // --- O Servidor Respondeu (Erro de API) ---
+          const { status, data } = error.response;
+
+
+          if (status === 401) {
+            setAlertMessage('Sessão Expirada. Por favor, faça login novamente.', '#dc143c');
+            // Certifique-se de que tem acesso à função logout aqui
+            if (typeof logout === 'function') {
+              logout();
+            }
+            return;
+          }
+
+          if (status === 404) {
+            setAlertMessage('Ingresso não encontrado.', '#dc143c');
+            return;
+          }
+
+          if (status === 400 || data?.errors || data?.message) {
+            let apiMessage = 'Dados inválidos.';
+
+            if (data?.errors) {
+              apiMessage = typeof data.errors === 'string' ? data.errors : JSON.stringify(data.errors);
+            } else if (data?.message) {
+              apiMessage = data.message;
+            }
+
+            setAlertMessage(apiMessage, '#dc143c');
+            return;
+          }
+
+          setAlertMessage(`Erro do servidor (${status}). Tente novamente.`, '#dc143c');
+
+        } else if (error.request) {
+          console.error('Erro de Rede:', error.request);
+          setAlertMessage('Sem conexão com a internet. Verifique sua rede.', '#dc143c');
+
+        } else {
+          // ---  Interno (Configuração) ---
+          console.error('Erro de Configuração:', error.message);
+          setAlertMessage('Ocorreu um erro interno ao processar o código.', '#dc143c');
+        }
+
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setShowQrcodereader(false);
+      setTicketCode(code);
+    }
   };
+
+
 
   const verifyTicketAssociation = async (eventkey) => {
     const bearerToken = userToken;
@@ -135,7 +205,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
     } catch (error) {
       console.error(error.response);
-      console.log('error by api: ' + error?.response?.data);
+      console.log('error by api: ', error?.response?.data);
       if (error?.response?.data?.errors) {
         setAlertMessage(error.response.data.errors, '#dc143c');
         return null;
@@ -189,9 +259,9 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         const status = error.response.status;
         const data = error.response.data;
 
-        if(status === 401){
-         setAlertMessage('Sessão Expirada: A sua sessão expirou. Por favor, faça login novamente.');
-          logout(); 
+        if (status === 401) {
+          setAlertMessage('Sessão Expirada: A sua sessão expirou. Por favor, faça login novamente.');
+          logout();
           return;
         }
 
@@ -209,19 +279,19 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
             : typeof errors === 'string'
               ? errors
               : JSON.stringify(errors);
-          
-         setAlertMessage('Erro de Validação', errorMessages || 'Dados inválidos.');
+
+          setAlertMessage('Erro de Validação', errorMessages || 'Dados inválidos.');
           return;
         }
 
-       setAlertMessage('Erro', `Erro inesperado do servidor (status ${status}). Tente novamente.`);
-        
+        setAlertMessage('Erro', `Erro inesperado do servidor (status ${status}). Tente novamente.`);
+
       } else if (error.request) {
         // --- 5. TRATAMENTO DE ERRO DE REDE ---
         // A requisição foi feita mas não houve resposta
         console.error('Erro de rede:', error.message);
-       setAlertMessage('Erro de Conexão', 'Verifique a sua internet e tente novamente.');
-      
+        setAlertMessage('Erro de Conexão', 'Verifique a sua internet e tente novamente.');
+
       } else {
         // Erro na configuração da requisição
         console.error('Erro de configuração:', error.message);
@@ -236,7 +306,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const hasTicketCodeRead = !!ticketCode;
   const hasAllDataToRegisterBracelet = selectedEvent && ticketCode;
 
-  console.log(user?.tickets)
 
   return (
     <View style={{ ...GStyles.view }}>
