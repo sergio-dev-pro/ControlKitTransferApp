@@ -1,7 +1,7 @@
 import { Button, Divider, Text, Badge } from '@rneui/themed';
 import React, { useContext, useState, useEffect } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { braceletRegister, hasBraceleteCode } from '../api/TicketApi';
+import { braceletRegister, getDeliveryByCode, hasBraceleteCode } from '../api/TicketApi';
 import Header from '../components/Header';
 import QrCodeReader from '../components/QrCodeReader';
 import { useAlert } from '../context/AlertContext';
@@ -74,7 +74,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
 
-    // Verifica se o modo de entrega está correto (sua lógica original)
     if (braceletDeliveryMode == 1) {
 
       setShowQrcodereader(false);
@@ -82,14 +81,28 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       try {
         setLoading(true);
 
-        const response = await getTicketDelivery(
+        const response = await getDeliveryByCode(
           selectedEventId,
           code,
           userToken,
-          'bracelet' // ou 'Kit', confirme o tipo correto
+          'bracelet'
         );
 
-        console.log('Sucesso:', response.data);
+        if (response.data.deliveredAt) {
+          setAlertMessage('QR Code já escaneado.', '#dc143c');
+          return;
+        }
+
+        if (!response || !response.data.day) {
+          setAlertMessage('QR CODE inválido ou não encontrado.', '#dc143c');
+          return;
+        }
+
+        if (response.data.day !== selectedEvent.day) {
+          setAlertMessage(`QR CODE escaneado pertence ao dia: ${response.data.day}.`, '#dc143c');
+          return
+        }
+
         setTicketCode(code);
 
       } catch (error) {
@@ -134,7 +147,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
           setAlertMessage('Sem conexão com a internet. Verifique sua rede.', '#dc143c');
 
         } else {
-          // ---  Interno (Configuração) ---
           console.error('Erro de Configuração:', error.message);
           setAlertMessage('Ocorreu um erro interno ao processar o código.', '#dc143c');
         }
@@ -147,8 +159,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       setTicketCode(code);
     }
   };
-
-
 
   const verifyTicketAssociation = async (eventkey) => {
     const bearerToken = userToken;
@@ -305,6 +315,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
   const hasTicketCodeRead = !!ticketCode;
   const hasAllDataToRegisterBracelet = selectedEvent && ticketCode;
+
+
 
 
   return (

@@ -132,7 +132,7 @@ function KitsDrawerScreen({ navigation }) {
 
       if (!ticket) {
         // Lança um erro manual para ser apanhado pelo catch se o objeto vier vazio
-        throw new Error("Ingresso não encontrado na resposta da API.");
+        throw new Error("Ingresso não encontrado.");
       }
 
       if (ticket.kitDeliveredAt) {
@@ -364,7 +364,7 @@ function KitsDrawerScreen({ navigation }) {
 
       if (codeIsValid) {
         setCurrentTicketCode(ticketCode);
-        addToArray(ticketCode, currentTicketId); // Chama a função 'addToArray' corrigida
+        addToArray(ticketCode, currentTicketId);
       }
     }
     catch (error) {
