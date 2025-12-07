@@ -197,7 +197,6 @@ function DeliverBraceletDrawerScreen({ navigation }) {
   };
 
   const handleUserFound = user => {
-    console.log('@@@@@@@@user.tickets =================>', user);
     if (user?.tickets) {
       setUserTickets(user.tickets);
       setUserDocument(user.id)

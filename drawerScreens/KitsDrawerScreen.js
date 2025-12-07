@@ -848,6 +848,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
   const [isValidBoolean, setIsValidBoolean] = useState(false);
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
+  const [reasonType, setReasonType] = useState(null);
 
   const handleUserFound = (user, searchedFor) => {
     console.log('@@@@@@@@user', user);
@@ -1161,7 +1162,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         isVisible={showModalOfReasonForKitDelivery}
         onCancel={clearState}
         onConfirm={reason => {
-          setReasonForKitDelivery(reason);
+          setReasonForKitDelivery(reason.reason);
+          setReasonType(reason.type)
           setShowModalOfReasonForKitDelivery(false);
         }}
       />
