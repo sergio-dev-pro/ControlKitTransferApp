@@ -853,8 +853,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
   const [reasonType, setReasonType] = useState(null);
 
+
   const handleUserFound = (user, searchedFor) => {
-    console.log('@@@@@@@@user', user);
     user && setUser(user);
   };
 
