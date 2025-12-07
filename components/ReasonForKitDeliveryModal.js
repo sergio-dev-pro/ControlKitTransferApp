@@ -1,84 +1,80 @@
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 import { Button, Input, Text } from '@rneui/themed';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Modal, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Platform } from 'react-native'; // Adicionei Platform
 import ReactNativeModal from 'react-native-modal';
-import { useAlert } from '../context/AlertContext';
-import { AuthContext } from '../context/AuthContext';
-import { cpfValidation, isValidEmail } from '../helpers/validation';
 import SelectModal from './SelectModal';
-
-const INPUT_VALUE_TYPE = {
-  email: 'email',
-  cpf: 'cpf',
-  passport: 'passport',
-};
 
 const ReasonForKitDeliveryModal = ({
   isVisible,
   onCancel,
   onConfirm,
 }) => {
-  const [inputValue, setInputValue] = useState();
-  const [invalidInputValue, setInvalidInputValue] = useState();
-  const setAlertMessage = useAlert();
-  const ref = useRef();
-  const isFocused = useIsFocused();
+  const [inputValue, setInputValue] = useState(''); 
+  const [invalidInputValue, setInvalidInputValue] = useState(null);
+  
+  // O setReasonType deve iniciar como null
   const [reasonType, setReasonType] = useState(null);
-  const [releaseReason, setReleaseReason] = useState(false)
+  const [releaseReason, setReleaseReason] = useState(false);
+
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    isFocused && ref.current && ref.current.focus();
-  }, [isFocused]);
+    if (!isVisible) {
+      setInputValue('');
+      setInvalidInputValue(null);
+      setReasonType(null);
+      setReleaseReason(false);
+    }
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (releaseReason && inputRef.current) {
+        setTimeout(() => {
+            try {
+                inputRef.current.focus();
+            } catch (e) { console.log(e) }
+        }, 300);
+    }
+  }, [releaseReason]);
 
   const validateInputValue = () => {
-    if (!inputValue)
-      return invalidInputValue ? setInvalidInputValue(null) : null;
-
-    const isValid = inputValue.length >= 8;
-
-    if (!isValid) {
-      return !invalidInputValue
-        ? setInvalidInputValue('Deve ter no mínimo 8 caracteres.')
-        : null;
+    if (!inputValue || inputValue.trim() === '') {
+        setInvalidInputValue('Campo obrigatório.');
+        return false;
     }
-
-    invalidInputValue && setInvalidInputValue(null);
-
-    return isValid;
+    if (inputValue.length < 8) {
+        setInvalidInputValue('Deve ter no mínimo 8 caracteres.');
+        return false;
+    }
+    setInvalidInputValue(null);
+    return true;
   };
 
   const handleConfirm = () => {
-    const isValidReason = validateInputValue();
-    if (!isValidReason) return;
-
+    if (!validateInputValue()) return;
     onConfirm({ reason: inputValue, type: reasonType });
-  }
-
-  useFocusEffect(
-      React.useCallback(() => {
-        setReleaseReason(false)
-        setReasonType(null)
-      }, [])
-    );
+  };
 
   return (
     <ReactNativeModal
       isVisible={isVisible}
       backdropOpacity={0.3}
       style={{ alignItems: 'center' }}
-      onBackdropPress={onCancel}>
+      onBackdropPress={onCancel}
+      avoidKeyboard={true}
+      panResponderThreshold={Platform.OS === 'android' ? 4 : 10}
+    >
       <View
         style={{
           backgroundColor: 'white',
           borderRadius: 10,
           padding: 20,
-          height: 'auto',
-          width: `95%`,
+          width: '95%',
         }}>
 
         <SelectModal
-          label={`Tipo do motivo da reetrega.`}
+          label="Tipo do motivo da reentrega"
           placeholder="Selecione o tipo"
           items={[
             { key: 'Exchange', value: 'Troca de ingresso' },
@@ -86,32 +82,44 @@ const ReasonForKitDeliveryModal = ({
           ]}
           value={reasonType}
           setValue={(selectedValue) => {
-            setReasonType(selectedValue)
-            setReleaseReason(true)
-          }
-          }
+            setReasonType(selectedValue);
+            setReleaseReason(true);
+          }}
         />
 
         {releaseReason && (
-          <>
-            <Text style={{ marginBottom: 10, fontSize: 19, fontWeight: 'bold', textAlign: 'center' }}>
+          <View style={{ marginTop: 15 }}>
+            <Text style={{ marginBottom: 10, fontSize: 18, fontWeight: 'bold', textAlign: 'center' }}>
               Por qual motivo o Kit deve ser entregue novamente?
             </Text>
+            
             <Input
-              ref={ref}
+              ref={inputRef}
               value={inputValue}
-              onChangeText={value => setInputValue(value)}
+              onChangeText={(text) => {
+                  setInputValue(text);
+                  if (invalidInputValue) setInvalidInputValue(null);
+              }}
               errorMessage={invalidInputValue}
-              placeholder='Digite aqui'
+              placeholder="Digite a justificativa aqui"
+              multiline={true} 
+              numberOfLines={2} 
             />
+
             <View
               style={{
                 width: '100%',
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
+                marginTop: 10
               }}>
-              <Button title="Cancelar" size="lg" type="clear" onPress={onCancel} />
+              <Button 
+                title="Cancelar" 
+                size="lg" 
+                type="clear" 
+                onPress={onCancel} 
+              />
               <Button
                 type="solid"
                 size="lg"
@@ -120,7 +128,7 @@ const ReasonForKitDeliveryModal = ({
                 onPress={handleConfirm}
               />
             </View>
-          </>
+          </View>
         )}
 
       </View>

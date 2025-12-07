@@ -81,6 +81,8 @@ function KitsDrawerScreen({ navigation }) {
   // ✅ --- ESTADOS PARA A LÓGICA DO "FLUXO 1" (Leitura Direta) ---
   const [kitCodesRead, setKitCodesRead] = useState({}); // Substitui 'kitCodes'
   const [nextTicketToScan, setNextTicketToScan] = useState(null); // Para o destaque verde
+  const [reasonType, setReasonType] = useState(null);
+
 
   useEffect(() => {
     (async () => {
@@ -247,7 +249,7 @@ function KitsDrawerScreen({ navigation }) {
           }
           if (reasonForKitDelivery) {
             formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
-            formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
+            formData.append(`Tickets[${index}].ReasonType`, reasonType);
           }
         });
         formData.append('SignatureDocumentFile', {
@@ -406,9 +408,10 @@ function KitsDrawerScreen({ navigation }) {
           <>
             <ReasonForKitDeliveryModal
               isVisible={showModalOfReasonForKitDelivery}
-              onCancel={cancel}
+              onCancel={clearState}
               onConfirm={reason => {
-                setReasonForKitDelivery(reason);
+                setReasonForKitDelivery(reason.reason);
+                setReasonType(reason.type)
                 setShowModalOfReasonForKitDelivery(false);
               }}
             />
@@ -875,11 +878,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setIncompleteRegistrationReason()
   };
 
-  // ✅ FUNÇÃO CORRIGIDA: Envia os dados usando 'shirtCodesRead'
   const registerDelivery = async () => {
     console.log('selectedTicketCodes: ' + selectedTicketCodes)
     if (mustSelectShirtSize) {
-      // Verifica se foi selecionado o tamanho da camisa para cada ingresso
       let wasSelected = true;
       selectedTicketCodes.forEach(code => {
         if (!ticketCodeAndShirtSize[code]) wasSelected = false;
@@ -907,7 +908,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
         if (hasKitAlreadyDelivered) {
           formData.append(`Tickets[${index}].Reason`, reasonForKitDelivery);
-          formData.append(`Tickets[${index}].ReasonType`, 'Exchange');
+          formData.append(`Tickets[${index}].ReasonType`, reasonType);
         }
       });
 
