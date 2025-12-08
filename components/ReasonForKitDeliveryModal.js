@@ -89,7 +89,7 @@ const ReasonForKitDeliveryModal = ({
         {releaseReason && (
           <View style={{ marginTop: 15, maxHeight: '80%' }}>
             <Text style={{ marginBottom: 10, fontSize: 18, fontWeight: 'bold', textAlign: 'center' }}>
-              Por qual motivo o Kit deve ser entregue novamente?
+              Por qual motivo deve ser entregue novamente?
             </Text>
             
             <Input

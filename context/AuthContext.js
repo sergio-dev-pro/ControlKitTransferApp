@@ -130,6 +130,7 @@ export function AuthProvider({ children }) {
         companies: companies,
         kitDeliveryMode: event?.kitDeliveryMode,
         braceletDeliveryMode: event?.braceletDeliveryMode,
+        braceletDeliveryRequireSignature: event?.braceletDeliveryRequireSignature,
         canManageBraceletDelivery: event?.canManageBraceletDelivery
       });
     } else {
@@ -138,7 +139,7 @@ export function AuthProvider({ children }) {
     setIsAuthenticating(false);
   };
 
-  const setSelectedEventId = async (id, kitdeliveryMode, canManageBraceletDelivery, braceletDeliveryMode) => {
+  const setSelectedEventId = async (id, kitdeliveryMode, canManageBraceletDelivery, braceletDeliveryMode, braceletDeliveryRequireSignature) => {
     try {
       setIsSearchingEventSettings(true);
       //const { data: requiredFieldsForUserRegistration } = await getEventRequiredFields(id);
@@ -149,7 +150,8 @@ export function AuthProvider({ children }) {
           id: id.toString(),
           kitDeliveryMode: kitdeliveryMode,
           braceletDeliveryMode: braceletDeliveryMode,
-          canManageBraceletDelivery: canManageBraceletDelivery
+          canManageBraceletDelivery: canManageBraceletDelivery,
+          braceletDeliveryRequireSignature: braceletDeliveryRequireSignature
         }),
       );
       setIsSearchingEventSettings(false);
@@ -158,7 +160,8 @@ export function AuthProvider({ children }) {
         selectedEventId: id,
         kitDeliveryMode: kitdeliveryMode,
         braceletDeliveryMode: braceletDeliveryMode,
-        canManageBraceletDelivery: canManageBraceletDelivery
+        canManageBraceletDelivery: canManageBraceletDelivery,
+        braceletDeliveryRequireSignature: braceletDeliveryRequireSignature
         //requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
       }));
     } catch (e) {
