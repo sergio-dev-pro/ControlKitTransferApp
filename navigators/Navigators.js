@@ -106,12 +106,12 @@ function Navigators() {
           {eventPermissions.includes("page.user.update.email") && (
             <Drawer.Screen name="Alterar e-mail" component={ChangeEmail} />
           )}
-          {eventPermissions.includes("page.delivery.bracelet") && canManageBraceletDelivery && (
+          {/* {eventPermissions.includes("page.delivery.bracelet") && canManageBraceletDelivery && (
             <Drawer.Screen
               name="Checkin"
               component={DeliverBraceletDrawerScreen}
             />
-          )}
+          )} */}
           {eventPermissions.includes("page.ticket.add") && (
             <Drawer.Screen name="Gerar ingresso" component={NewFastTicket} />
           )}

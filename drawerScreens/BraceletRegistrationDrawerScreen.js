@@ -103,6 +103,11 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
           return
         }
 
+        if (response.data.sector !== selectedEvent.sector) {
+          setAlertMessage(`QR CODE escaneado pertence ao setor: ${response.data.sector}.`, '#dc143c');
+          return
+        }
+
         setTicketCode(code);
 
       } catch (error) {
@@ -215,8 +220,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
     } catch (error) {
       console.error(error.response);
-      console.log('error by api: ', error?.response?.data);
-      if (error?.response?.data?.errors) {
+      console.log('error by api: ', error?.response?.message);
+      if (error?.response?.data?.message) {
         setAlertMessage(error.response.data.errors, '#dc143c');
         return null;
       }

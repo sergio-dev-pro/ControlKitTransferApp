@@ -188,11 +188,7 @@ function KitsDrawerScreen({ navigation }) {
         setAlertMessage('Sem conexão com a internet.', '#dc143c');
 
       } else {
-        console.error('Erro de Configuração:', error.message);
-        const msg = error.message === "Ingresso não encontrado na resposta da API."
-          ? error.message
-          : 'Ocorreu um erro ao processar o código.';
-        setAlertMessage(msg, '#dc143c');
+        setAlertMessage("Ingresso não encontrado", '#dc143c');
       }
 
       return null;
@@ -408,7 +404,7 @@ function KitsDrawerScreen({ navigation }) {
           <>
             <ReasonForKitDeliveryModal
               isVisible={showModalOfReasonForKitDelivery}
-              onCancel={clearState}
+              onCancel={cancel}
               onConfirm={reason => {
                 setReasonForKitDelivery(reason.reason);
                 setReasonType(reason.type)
@@ -462,24 +458,8 @@ function KitsDrawerScreen({ navigation }) {
                       ]}
                     >
                       <Text h4 h4Style={styles.cardTitle}>
-                        {ticketFound.name}
+                        {ticketFound?.day} - {ticketFound?.sector}
                       </Text>
-
-                      {/* --- Detalhes do Bilhete (Dia, Documento, Setor) --- */}
-                      <View
-                        style={{
-                          width: '100%',
-                          flexDirection: IS_MOBILE ? 'column' : 'row',
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap',
-                          marginBottom: 8,
-                        }}
-                      >
-                        <Text h4>Dia:</Text>
-                        <View>
-                          <Text style={{ fontSize: 18 }}>{ticketFound?.day}</Text>
-                        </View>
-                      </View>
                       {ticketFound?.document && (
                         <View
                           style={{
@@ -501,18 +481,6 @@ function KitsDrawerScreen({ navigation }) {
                               return document;
                             })()}
                           </Text>
-                        </View>
-                      )}
-                      {ticketFound?.sector && (
-                        <View
-                          style={{
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            marginBottom: 8,
-                          }}
-                        >
-                          <Text h4>Setor:</Text>
-                          <Text style={{ fontSize: 18 }}>{ticketFound.sector}</Text>
                         </View>
                       )}
                       {ticketFound?.shirtSize && (
