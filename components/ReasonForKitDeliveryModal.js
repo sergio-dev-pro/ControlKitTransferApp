@@ -60,7 +60,7 @@ const ReasonForKitDeliveryModal = ({
     <ReactNativeModal
       isVisible={isVisible}
       backdropOpacity={0.3}
-      style={{ alignItems: 'center' }}
+      style={{ alignItems: 'center' , width: '80%'}}
       onBackdropPress={onCancel}
       avoidKeyboard={true}
       panResponderThreshold={Platform.OS === 'android' ? 4 : 10}
