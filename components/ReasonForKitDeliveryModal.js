@@ -74,11 +74,11 @@ const ReasonForKitDeliveryModal = ({
         }}>
 
         <SelectModal
-          label="Tipo do motivo da reentrega"
+          label="Tipo da reentrega"
           placeholder="Selecione o tipo"
           items={[
-            { key: 'Exchange', value: 'Troca de ingresso' },
-            { key: 'Loss', value: 'Perda do ingresso' },
+            { key: 'Exchange', value: 'Troca' },
+            { key: 'Loss', value: 'Perda' },
           ]}
           value={reasonType}
           setValue={(selectedValue) => {
