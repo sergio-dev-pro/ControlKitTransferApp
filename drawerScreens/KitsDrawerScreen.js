@@ -148,7 +148,7 @@ function KitsDrawerScreen({ navigation }) {
       setTicketFounds(prevTicketFounds => {
         const newTickets = [...prevTicketFounds, newTicketFound];
         // Define este novo bilhete como o próximo a escanear (se for o primeiro)
-        if (newTickets.length === 1) {
+        if (newTickets.length >= 1) {
           setNextTicketToScan(newTicketFound.ticketId);
         }
         return newTickets;
@@ -448,6 +448,7 @@ function KitsDrawerScreen({ navigation }) {
                 renderItem={({ item: ticketFound }) => {
                   // A lógica de destaque ("fundo verde")
                   // 'nextTicketToScan' é o estado que controla quem é o próximo
+                  console.log('ticket='+ JSON.stringify(ticketFound))
                   const isHighlighted = nextTicketToScan === ticketFound.ticketId;
 
                   return (
