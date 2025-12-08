@@ -60,17 +60,16 @@ const ReasonForKitDeliveryModal = ({
     <ReactNativeModal
       isVisible={isVisible}
       backdropOpacity={0.3}
-      style={{ alignItems: 'center' , width: '80%'}}
+      style={{ alignItems: 'center' , width: '100%'}}
       onBackdropPress={onCancel}
       avoidKeyboard={true}
-      panResponderThreshold={Platform.OS === 'android' ? 4 : 10}
+      panResponderThreshold={Platform.OS === 'android' ? 5 : 10}
     >
       <View
         style={{
           backgroundColor: 'white',
           borderRadius: 10,
-          padding: 20,
-          width: '95%',
+          padding: 15,
         }}>
 
         <SelectModal
@@ -88,7 +87,7 @@ const ReasonForKitDeliveryModal = ({
         />
 
         {releaseReason && (
-          <View style={{ marginTop: 15 }}>
+          <View style={{ marginTop: 15, maxHeight: '80%' }}>
             <Text style={{ marginBottom: 10, fontSize: 18, fontWeight: 'bold', textAlign: 'center' }}>
               Por qual motivo o Kit deve ser entregue novamente?
             </Text>
@@ -108,7 +107,6 @@ const ReasonForKitDeliveryModal = ({
 
             <View
               style={{
-                width: '100%',
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
