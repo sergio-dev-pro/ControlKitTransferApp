@@ -366,7 +366,7 @@ function KitsDrawerScreen({ navigation }) {
       }
     }
     catch (error) {
-      console.log(error)
+      console.log('errooor='+error)
     } finally {
       setLoading(false);
       setShowQrCodeCamisa(false);
