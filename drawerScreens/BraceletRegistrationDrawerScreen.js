@@ -77,8 +77,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [nextTicketToScan, setNextTicketToScan] = useState(null); // Para o destaque verde
   const [reasonType, setReasonType] = useState(null);
 
-  console.log(authContext.braceletDeliveryRequireSignature)
-
   useEffect(() => {
     (async () => {
       try {
