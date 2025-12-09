@@ -77,6 +77,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [nextTicketToScan, setNextTicketToScan] = useState(null); // Para o destaque verde
   const [reasonType, setReasonType] = useState(null);
 
+  console.log(authContext.braceletDeliveryRequireSignature)
 
   useEffect(() => {
     (async () => {
@@ -131,7 +132,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         throw new Error("Ingresso não encontrado.");
       }
 
-      if (ticket.kitDeliveredAt) {
+      if (ticket.braceletDeliveredAt) {
         setHasKitAlreadyDelivered(true);
         setShowModalOfReasonForKitDelivery(true);
       }
@@ -226,16 +227,20 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
             formData.append(`Tickets[${index}].ReasonType`, reasonType);
           }
         });
-        formData.append('SignatureDocumentFile', {
-          uri: documentImg,
-          type: 'image/jpg',
-          name: 'documentImage.jpg',
-        });
-        formData.append('SignatureFile', {
-          uri: 'data:image/png;base64,' + signature?.encoded + ';',
-          type: 'image/png',
-          name: 'signatureImage.png',
-        });
+
+        if (completeDelivery) {
+          formData.append('SignatureDocumentFile', {
+            uri: documentImg,
+            type: 'image/jpg',
+            name: 'documentImage.jpg',
+          });
+          formData.append('SignatureFile', {
+            uri: 'data:image/png;base64,' + signature?.encoded + ';',
+            type: 'image/png',
+            name: 'signatureImage.png',
+          });
+        }
+
         formData.append('EventId', authContext.selectedEventId);
         formData.append('Type', 'Bracelet');
 
@@ -245,8 +250,11 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         setKitCodesRead({});
         setShowResponseCamisa(null);
       } catch (error) {
+
+        const response = error.response?.data?.message;
+        console.error(JSON.stringify(error.response?.data, null, 2));
         console.error('Erro ao registrar a assinatura do kit:', error);
-        setAlertMessage('Entrega não registrada! QRCODE NAO FOI ENTREGUE!');
+        setAlertMessage(response, '#dc143c');
       }
     } catch (error) {
       console.error('Erro geral no registro da entrega:', error);
@@ -340,7 +348,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       }
     }
     catch (error) {
-      console.log('errooor='+error)
+      console.log('errooor=' + error)
     } finally {
       setLoading(false);
       setShowQrCodeCamisa(false);
@@ -357,6 +365,13 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     });
     setNextTicketToScan(ticketId);
   };
+
+  const completeDelivery = authContext.braceletDeliveryRequireSignature
+
+  const allCodesScanned = ticketFounds?.length === Object.keys(kitCodesRead || {}).length
+
+  const isDocumentationValid = !completeDelivery || (documentImg && signature);
+
 
 
   return (
@@ -422,7 +437,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
                 renderItem={({ item: ticketFound }) => {
                   // A lógica de destaque ("fundo verde")
                   // 'nextTicketToScan' é o estado que controla quem é o próximo
-                  console.log('ticket='+ JSON.stringify(ticketFound))
+                  //                  console.log('ticket=' + JSON.stringify(ticketFound))
                   const isHighlighted = nextTicketToScan === ticketFound.ticketId;
 
                   return (
@@ -467,13 +482,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
                           <Text style={styles.kitCode}>
                             {kitCodesRead[ticketFound.ticketId].code}
                           </Text>
-                          <Button
-                            title="Ler Novamente"
-                            type="clear"
-                            titleStyle={styles.editButtonTitle}
-                            containerStyle={styles.editButton}
-                            onPress={() => editKitCode(ticketFound.ticketId)} // Chama a função de editar
-                          />
+                          <Button containerStyle={{ margin: 10 }} onPress={() => editKitCode(ticketFound.ticketId)}>Editar</Button>
                         </View>
                       )}
                     </Card>
@@ -483,115 +492,55 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
               />
               <Divider style={{ marginBottom: 8 }} />
             </View>
-            <Card
-              containerStyle={{ backgroundColor: 'ghostwhite', marginTop: 0 }}>
-              {!!documentImg ? (
-                <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                  <Image
-                    style={{ height: 120, width: 120, marginRight: 8 }}
-                    source={{
-                      uri:
-                        Platform.OS === 'android'
-                          ? 'file://' + documentImg
-                          : documentImg,
-                    }}
-                  />
-                  {!!signature && (
-                    <View>
+
+            {completeDelivery && (
+              <Card
+                containerStyle={{ backgroundColor: 'ghostwhite', marginTop: 0 }}>
+                {!!documentImg && (
+
+                  <>
+                    <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
                       <Image
                         style={{ height: 120, width: 120, marginRight: 8 }}
                         source={{
                           uri:
                             Platform.OS === 'android'
-                              ? 'data:image/png;base64,' +
-                              signature?.encoded +
-                              ';'
-                              : signature.pathName,
+                              ? 'file://' + documentImg
+                              : documentImg,
                         }}
                       />
-                      <Text
-                        h5
-                        style={{
-                          color: THEME.cor.primary,
-                          width: '100%',
-                          textAlign: 'center',
-                        }}>
-                        Assinado
-                      </Text>
+                      {!!signature && (
+                        <View>
+                          <Image
+                            style={{ height: 120, width: 120, marginRight: 8 }}
+                            source={{
+                              uri:
+                                Platform.OS === 'android'
+                                  ? 'data:image/png;base64,' +
+                                  signature?.encoded +
+                                  ';'
+                                  : signature.pathName,
+                            }}
+                          />
+                          <Text
+                            h5
+                            style={{
+                              color: THEME.cor.primary,
+                              width: '100%',
+                              textAlign: 'center',
+                            }}>
+                            Assinado
+                          </Text>
+                        </View>
+                      )}
                     </View>
-                  )}
-                </View>
-              ) : (
-                <>
-                  <TakePictureModal
-                    isVisible={isVisible}
-                    cancelPhoto={() => {
-                      setIsVisible(false);
-                    }}
-                    savePhoto={picture => {
-                      setIsVisible(false);
-                      setDocumentImg(picture);
-                    }}
-                  />
-                  {/* <Text h5 h5Style={{padding: 8}}>
-                    Confira os ingressos antes de continuar.
-                  </Text> */}
+                  </>
 
-                  {eventAllowed && !documentImg && !enableTakeDocumentPicture && (
-                    <View style={{ marginVertical: 10 }}>
-                      <Button
-                        type="outline"
-                        onPress={() => {
-                          setShowQrCodeCamisa(true);
-                        }}
-                      >
-                        Ler Código Camisa
-                      </Button>
-                    </View>
-                  )}
+                )}
 
-                  {enableTakeDocumentPicture && (
-                    <View style={{ marginVertical: 10 }}>
-                      <Button
-                        type="outline"
-                        onPress={() => {
-                          setIsVisible(true);
-                        }}>
-                        Tire uma foto do documento
-                      </Button>
-                    </View>
-                  )}
-
-                </>
-              )}
-
-              {!!signature ? (
-                <>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'center',
-                      // backgroundColor: THEME.cor.whitesmoke,
-                      padding: 8,
-                      marginTop: 20,
-                    }}>
-                    <Button
-                      type="outline"
-                      containerStyle={{ marginRight: 20 }}
-                      onPress={cancel}>
-                      Cancelar
-                    </Button>
-                    <Button
-                      containerStyle={{ flex: 1 }}
-                      onPress={() => setIsConfirmDelivery(true)}>
-                      Entregar
-                    </Button>
-                  </View>
-                </>
-              ) : (
-                !!documentImg && (
+                {(!!documentImg && completeDelivery && !signature && (
                   <>
-                    <Text h4 h4Style={{ fontSize: 22, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 20, marginBottom: 8, textAlign: 'center', fontWeight: 'bold' }}>
                       Assinatura do proprietário do ingresso
                     </Text>
                     <Button
@@ -603,8 +552,55 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
                     </Button>
                   </>
                 )
-              )}
-            </Card>
+                )}
+
+                {enableTakeDocumentPicture && completeDelivery && allCodesScanned && !documentImg && (
+                  <View style={{ marginVertical: 10 }}>
+                    <Button
+                      type="outline"
+                      onPress={() => {
+                        setIsVisible(true);
+                      }}>
+                      Tire uma foto do documento
+                    </Button>
+                  </View>
+                )}
+              </Card>
+            )}
+
+
+            <Text style={{ marginTop: 10, fontSize: 15, fontWeight: '900', textAlign: 'center', textDecorationLine: 'underline' }} >
+              Quantidade de qrcodes escaneados {Object.keys(kitCodesRead || {}).length} / {ticketFounds?.length}
+            </Text>
+
+
+
+            {eventAllowed && !enableTakeDocumentPicture && !allCodesScanned && (
+              <View style={{ marginVertical: 10 }}>
+                <Button
+                  type="outline"
+                  onPress={() => {
+                    setShowQrCodeCamisa(true);
+                  }}
+                >
+                  Ler Código da pulseira
+                </Button>
+              </View>
+            )}
+
+
+
+            <TakePictureModal
+              isVisible={isVisible}
+              cancelPhoto={() => {
+                setIsVisible(false);
+              }}
+              savePhoto={picture => {
+                setIsVisible(false);
+                setDocumentImg(picture);
+              }}
+            />
+
             <Signature
               show={isShow}
               onNotShow={() => setIsShow(false)}
@@ -613,6 +609,32 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
                 setSignature(data);
               }}
             />
+
+
+            {allCodesScanned && isDocumentationValid && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  // backgroundColor: THEME.cor.whitesmoke,
+                  padding: 8,
+                  marginTop: 20,
+                }}>
+                <Button
+                  type="outline"
+                  containerStyle={{ marginRight: 20 }}
+                  onPress={cancel}>
+                  Cancelar
+                </Button>
+                <Button
+                  containerStyle={{ flex: 1 }}
+                  onPress={() => setIsConfirmDelivery(true)}>
+                  Entregar
+                </Button>
+              </View>
+            )}
+
+
             <ReactNativeModal
               isVisible={isConfirmDelivery}
               onBackdropPress={() => setIsConfirmDelivery(false)}>
@@ -815,16 +837,20 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         }
       });
 
-      formData.append('SignatureDocumentFile', {
-        uri: documentImg,
-        type: 'image/jpg',
-        name: 'documentImage.jpg',
-      });
-      formData.append('SignatureFile', {
-        uri: 'data:image/png;base64,' + signature?.encoded + ';',
-        type: 'image/png',
-        name: 'signatureImage.png',
-      });
+
+      if (completeDelivery) {
+        formData.append('SignatureDocumentFile', {
+          uri: documentImg,
+          type: 'image/jpg',
+          name: 'documentImage.jpg',
+        });
+        formData.append('SignatureFile', {
+          uri: 'data:image/png;base64,' + signature?.encoded + ';',
+          type: 'image/png',
+          name: 'signatureImage.png',
+        });
+      }
+
       formData.append('EventId', authContext.selectedEventId);
       formData.append('Type', 'Bracelet');
 
@@ -855,7 +881,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         }
       }
 
-      console.log('Mensagem de erro extraída:', errorMessage);
+      console.error('Erro:', errorMessage);
 
       setAlertMessage(errorMessage, '#dc143c');
 
@@ -883,9 +909,11 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       try {
         const selectedTickets = user.tickets.filter(ticket => ticketIds.includes(ticket.id));
 
+        console.log('selectedTickets: ', selectedTickets)
+
         for (let i = 0; i < selectedTickets.length; i++) {
           const ticket = selectedTickets[i];
-          if (ticket.kitDeliveredAt) {
+          if (ticket.braceletDeliveredAt) {
             hasKitDelivered = true;
             break;
           }
@@ -951,7 +979,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     const currentTicket = user.tickets.find(ticket => ticket.id == currentTicketId);
 
     try {
-      const deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 1);
+      const deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 2);
 
       console.log('deliveryItemResponse.data.day = ' + deliveryItemResponse.data?.day);
 
@@ -1039,6 +1067,11 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     });
   };
 
+  const completeDelivery = authContext.braceletDeliveryRequireSignature
+
+  const allCodesScanned = Object.keys(shirtCodesRead)?.length === selectedTicketCodes?.length
+
+  const isDocumentationValid = !completeDelivery || (documentImg && signature);
 
   return (
     <View style={{ flex: 1 }}>
@@ -1062,6 +1095,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           isConfirming={isConfirmingTheTicketCodeSelection}
         />
       )}
+
       <ReasonForKitDeliveryModal
         isVisible={showModalOfReasonForKitDelivery}
         onCancel={clearState}
@@ -1071,6 +1105,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           setShowModalOfReasonForKitDelivery(false);
         }}
       />
+
       <Button
         onPress={() => {
           onCancelDeliveryByCPF();
@@ -1147,26 +1182,12 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
             }}
           />
 
-          {eventAllowed && !documentImg && (
-            <Text style={{ marginTop: 10, fontSize: 15, fontWeight: '900', textAlign: 'center', textDecorationLine: 'underline' }} >
-              Quantidade de qrcodes escaneados {Object.keys(shirtCodesRead).length} / {selectedTicketCodes.length}
-            </Text>
-          )}
+          <Text style={{ marginTop: 10, fontSize: 15, fontWeight: '900', textAlign: 'center', textDecorationLine: 'underline' }} >
+            Quantidade de qrcodes escaneados {Object.keys(shirtCodesRead)?.length} / {selectedTicketCodes?.length}
+          </Text>
 
-          {eventAllowed && !documentImg && !enableTakeDocumentPicture && (
-            <View style={{ marginVertical: 10 }}>
-              <Button
-                type="outline"
-                onPress={() => {
-                  setShowQrCodeCamisa(true);
-                }}
-              >
-                Ler Código da pulseira
-              </Button>
-            </View>
-          )}
 
-          {enableTakeDocumentPicture && (
+          {enableTakeDocumentPicture && completeDelivery && (
             <Button
               type="outline"
               containerStyle={{ paddingTop: 10 }}
@@ -1216,7 +1237,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           </View>
         </Card>
       )}
-      {user && selectedTicketCodes && documentImg && !signature && (
+      {user && selectedTicketCodes && documentImg && !signature && completeDelivery && (
         <>
           <Text h5 style={{ fontSize: 18, marginBottom: 8 }}>
             Colete a assinatura do proprietário do ingresso
@@ -1238,7 +1259,21 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
           />
         </>
       )}
-      {user && selectedTicketCodes && documentImg && signature && (
+
+      {!allCodesScanned && (
+        <View style={{ marginVertical: 10 }}>
+          <Button
+            type="outline"
+            onPress={() => {
+              setShowQrCodeCamisa(true);
+            }}
+          >
+            Ler Código da pulseira
+          </Button>
+        </View>
+      )}
+
+      {user && selectedTicketCodes && allCodesScanned && isDocumentationValid && (
         <Button
           containerStyle={{ marginTop: 10 }}
           onPress={() => setIsConfirmDelivery(true)}>
@@ -1465,7 +1500,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {[ticket.sector || '', ticket.day || '', ticket.kitDeliveredAt ? "ENTREGUE" : null]
+                {[ticket.sector || '', ticket.day || '', ticket.braceletDeliveredAt ? "ENTREGUE" : null]
                   .filter(Boolean)
                   .join(' - ')}
               </Text>
@@ -1522,7 +1557,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   kitInfoContainer: {
-    alignItems: 'center',
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
@@ -1530,6 +1564,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   kitLabel: {
+    textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 14,
     color: '#555',
@@ -1539,11 +1574,5 @@ const styles = StyleSheet.create({
     color: '#000',
     marginBottom: 10,
   },
-  editButton: {
-    marginTop: 5,
-  },
-  editButtonTitle: {
-    color: THEME.cor.primary,
-    fontSize: 14,
-  },
+
 });
