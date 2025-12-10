@@ -1,6 +1,16 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
 import BASE_URL_V2 from '../constants/api2';
+import { getAndroidId } from 'react-native-device-info';
+
+let deviceId = null;
+
+const getDeviceId = async () => {
+  if (!deviceId) {
+    deviceId = await getAndroidId();
+  }
+  return deviceId;
+};
 
 export const ticketOwnerDocumentRegistration = (token, formData) => {
   return axios({

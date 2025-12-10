@@ -1,11 +1,13 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL_V2 } from '../constants/api2';
+import { getAndroidId } from 'react-native-device-info';
 
 // Instância global da API
 export const api = axios.create({
   baseURL: BASE_URL_V2,
-  headers: { Accept: 'application/json' },
+  headers: { Accept: 'application/json', 'X-Device-Id': await getAndroidId() },
+  
 });
 
 /**

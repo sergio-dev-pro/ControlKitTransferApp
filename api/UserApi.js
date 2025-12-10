@@ -1,10 +1,19 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
-import { getModel } from 'react-native-device-info';
+import { getModel, getAndroidId } from 'react-native-device-info';
 import { Alert } from 'react-native';
 import BASE_URL_V2 from '../constants/api2';
 import { api } from './InterceptorApi';
 
+
+let deviceId = null;
+
+const getDeviceId = async () => {
+  if (!deviceId) {
+    deviceId = await getAndroidId();
+  }
+  return deviceId;
+};
 
 export const getUserByCpf = async (cpf, eventId) =>
   axios({
@@ -37,6 +46,7 @@ export const refreshAccessToken = async () => {
     method: 'POST',
     headers: {
       Accept: 'application/json',
+      'X-Device-Id': await getDeviceId()
     },
   });
 
@@ -71,6 +81,7 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Device-Id': await getDeviceId()
       },
     });
     return response.data;
@@ -85,6 +96,7 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
           headers: {
             Accept: 'application/json',
             Authorization: `Bearer ${tokens.accessToken}`,
+            'X-Device-Id': await getDeviceId()
           },
         });
         var result = retryResponse.data;
@@ -116,7 +128,8 @@ export const getUserByEmail = async (email, eventId, token) =>
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      Authorization: 'Bearer ' + token
+      Authorization: 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
     },
   });
 
@@ -153,6 +166,7 @@ export const saveUserPhotoAgain = async (formData, token) => {
       Accept: "application/json",
       "Content-Type": "multipart/form-data",
       Authorization: "Bearer " + token,
+      'X-Device-Id': await getDeviceId()
     },
   });
 
@@ -168,6 +182,7 @@ export const completeUserRegister = async (formData, token) => {
       Accept: "application/json",
       "Content-Type": "multipart/form-data",
       Authorization: "Bearer " + token,
+      'X-Device-Id': await getDeviceId()
     },
   });
 
@@ -183,6 +198,7 @@ export const guestPreRegister = async formData => {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'multipart/form-data',
+        'X-Device-Id': await getDeviceId()
       },
     });
     return response?.data;
@@ -239,6 +255,7 @@ export const updateEmail = async (data, userToken) => {
     headers: {
       Accept: 'application/json',
       Authorization: 'Bearer ' + userToken,
+      'X-Device-Id': await getDeviceId()
     },
   });
 };
@@ -253,6 +270,7 @@ export const completeFastTicketRegister = async (formData, userToken) => {
     headers: {
       'Content-Type': 'multipart/form-data',
       Authorization: `Bearer ${userToken}` ,
+      'X-Device-Id': await getDeviceId()
     },
   });
   console.log('response returned=' + JSON.stringify(response.data));
@@ -266,7 +284,8 @@ export const completeManualRegisterByTickets = async (data, userToken) => {
     data,
     headers: {
       Accept: 'application/json',
-      Authorization: 'Bearer ' + userToken
+      Authorization: 'Bearer ' + userToken,
+      'X-Device-Id': await getDeviceId()
     },
   });
 };

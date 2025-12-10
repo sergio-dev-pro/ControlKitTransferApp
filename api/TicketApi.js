@@ -1,7 +1,17 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
 import BASE_URL_V2 from '../constants/api2';
+import { getAndroidId } from 'react-native-device-info';
 
+
+let deviceId = null;
+
+const getDeviceId = async () => {
+  if (!deviceId) {
+    deviceId = await getAndroidId();
+  }
+  return deviceId;
+};
 
 export const fetchTickets = async (deviceId, eventId, userToken) =>
   axios({
@@ -36,6 +46,7 @@ export const fetchTickets = async (deviceId, eventId, userToken) =>
         Accept: 'application/json',
         'Content-Type': 'application/json-patch+json',
         Authorization: 'Bearer ' + token,
+        'X-Device-Id': await getDeviceId()
       },
     });
   };
@@ -48,6 +59,7 @@ export const fetchTickets = async (deviceId, eventId, userToken) =>
         Accept: 'application/json',
         'Content-Type': 'application/json-patch+json',
         Authorization: 'Bearer ' + token,
+        'X-Device-Id': await getDeviceId()
       },
     });
   };
@@ -64,6 +76,7 @@ export const registerBraceletDelivery = async (token, formData) => {
       Accept: 'text/plain',
       'Content-Type': 'multipart/form-data',
       Authorization: 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
     },
   });
 
@@ -78,6 +91,7 @@ export const braceletRegister = async (operatorToken, code, reason, accessKey, e
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
       Authorization: 'Bearer ' + operatorToken,
+      'X-Device-Id': await getDeviceId()
     },
   });
 };
@@ -91,6 +105,7 @@ export const hasBraceleteCode = async (userToken, accessKey, eventId) => {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${userToken}`,
+        'X-Device-Id': await getDeviceId()
       },
 
     });
@@ -101,5 +116,4 @@ export const hasBraceleteCode = async (userToken, accessKey, eventId) => {
     console.error('Erro ao verificar o código da pulseira:', error);
     throw error;
   }
-
 };

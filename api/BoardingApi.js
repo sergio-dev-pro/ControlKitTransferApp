@@ -1,7 +1,16 @@
 import axios from 'axios';
 import { Alert } from 'react-native';
 import BASE_URL_V2 from '../constants/api2';
+import { getAndroidId } from 'react-native-device-info';
 
+let deviceId = null;
+
+const getDeviceId = async () => {
+  if (!deviceId) {
+    deviceId = await getAndroidId();
+  }
+  return deviceId;
+};
 
 export const startBoarding = async (userToken, eventId, itineraryId, vehicleId) =>
 {
@@ -15,7 +24,8 @@ export const startBoarding = async (userToken, eventId, itineraryId, vehicleId) 
         data,
         headers: {
           Accept: 'application/json',
-          Authorization: 'Bearer ' + userToken
+          Authorization: 'Bearer ' + userToken,
+          'X-Device-Id': await getDeviceId()
         },
       });
       console.log('@@@boardingCreated=' + JSON.stringify(response.data))
@@ -36,6 +46,7 @@ export const finishBoarding = async (userToken, eventId, boardingId) => {
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${userToken}`,
+        'X-Device-Id': await getDeviceId()
       },
     });
     return true;
@@ -64,7 +75,8 @@ export const registerTicketBoarding = async (userToken, eventId, boardingId, acc
         data,
         headers: {
           Accept: 'application/json',
-          Authorization: 'Bearer ' + userToken
+          Authorization: 'Bearer ' + userToken,
+          'X-Device-Id': await getDeviceId()
         },
       });
     return true;
@@ -86,7 +98,8 @@ export const getVehicles = async (userToken, eventId) =>
         method: 'GET',
         headers: {
           Accept: 'application/json',
-          Authorization: 'Bearer ' + userToken
+          Authorization: 'Bearer ' + userToken,
+          'X-Device-Id': await getDeviceId()
         },
       });
     return response.data;
@@ -106,7 +119,8 @@ export const getItineraries = async (userToken, eventId) =>
         method: 'GET',
         headers: {
           Accept: 'application/json',
-          Authorization: 'Bearer ' + userToken
+          Authorization: 'Bearer ' + userToken,
+          'X-Device-Id': await getDeviceId()
         },
       });
     return response.data;

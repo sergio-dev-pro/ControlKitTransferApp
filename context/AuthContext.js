@@ -7,6 +7,7 @@ import { useAlert } from './AlertContext';
 import { getEventRequiredFields, getKitDelivery } from '../api/EventApi';
 import BASE_URL_V2 from '../constants/api2';
 import { setupAxiosInterceptor } from '../api/InterceptorApi';
+import { getAndroidId } from 'react-native-device-info';
 
 export const AuthContext = createContext();
 
@@ -179,6 +180,8 @@ export function AuthProvider({ children }) {
 
   const confirmLogin = async (code, document) => {
     setIsAuthenticating(true);
+    var deviceId = await getAndroidId();
+    console.log('@@@deviceId='+ deviceId);
     try {
       const url = BASE_URL_V2 + '/companyusers/loginConfirm';
       const dataResponse = await axios({
@@ -188,6 +191,7 @@ export function AuthProvider({ children }) {
         headers: {
           Accept: 'text/plain',
           'Content-Type': 'application/json-patch+json',
+          'X-Device-Id': deviceId
         },
       });
 
@@ -248,6 +252,7 @@ export function AuthProvider({ children }) {
         headers: {
           Accept: 'text/plain',
           'Content-Type': 'application/json-patch+json',
+          'X-Device-Id': await getAndroidId()
         },
       });
 

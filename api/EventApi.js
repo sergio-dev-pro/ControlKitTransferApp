@@ -2,6 +2,17 @@ import axios from 'axios';
 import BASE_URL from '../constants/api';
 import BASE_URL_V2 from '../constants/api2';
 import { api } from './InterceptorApi';
+import { getAndroidId } from 'react-native-device-info';
+import { refreshAccessToken } from './UserApi';
+
+let deviceId = null;
+
+const getDeviceId = async () => {
+  if (!deviceId) {
+    deviceId = await getAndroidId();
+  }
+  return deviceId;
+};
 
 export const getEventRequiredFields = async eventId =>
   axios({
@@ -20,7 +31,8 @@ export const getSponsors = async (eventId, token) => {
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
-      'Authorization': 'Bearer ' + token
+      'Authorization': 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
     },
   });
   return response.data
@@ -33,7 +45,8 @@ export const getEventDays = async (eventId, token) => {
     headers: {
       Accept: 'text/plain',
       'Content-Type': 'application/json-patch+json',
-      'Authorization': 'Bearer ' + token
+      'Authorization': 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
     },
   });
 
@@ -47,7 +60,8 @@ export const getEventSectors = async (eventId, token) => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json-patch+json',
-      'Authorization': 'Bearer ' + token
+      'Authorization': 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
     },
   });
 
@@ -75,6 +89,7 @@ export const getEventsList = async (token, companyId) => {
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Device-Id': await getDeviceId()
       },
     });
 

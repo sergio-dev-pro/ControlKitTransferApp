@@ -1,5 +1,6 @@
 import axios from 'axios';
 import BASE_URL from '../constants/api';
+import { getAndroidId } from 'react-native-device-info';
 
 export const getItineraries = async (eventId, authorization) => {
   try {
