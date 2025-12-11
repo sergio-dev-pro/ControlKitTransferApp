@@ -125,10 +125,9 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         authContext.userToken, 'Bracelet'
       );
 
-      if (!ticket) {
-        // Lança um erro manual para ser apanhado pelo catch se o objeto vier vazio
-        throw new Error("Ingresso não encontrado.");
-      }
+      if (!ticket?.sectorVisibleToMeetingPoint) {
+          throw new Error("Ingresso não encontrado.");
+       }
 
       if (ticket.braceletDeliveredAt) {
         setHasKitAlreadyDelivered(true);
@@ -778,7 +777,12 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
 
   const handleUserFound = (user, searchedFor) => {
-    user && setUser(user);
+    if (!user) return;
+
+    const updatedUser = { ...user };
+    updatedUser.tickets = user.tickets.filter(t => t.sectorVisibleToMeetingPoint);
+
+    setUser(updatedUser);
   };
 
   const clearState = () => {
