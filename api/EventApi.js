@@ -106,6 +106,7 @@ export const getEventsList = async (token, companyId) => {
           headers: {
             Accept: 'application/json',
             Authorization: `Bearer ${tokens.accessToken}`,
+            'X-Device-Id': await getDeviceId()
           },
         });
          return {newToken: tokens?.accessToken, refreshToken: tokens?.refreshToken, ...retryResponse.data}
@@ -125,7 +126,8 @@ export const getAccessPolicies = async (eventId, token) => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json-patch+json',
-      'Authorization': 'Bearer ' + token
+      'Authorization': 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
     },
   });
 

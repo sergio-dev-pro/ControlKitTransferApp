@@ -16,7 +16,7 @@ import { useAlert } from '../context/AlertContext';
 import { AuthContext } from '../context/AuthContext';
 import { getDeviceId } from 'react-native-device-info';
 import GStyles from '../style/global';
-import { fetchTickets, getDeliveryByCode, getTicketDelivery, registerTicket } from '../api/TicketApi';
+import { fetchTickets, getDeliveryByCode, getTicketDelivery } from '../api/TicketApi';
 import * as realmApi from '../api/realmApi';
 import useNetinfo from './hooks/useNetinfo';
 import THEME from '../style/theme';
@@ -132,10 +132,9 @@ function KitsDrawerScreen({ navigation }) {
         authContext.userToken, 'Kit'
       );
 
-      if (!ticket) {
-        // Lança um erro manual para ser apanhado pelo catch se o objeto vier vazio
-        throw new Error("Ingresso não encontrado.");
-      }
+      if (!ticket?.sectorVisibleToMeetingPoint) {
+          throw new Error("Ingresso não encontrado.");
+       }
 
       if (ticket.kitDeliveredAt) {
         setHasKitAlreadyDelivered(true);
@@ -830,7 +829,12 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
 
   const handleUserFound = (user, searchedFor) => {
-    user && setUser(user);
+    if (!user) return;
+
+    const updatedUser = { ...user };
+    updatedUser.tickets = user.tickets.filter(t => t.sectorVisibleToMeetingPoint);
+
+    setUser(updatedUser);
   };
 
   const clearState = () => {

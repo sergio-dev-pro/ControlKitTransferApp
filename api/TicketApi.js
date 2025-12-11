@@ -24,20 +24,6 @@ export const fetchTickets = async (deviceId, eventId, userToken) =>
     },
   });
 
-  export const registerTicket = async (eventId, accessKeys, token) => {
-    const payload = { eventId, accessKeys };
-    return await axios({
-      url: BASE_URL_V2 + `/tickets/kits`,
-      method: 'PATCH',
-      data: payload,
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json-patch+json',
-        Authorization: 'Bearer ' + token,
-      },
-    });
-  };
-
   export const getTicketDelivery = async (eventId, accessKey, token, type) => {
     return await axios({
       url: BASE_URL_V2 + `/Deliveries?eventId=${eventId}&accessKey=${accessKey}&type=${type}`,
@@ -63,8 +49,6 @@ export const fetchTickets = async (deviceId, eventId, userToken) =>
       },
     });
   };
-
-
 
 export const registerBraceletDelivery = async (token, formData) => {
 
