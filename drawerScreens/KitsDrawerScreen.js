@@ -349,12 +349,19 @@ function KitsDrawerScreen({ navigation }) {
         setAlertMessage('QR CODE não encontrado.', '#dc143c');
         codeIsValid = false;
       }
-      else if (deliveryItemResponse.data.day != currentTicket?.day) {
-        setAlertMessage('QR CODE de outro dia.', '#dc143c');
+      
+      if (deliveryItemResponse.data.deliveredAt) {
+        setAlertMessage('QR Code já escaneado.', '#dc143c');
         codeIsValid = false;
       }
-      else if (deliveryItemResponse.data.deliveredAt) {
-        setAlertMessage('QR Code já escaneado.', '#dc143c');
+
+      if (deliveryItemResponse.data.sector != currentTicket?.sector) {
+        setAlertMessage(`Setor incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`,'#dc143c'); 
+        codeIsValid = false;
+      }
+
+      if (deliveryItemResponse.data.day != currentTicket?.day) {
+        setAlertMessage(`Dia incorreto! QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
         codeIsValid = false;
       }
 
@@ -366,7 +373,7 @@ function KitsDrawerScreen({ navigation }) {
       }
     }
     catch (error) {
-      console.log('errooor='+error)
+      console.log('errooor=' + error)
     } finally {
       setLoading(false);
       setShowQrCodeCamisa(false);
@@ -383,7 +390,6 @@ function KitsDrawerScreen({ navigation }) {
     });
     setNextTicketToScan(ticketId);
   };
-
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -448,7 +454,7 @@ function KitsDrawerScreen({ navigation }) {
                 renderItem={({ item: ticketFound }) => {
                   // A lógica de destaque ("fundo verde")
                   // 'nextTicketToScan' é o estado que controla quem é o próximo
-                  console.log('ticket='+ JSON.stringify(ticketFound))
+                  console.log('ticket=' + JSON.stringify(ticketFound))
                   const isHighlighted = nextTicketToScan === ticketFound.ticketId;
 
                   return (
@@ -1023,17 +1029,20 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
       const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
 
-
       if (!currentDeliveryItemEventDay) {
         throw new Error('QR CODE não encontrado.');
       }
 
-      if (deliveryItemResponse.data.day != currentTicket?.day) {
-        throw new Error(`Erro: QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
-      }
-
       if (deliveryItemResponse.data.deliveredAt) {
         throw new Error('QR Code já escaneado.');
+      }
+
+      if (deliveryItemResponse.data.sector != currentTicket?.sector) {
+        throw new Error(`Setor incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`);
+      }
+
+      if (deliveryItemResponse.data.day != currentTicket?.day) {
+        throw new Error(`Dia incorreto! QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
       }
 
       setCurrentTicketCode(ticketCode);

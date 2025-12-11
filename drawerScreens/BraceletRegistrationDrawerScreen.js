@@ -125,6 +125,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         authContext.userToken, 'Bracelet'
       );
 
+      console.log(ticket)
+
       if (!ticket) {
         // Lança um erro manual para ser apanhado pelo catch se o objeto vier vazio
         throw new Error("Ingresso não encontrado.");
@@ -329,14 +331,22 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         setAlertMessage('QR CODE não encontrado.', '#dc143c');
         codeIsValid = false;
       }
-      else if (deliveryItemResponse.data.day != currentTicket?.day) {
-        setAlertMessage('QR CODE de outro dia.', '#dc143c');
-        codeIsValid = false;
-      }
-      else if (deliveryItemResponse.data.deliveredAt) {
+
+      if (deliveryItemResponse.data.deliveredAt) {
         setAlertMessage('QR Code já escaneado.', '#dc143c');
         codeIsValid = false;
       }
+
+      if (deliveryItemResponse.data.sector != currentTicket?.sector) {
+        setAlertMessage(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`,'#dc143c');
+        codeIsValid = false;
+      }
+
+      if (deliveryItemResponse.data.day != currentTicket?.day) {
+        setAlertMessage(`Dia Incorreto! O QR CODE pertence ao dia: "${deliveryItemResponse.data.day}"`, '#dc143c');
+        codeIsValid = false;
+      }
+
 
       setShowQrCodeCamisa(false);
 
@@ -983,17 +993,20 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
       const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
 
-
       if (!currentDeliveryItemEventDay) {
         throw new Error('QR CODE não encontrado.');
       }
 
-      if (deliveryItemResponse.data.day != currentTicket?.day) {
-        throw new Error(`Erro: QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
-      }
-
       if (deliveryItemResponse.data.deliveredAt) {
         throw new Error('QR Code já escaneado.');
+      }
+
+      if (deliveryItemResponse.data.sector != currentTicket?.sector) {
+        throw new Error(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`);
+      }
+
+      if (deliveryItemResponse.data.day != currentTicket?.day) {
+        throw new Error(`Dia Incorreto! QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
       }
 
       setCurrentTicketCode(ticketCode);
