@@ -87,7 +87,7 @@ export default function TakePictureScreen() {
       name: 'userImage.jpg',
     });
     const faceBoudingBox = await detectFace(formData, authContext.userToken);
-    if (!faceBoudingBox) {
+     if (!faceBoudingBox) {
       //setAlertMessage('Sem rosto detectado, tire a foto novamente por favor.');
       return false;
     }

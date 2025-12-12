@@ -130,7 +130,7 @@ const NewFastTicket = ({ navigation }) => {
 
     } finally {
       setLoading(false);
-      clearStates()
+      //clearStates()
     }
   };
 
@@ -192,10 +192,7 @@ const NewFastTicket = ({ navigation }) => {
         type: 'image/jpeg',
         name: 'userImage.jpg',
       });
-      formData.append('FaceBoundingBox.Height', faceBoudingBox.height);
-      formData.append('FaceBoundingBox.Left', faceBoudingBox.left);
-      formData.append('FaceBoundingBox.Top', faceBoudingBox.top);
-      formData.append('FaceBoundingBox.Width', faceBoudingBox.width);
+      formData.append('FaceBoundingBox', JSON.stringify(faceBoudingBox))
     }
 
     return formData

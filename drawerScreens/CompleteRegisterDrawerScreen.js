@@ -18,6 +18,8 @@ import { listCountries } from '../helpers/listCountries';
 import { DOMAINS_EMAILS } from '../helpers/emailDomains';
 import { TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import TakePictureScreen from './ManualRegisterScreen/TakePictureScreen';
+import { RegisterStateContext } from './ManualRegisterScreen/registerContext';
 
 const inputErrorMsgs = {
   cpf: 'CPF inválido.',
@@ -65,6 +67,8 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
   const [stateSuggestions, setStateSuggestions] = useState([]);
   const [emailValidation, setEmailValidation] = useState({ isValid: true, errorMsg: '' });
   const [suggestionsEmail, setSuggestionsEmail] = useState([]);
+  const [faceBoudingBox, setFaceBoudingBox] = useState(null)
+
 
 
 
@@ -222,9 +226,14 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     setStep(2);
   };
 
-  const handleSave = (photoData) => {
-    setPhotoUri(photoData);
-    setTakePhoto(false);
+  const savePhoto = async (picturePath, faceBouding) => {
+    if (!picturePath) return;
+
+    setPhotoUri(picturePath)
+
+    setFaceBoudingBox(faceBouding);
+
+    setTakePhoto(false)
     setStep(2)
   };
 
@@ -262,6 +271,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     formData.append('Phone.InternationalNumber', guestPhone.nationalNumber);
     formData.append('Gender', genderMap[gender]);
 
+    formData.append('FaceBoundingBox', JSON.stringify(faceBoudingBox))
 
     if (address.city && address.state) {
       formData.append('Address.City', address.city);
@@ -286,9 +296,9 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     } catch (error) {
       if (error.response) {
         const errorMessage = error.response.data?.message || '';
-        console.log('Erro response status:', error.response.status);
-        console.log('Erro response data:', error.response.data);
-        console.log('Erro response headers:', error.response.headers);
+        console.error('Erro response status:', error.response.status);
+        console.error('Erro response data:', error.response.data);
+        console.error('Erro response headers:', error.response.headers);
 
         // Se a mensagem começar com "Rosto não reconhecido"
         if (errorMessage.startsWith('Rosto não reconhecido')) {
@@ -297,13 +307,13 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
         setAlertMessage(errorMessage, '#dc143c');
       } else if (error.request) {
-        console.log('Erro request:', error.request);
+        console.error('Erro request:', error.request);
       } else {
-        console.log('Erro message:', error.message);
+        console.error('Erro message:', error.message);
         setAlertMessage(error.message, '#dc143c');
       }
 
-      console.log('Config do erro:', error.config);
+      console.error('Config do erro:', error.config);
     }
     finally {
       setIsLoading(false);
@@ -428,229 +438,263 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
 
   return (
-    <View style={{ ...GStyles.view }}>
-      <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
-      <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke, flex: 1 }}>
-        <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>Completar cadastro</Text>
-        <Divider />
+    <RegisterStateContext.Provider
+      value={{
+        cancelPhoto: () => {
+          setTakePhoto(false);
+        },
+        savePhoto,
+        isSavingPhoto: isLoading,
+      }}>
+      <View style={{ ...GStyles.view }}>
+        <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
+        <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke, flex: 1 }}>
+          <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>Completar cadastro</Text>
+          <Divider />
 
 
-        {step == null && (
-          <View style={[GStyles.container]}>
-            <Button
-              size="lg"
-              titleStyle={{ fontSize: 18 }}
-              type="outline"
-              onPress={() => {
-                setShowSearchModalByCPF(true);
-              }}>
-              Buscar por CPF
-
-            </Button>
-
-            {showSearchModalByCPF && (
-              <SearchUserModal
-                title="Buscar"
-                onUserFound={handleUserFound}
-                placeholderText="Busque pelo CPF"
-                isVisible={showSearchModalByCPF}
-                onClose={() => {
-                  setShowSearchModalByCPF(false);
-                }}
-              />
-            )}
-          </View>
-        )}
-
-        {step === 1 && (
-          <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 16 }}>
-            <Input
-              label="Tipo de Documento"
-              value={documentType === 1 ? 'CPF' : 'Passaporte'}
-              editable={false}
-            />
-            {documentType === 1 ? (
-              <Input
-                label="CPF"
-                keyboardType="numeric"
-                {...maskedCPFInputProps}
-                editable={false}
-              />
-            ) : (
-              <Input
-                label="Passaporte"
-                placeholder="Informe o número do passaporte"
-                value={guestDocument}
-                onChangeText={setGuestDocument}
-                editable={false}
-              />
-            )}
-
-            <Input placeholder="Nome" value={guestFirstname} onChangeText={setGuestFirstname} />
-            <Input placeholder="Sobrenome" value={guestLastname} onChangeText={setGuestLastname} />
-
-            <Input
-              label="Email"
-              value={guestEmail}
-              onBlur={() => {
-                validEmail(guestEmail);
-              }}
-              onChangeText={handleEmailChange}
-              errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-            {suggestionsEmail.length > 0 && (
-              <View style={styles.listContainer}>
-                {suggestionsEmail.map((item, index) => (
-                  <TouchableOpacity
-                    key={item}
-                    onPress={() => onSuggestionPress(item)}
-                    style={[
-                      styles.listItem,
-                      index < suggestionsEmail.length - 1 && styles.bottomDivider,
-                    ]}
-                  >
-                    <Text style={styles.suggestionText}>{item}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-
-            <Input
-              label="Data de nascimento"
-              placeholder="DD/MM/AAAA"
-              keyboardType="numeric"
-              value={birthDate}
-              onChangeText={handleDateChange}
-              maxLength={10}
-            />
-
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Input
-                label="Código do País"
-                placeholder="Ex: 55"
-                keyboardType="numeric"
-                containerStyle={{ flex: 1 }}
-                value={guestPhone.countryCode}
-                onChangeText={(text) =>
-                  setGuestPhone(prev => ({ ...prev, countryCode: text.replace(/[^\d]/g, '') }))
-                }
-              />
-              <Input
-                label="DDD"
-                placeholder="Ex: 11"
-                keyboardType="numeric"
-                containerStyle={{ flex: 1 }}
-                value={guestPhone.dialCode}
-                onChangeText={(text) =>
-                  setGuestPhone(prev => ({ ...prev, dialCode: text.replace(/[^\d]/g, '') }))
-                }
-              />
-            </View>
-
-            <Input
-              label="Número"
-              placeholder="Ex: 912345678"
-              keyboardType="numeric"
-              value={guestPhone.nationalNumber}
-              onChangeText={(text) =>
-                setGuestPhone(prev => ({ ...prev, nationalNumber: text.replace(/[^\d]/g, '') }))
-              }
-            />
-
-            <SelectModal
-              label="Gênero"
-              placeholder="Gênero"
-              items={[
-                { key: 'Masculino', value: 'Masculino' },
-                { key: 'Feminino', value: 'Feminino' },
-                { key: 'Outro', value: 'Outro' },
-              ]}
-              value={gender}
-              setValue={setGender}
-            />
-
-            <AddressFormFields
-              address={address}
-              setAddress={setAddress}
-              stateSuggestions={stateSuggestions}
-              setStateSuggestions={setStateSuggestions}
-            />
-
-            <SelectModal
-              label="País"
-              placeholder="Selecione um país"
-              items={countryOptions}
-              value={address.country} // ex: "BRA"
-              setValue={(id) => setAddress(prev => ({ ...prev, country: id }))}
-            />
-
-            <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
-              <Button title="Continuar cadastro" onPress={continueRegistry} containerStyle={{ width: '90%' }} />
-            </View>
-          </ScrollView>
-        )}
-
-        {step === 2 && (
-          <View
-            style={{
-              padding: 8,
-              marginTop: 20,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Button
-              size="lg"
-              type="outline"
-              containerStyle={{ marginBottom: 20, width: '100%' }}
-              onPress={handleClear}
-              titleStyle={{ fontSize: 18 }}
-            >
-              Cancelar
-            </Button>
-
-
-            {!photoUri ? (
+          {step == null && (
+            <View style={[GStyles.container]}>
               <Button
                 size="lg"
-                containerStyle={{ width: '100%', marginBottom: 20 }}
                 titleStyle={{ fontSize: 18 }}
+                type="outline"
                 onPress={() => {
-                  setTakePhoto(true);
-                  setStep(3);
-                }}
-              >
-                Tirar foto
+                  setShowSearchModalByCPF(true);
+                }}>
+                Buscar por CPF
+
               </Button>
-            ) : (
+
+              {showSearchModalByCPF && (
+                <SearchUserModal
+                  title="Buscar"
+                  onUserFound={handleUserFound}
+                  placeholderText="Busque pelo CPF"
+                  isVisible={showSearchModalByCPF}
+                  onClose={() => {
+                    setShowSearchModalByCPF(false);
+                  }}
+                />
+              )}
+            </View>
+          )}
+
+          {step === 1 && (
+            <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 16 }}>
+              <Input
+                label="Tipo de Documento"
+                value={documentType === 1 ? 'CPF' : 'Passaporte'}
+                editable={false}
+              />
+              {documentType === 1 ? (
+                <Input
+                  label="CPF"
+                  keyboardType="numeric"
+                  {...maskedCPFInputProps}
+                  editable={false}
+                />
+              ) : (
+                <Input
+                  label="Passaporte"
+                  placeholder="Informe o número do passaporte"
+                  value={guestDocument}
+                  onChangeText={setGuestDocument}
+                  editable={false}
+                />
+              )}
+
+              <Input placeholder="Nome" value={guestFirstname} onChangeText={setGuestFirstname} />
+              <Input placeholder="Sobrenome" value={guestLastname} onChangeText={setGuestLastname} />
+
+              <Input
+                label="Email"
+                value={guestEmail}
+                onBlur={() => {
+                  validEmail(guestEmail);
+                }}
+                onChangeText={handleEmailChange}
+                errorMessage={!emailValidation.isValid ? emailValidation.errorMsg : ''}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              {suggestionsEmail.length > 0 && (
+                <View style={styles.listContainer}>
+                  {suggestionsEmail.map((item, index) => (
+                    <TouchableOpacity
+                      key={item}
+                      onPress={() => onSuggestionPress(item)}
+                      style={[
+                        styles.listItem,
+                        index < suggestionsEmail.length - 1 && styles.bottomDivider,
+                      ]}
+                    >
+                      <Text style={styles.suggestionText}>{item}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+
+              <Input
+                label="Data de nascimento"
+                placeholder="DD/MM/AAAA"
+                keyboardType="numeric"
+                value={birthDate}
+                onChangeText={handleDateChange}
+                maxLength={10}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Input
+                  label="Código do País"
+                  placeholder="Ex: 55"
+                  keyboardType="numeric"
+                  containerStyle={{ flex: 1 }}
+                  value={guestPhone.countryCode}
+                  onChangeText={(text) =>
+                    setGuestPhone(prev => ({ ...prev, countryCode: text.replace(/[^\d]/g, '') }))
+                  }
+                />
+                <Input
+                  label="DDD"
+                  placeholder="Ex: 11"
+                  keyboardType="numeric"
+                  containerStyle={{ flex: 1 }}
+                  value={guestPhone.dialCode}
+                  onChangeText={(text) =>
+                    setGuestPhone(prev => ({ ...prev, dialCode: text.replace(/[^\d]/g, '') }))
+                  }
+                />
+              </View>
+
+              <Input
+                label="Número"
+                placeholder="Ex: 912345678"
+                keyboardType="numeric"
+                value={guestPhone.nationalNumber}
+                onChangeText={(text) =>
+                  setGuestPhone(prev => ({ ...prev, nationalNumber: text.replace(/[^\d]/g, '') }))
+                }
+              />
+
+              <SelectModal
+                label="Gênero"
+                placeholder="Gênero"
+                items={[
+                  { key: 'Masculino', value: 'Masculino' },
+                  { key: 'Feminino', value: 'Feminino' },
+                  { key: 'Outro', value: 'Outro' },
+                ]}
+                value={gender}
+                setValue={setGender}
+              />
+
+              <AddressFormFields
+                address={address}
+                setAddress={setAddress}
+                stateSuggestions={stateSuggestions}
+                setStateSuggestions={setStateSuggestions}
+              />
+
+              <SelectModal
+                label="País"
+                placeholder="Selecione um país"
+                items={countryOptions}
+                value={address.country} // ex: "BRA"
+                setValue={(id) => setAddress(prev => ({ ...prev, country: id }))}
+              />
+
+              <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+                <Button title="Continuar cadastro" onPress={continueRegistry} containerStyle={{ width: '90%' }} />
+              </View>
+            </ScrollView>
+          )}
+
+          {step === 2 && (
+            <View
+              style={{
+                padding: 8,
+                marginTop: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Button
                 size="lg"
-                containerStyle={{ width: '100%' }}
+                type="outline"
+                containerStyle={{ marginBottom: 20, width: '100%' }}
+                onPress={handleClear}
                 titleStyle={{ fontSize: 18 }}
-                onPress={handleSubmit}
-                loading={isLoading}
               >
-                Finalizar Cadastro
+                Cancelar
               </Button>
-            )}
 
 
-          </View>
-        )}
+              {!photoUri ? (
+                <Button
+                  size="lg"
+                  containerStyle={{ width: '100%', marginBottom: 20 }}
+                  titleStyle={{ fontSize: 18 }}
+                  onPress={() => {
+                    setTakePhoto(true);
+                    setStep(3);
+                  }}
+                >
+                  Tirar foto
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  containerStyle={{ width: '100%' }}
+                  titleStyle={{ fontSize: 18 }}
+                  onPress={handleSubmit}
+                  loading={isLoading}
+                >
+                  Finalizar Cadastro
+                </Button>
+              )}
 
-        {step === 3 && (
+
+            </View>
+          )}
+
+          {step === 3 && (
+            <>
+
+
+              <TakePictureScreen
+                onSave={(path) => {
+                  handleSave(path);
+                }}
+
+                onCancel={() => {
+                  setTakePhoto(false);
+                  setStep(2);
+                }}
+
+                isLoadingProp={isLoading}
+              />
+
+              {/*
+          
           <TakePictureModal
             isVisible={takePhoto}
             cancelPhoto={() => { setTakePhoto(false), setStep(2) }}
             savePhoto={handleSave}
             isSavingPhoto={isLoading}
           />
-        )}
+            */}
+
+            </>
+          )}
+
+
+
+
+        </View>
       </View>
-    </View>
+    </RegisterStateContext.Provider >
   );
 };
 
