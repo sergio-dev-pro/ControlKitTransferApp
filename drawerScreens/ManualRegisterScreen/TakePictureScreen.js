@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,16 +16,20 @@ import ReactNativeModal from 'react-native-modal';
 import THEME from '../../style/theme';
 import { useAlert } from '../../context/AlertContext';
 import { detectFace } from '../../api/FaceApi';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function TakePictureScreen() {
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState('');
   const [picture, setPicture] = useState();
   const [loading, setLoading] = useState(false);
   const [isTakingPhoto, setIsTakingPhoto] = useState(false);
+  const [faceBoudingBox, setFaceBoudingBox] = useState(null);
   const [isInitializedCamera, setIsInitializedCamera] = useState(false);
   const camera = useRef(null);
   const { cancelPhoto, savePhoto, isSavingPhoto } = useRegisterState();
   const setAlertMessage = useAlert();
+
+  const authContext = useContext(AuthContext);
 
   const devices = useCameraDevices();
   const device = devices.back;
@@ -76,16 +80,19 @@ export default function TakePictureScreen() {
     if (Platform.OS == 'android') path = 'file://' + path;
 
     const formData = new FormData();
-    formData.append('file', {
+    formData.append('EventId', authContext.selectedEventId)
+    formData.append('FacePhoto', {
       uri: path,
       type: 'image/jpeg',
       name: 'userImage.jpg',
     });
-    const facesDetected = await detectFace(formData);
-    if (facesDetected != 1) {
+    const faceBoudingBox = await detectFace(formData, authContext.userToken);
+    if (!faceBoudingBox) {
       setAlertMessage('Sem rosto detectado, tire a foto novamente por favor.');
       return false;
     }
+
+    setFaceBoudingBox(faceBoudingBox);
 
     return true;
   };
@@ -99,8 +106,8 @@ export default function TakePictureScreen() {
       });
       setPicture(photo);
 
-      const isValidPicture = await pictureValidation(photo.path);
-      !isValidPicture && setPicture(null);
+      const isFaceValid = await pictureValidation(photo.path);
+      !isFaceValid && setPicture(null);
       setIsTakingPhoto(false);
     } catch (error) {
       console.error(error);
@@ -141,7 +148,7 @@ export default function TakePictureScreen() {
               <Button
                 type="solid"
                 loading={isSavingPhoto || isTakingPhoto}
-                onPress={() => savePhoto(picturePath)}
+                onPress={() => savePhoto(picturePath, faceBoudingBox)}
                 style={[styles.camButton, { width: '40%' }]}>
                 Salvar
               </Button>

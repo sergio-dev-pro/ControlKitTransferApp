@@ -37,6 +37,7 @@ const NewFastTicket = ({ navigation }) => {
   const [valueInitialFirstName, setValueInitialFirstName] = useState('')
   const [valueInitialLastname, setValueInitialLastname] = useState('')
   const [valuePicturePath, setValuePicturePath] = useState(null)
+  const [faceBoudingBox, setFaceBoudingBox] = useState(null)
   const [isUserActive, setIsUserActive] = useState(false);
   const [emaiValue, setEmailValue] = useState('')
   const [valueInitialSector, setValueInitialSector] = useState(null);
@@ -54,10 +55,12 @@ const NewFastTicket = ({ navigation }) => {
     setDocument(cleanedCpf);
   };
 
-  const savePhoto = async (picturePath) => {
+  const savePhoto = async (picturePath, faceBouding) => {
     if (!picturePath) return;
 
     setValuePicturePath(picturePath)
+
+    setFaceBoudingBox(faceBouding);
 
     setTakePhoto(false)
   };
@@ -88,7 +91,6 @@ const NewFastTicket = ({ navigation }) => {
     }
 
     const formData = convertJsonToFormData();
-
 
     if (!formData) {
       console.log("Erro", "Não há dados de utilizador para registar.");
@@ -190,6 +192,10 @@ const NewFastTicket = ({ navigation }) => {
         type: 'image/jpeg',
         name: 'userImage.jpg',
       });
+      formData.append('FaceBoundingBox.Height', faceBoudingBox.height);
+      formData.append('FaceBoundingBox.Left', faceBoudingBox.left);
+      formData.append('FaceBoundingBox.Top', faceBoudingBox.top);
+      formData.append('FaceBoundingBox.Width', faceBoudingBox.width);
     }
 
     return formData
@@ -324,10 +330,8 @@ const NewFastTicket = ({ navigation }) => {
 
 
 
-
-
         </ScrollView>
-        {takePhoto && <TakePictureScreen />}
+        {takePhoto && <TakePictureScreen  />}
         <Loading isActive={loading} />
       </View>
     </RegisterStateContext.Provider >
