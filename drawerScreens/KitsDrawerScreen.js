@@ -354,7 +354,7 @@ function KitsDrawerScreen({ navigation }) {
         codeIsValid = false;
       }
 
-      if (deliveryItemResponse.data.sector != currentTicket?.sector) {
+      if (deliveryItemResponse.data.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
         setAlertMessage(`Setor incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`,'#dc143c'); 
         codeIsValid = false;
       }
@@ -1029,7 +1029,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     try {
       const deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 1);
 
-      console.log('deliveryItemResponse.data.day = ' + deliveryItemResponse.data?.day);
+      console.log('deliveryItemResponse.data.sector = ' + deliveryItemResponse.data.sector);
 
       const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
 
@@ -1041,7 +1041,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         throw new Error('QR Code já escaneado.');
       }
 
-      if (deliveryItemResponse.data.sector != currentTicket?.sector) {
+      if (deliveryItemResponse.data.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
         throw new Error(`Setor incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`);
       }
 
