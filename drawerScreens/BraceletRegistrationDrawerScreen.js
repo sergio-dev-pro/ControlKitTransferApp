@@ -339,7 +339,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         codeIsValid = false;
       }
 
-      if (deliveryItemResponse.data.day != currentTicket?.day) {
+      if (deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
         setAlertMessage(`Dia Incorreto! O QR CODE pertence ao dia: "${deliveryItemResponse.data.day}"`, '#dc143c');
         codeIsValid = false;
       }
@@ -1005,7 +1005,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         throw new Error(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`);
       }
 
-      if (deliveryItemResponse.data.day != currentTicket?.day) {
+      if (deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
         throw new Error(`Dia Incorreto! QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
       }
 

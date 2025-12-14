@@ -359,7 +359,7 @@ function KitsDrawerScreen({ navigation }) {
         codeIsValid = false;
       }
 
-      if (deliveryItemResponse.data.day != currentTicket?.day) {
+      if (deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
         setAlertMessage(`Dia incorreto! QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
         codeIsValid = false;
       }
@@ -1045,7 +1045,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         throw new Error(`Setor incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`);
       }
 
-      if (deliveryItemResponse.data.day != currentTicket?.day) {
+      if (deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
         throw new Error(`Dia incorreto! QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
       }
 
