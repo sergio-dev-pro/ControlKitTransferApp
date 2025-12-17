@@ -136,6 +136,26 @@ export const getUserByEmail = async (email, eventId, token) =>
   return response.data;
 }
 
+export const getBasicUserByEmail = async (email, eventId, token) =>
+{
+  var response = await axios({
+    url:
+      BASE_URL_V2 +
+      '/users/byEmail?email=' +
+      email +
+      '&eventId=' +
+      eventId,
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
+    },
+  });
+
+  return response.data;
+}
+
 export const saveUserPhoto = async formData => {
   formData.append('deviceInfo', getModel());
   try {

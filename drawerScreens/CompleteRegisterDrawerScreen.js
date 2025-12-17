@@ -6,7 +6,7 @@ import THEME from '../style/theme';
 import { Text, Divider, Input, Button } from '@rneui/themed';
 import { AuthContext } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
-import { completeUserRegister } from '../api/UserApi';
+import { completeUserRegister, getBasicUserByEmail } from '../api/UserApi';
 import { useMaskedInputProps } from 'react-native-mask-input';
 import SelectModal from '../components/SelectModal';
 import TakePictureModal from '../components/TakePictureModal';
@@ -88,7 +88,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     setGuestLastname('');
     setGuestEmail('');
     setGuestPhone({
-      countryCode: '',
+      countryCode: '+55',
       dialCode: '',
       nationalNumber: '',
       internationalNumber: '',
@@ -133,7 +133,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     setBirthDate(formatted);
   };
 
-  const continueRegistry = () => {
+  const continueRegistry = async () => {
     // Validação do tipo documento
     if (documentType === 1) {
       // CPF
@@ -160,6 +160,13 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
     if (!regex.test(guestEmail)) {
       Alert.alert('', 'Digite um e-mail válido.');
+      return;
+    }
+
+    var userByApi = await getBasicUserByEmail(guestEmail, selectedEventId, userToken);
+    if(userByApi?.document && guestDocument != userByApi?.document)
+    {
+      Alert.alert('', `O email preenchido pertence ao documento ${userByApi?.document}`);
       return;
     }
 
@@ -415,7 +422,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
       // Reset de objetos complexos
       setGuestPhone({
-        countryCode: '',
+        countryCode: '+55',
         dialCode: '',
         nationalNumber: '',
         internationalNumber: '',
@@ -476,7 +483,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
         savePhoto,
         isSavingPhoto: isLoading,
       }}>
-      <View style={{ ...GStyles.container }} >
+      <View style={{ ...GStyles.view }} >
         <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
         <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke, flex: 1 }}>
           <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>Completar cadastro</Text>
@@ -485,12 +492,12 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
           {step == null && (
             // Adicionado justifyContent e alignItems para centralizar o botão
-            <View style={[{ alignItems: 'center' }]}>
+            <View style={[{ alignItems: 'center', width: '100%' }]}>
               <Button
                 size="lg"
                 titleStyle={{ fontSize: 18 }}
                 type="outline"
-                containerStyle={{ width: '100%' }} // Garante que o botão tenha largura para centralizar o texto internamente se necessário
+                containerStyle={{ width: '60%', marginTop: 10 }}
                 onPress={() => {
                   setShowSearchModalByCPF(true);
                 }}>

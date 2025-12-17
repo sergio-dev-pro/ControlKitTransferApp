@@ -107,7 +107,7 @@ function PhotoReregisterDrawerScreen({ navigation }) {
                 justifyContent: 'space-between',
                 marginBottom: 8,
               }}>
-              <Text h4>E-mail</Text>
+              <Text h4>Documento</Text>
               <Text h4>{user?.id}</Text>
             </View>
             <Button
