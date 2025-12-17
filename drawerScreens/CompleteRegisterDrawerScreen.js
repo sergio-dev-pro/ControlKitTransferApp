@@ -260,8 +260,6 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
       name: 'userImage.jpg',
     });
 
-    console.log('guestPhone.countryCode: ' + guestPhone.countryCode)
-
     formData.append('EventId', selectedEventId);
     formData.append('DocumentType', documentType);
     formData.append('Document', guestDocument);
@@ -359,9 +357,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     index === self.findIndex((t) => t.code === item.code)
   );
 
-  // 2. Correção no sort e map
   const ddiItems = uniqueCodes
-    // Ordenamos usando a propriedade correta 'country' nos dois lados
     .sort((a, b) => a.country.localeCompare(b.country))
     .map((item) => ({
       key: item.code,
