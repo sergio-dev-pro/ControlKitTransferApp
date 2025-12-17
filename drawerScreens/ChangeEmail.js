@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import React, { useState, useContext } from 'react';
 import GStyles from '../style/global';
 import Header from '../components/Header';
@@ -47,12 +47,19 @@ const ChangeEmail = ({ navigation }) => {
     const isValid = validCPF(inputValue);
     if (!isValid) return;
     try {
+
       setLoading(true);
       const data = await getUserByCpfWithAuth(
         inputValue,
         authContext.selectedEventId,
         authContext.userToken,
       );
+
+      console.log('data: ', data)
+      if (!data) {
+        setAlertMessage('Usuário não encontrado.');
+      }
+
       if (data.newToken) {
         authContext.updateTokens({ accessToken: updatedUser.newToken, refreshToken: updatedUser.refreshToken })
       }
@@ -60,6 +67,8 @@ const ChangeEmail = ({ navigation }) => {
       setUserEmailFoundUpdated(data.email);
       setToken(data.token);
     } catch (error) {
+
+
       console.error('Erro geral:', error);
 
       if (error.response) {
@@ -124,6 +133,7 @@ const ChangeEmail = ({ navigation }) => {
       clearStates();
       return;
     }
+
     const isValid = isValidEmail(userEmailFoundUpdated);
     if (!isValid) return setInvalidUserEmailFoundInputValue('e-mail inválido');
     setLoading(true);
@@ -132,18 +142,30 @@ const ChangeEmail = ({ navigation }) => {
         {
           document: inputValue.replace(/\D/g, ''),
           email: userEmailFoundUpdated,
-          eventId: authContext.selectedEventId  // ADICIONADO
+          eventId: authContext.selectedEventId
         },
         authContext.userToken
       );
 
-      clearStates();
-      alert('E-mail alterado com sucesso', '#32cd32');
+      if (res) {
+        clearStates();
+        alert('E-mail alterado com sucesso', '#32cd32');
+      }
+
+
     } catch (error) {
-      console.error("Erro na requisição:", error);
-      console.error("Código de status:", error?.response?.status);
-      console.error("Detalhes do erro:", error?.response?.data); // ADICIONADO
-      alert("Erro ao atualizar e-mail: " + JSON.stringify(error?.response?.data));
+      if (error.response) {
+        const { status, data } = error.response;
+        console.log('Status:', status);
+        console.log('Data:', data);
+
+        if (status === 400 || status === 409 || data?.message) {
+          const apiMessage = data?.message || JSON.stringify(data);
+          setAlertMessage(`${apiMessage}`, '#dc143c');
+        } else {
+          setAlertMessage("Erro ao atualizar e-mail. Tente novamente.", '#dc143c');
+        }
+      }
     }
     finally {
       setLoading(false);

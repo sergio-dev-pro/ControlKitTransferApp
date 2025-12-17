@@ -20,6 +20,7 @@ import { TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import TakePictureScreen from './ManualRegisterScreen/TakePictureScreen';
 import { RegisterStateContext } from './ManualRegisterScreen/registerContext';
+import { countryCodes } from '../helpers/countryCodes';
 
 const inputErrorMsgs = {
   cpf: 'CPF inválido.',
@@ -37,7 +38,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
   const [guestLastname, setGuestLastname] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState({
-    countryCode: '',
+    countryCode: '+55',
     dialCode: '',
     nationalNumber: '',
     internationalNumber: '',
@@ -258,6 +259,9 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
       type: 'image/jpeg',
       name: 'userImage.jpg',
     });
+
+    console.log('guestPhone.countryCode: ' + guestPhone.countryCode)
+
     formData.append('EventId', selectedEventId);
     formData.append('DocumentType', documentType);
     formData.append('Document', guestDocument);
@@ -351,6 +355,20 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     rawValue: id
   }));
 
+  const uniqueCodes = countryCodes.filter((item, index, self) =>
+    index === self.findIndex((t) => t.code === item.code)
+  );
+
+  // 2. Correção no sort e map
+  const ddiItems = uniqueCodes
+    // Ordenamos usando a propriedade correta 'country' nos dois lados
+    .sort((a, b) => a.country.localeCompare(b.country))
+    .map((item) => ({
+      key: item.code,
+      value: `${item.country} (${item.code})`,
+      dialCode: item.code
+    }));
+
   const validEmail = (currentEmail) => {
     const isValid = isValidationEmail(currentEmail);
     setEmailValidation({
@@ -389,7 +407,6 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     setSuggestionsEmail([]);
     validEmail(suggestion);
   };
-
 
   useFocusEffect(
     React.useCallback(() => {
@@ -436,6 +453,23 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     }, [])
   );
 
+  
+
+  const phoneMask = (text) => {
+    if (text.replace(/\D/g, '').length > 8) {
+      return [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]; // 9 dígitos
+    } else {
+      return [/\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]; // 8 dígitos
+    }
+  };
+
+  const maskedPhoneInputProps = useMaskedInputProps({
+    value: guestPhone.nationalNumber,
+    onChangeText: (text, rawText) => {
+      setGuestPhone(prev => ({ ...prev, nationalNumber: rawText }));
+    },
+    mask: phoneMask,
+  });
 
   return (
     <RegisterStateContext.Provider
@@ -446,7 +480,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
         savePhoto,
         isSavingPhoto: isLoading,
       }}>
-      <View style={{ ...GStyles.view }}>
+      <View style={{ ...GStyles.container }} >
         <Header style={{ marginBottom: 0 }} openDrawer={() => navigation.openDrawer()} />
         <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke, flex: 1 }}>
           <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>Completar cadastro</Text>
@@ -454,11 +488,13 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
 
 
           {step == null && (
-            <View style={[GStyles.container]}>
+            // Adicionado justifyContent e alignItems para centralizar o botão
+            <View style={[{ alignItems: 'center' }]}>
               <Button
                 size="lg"
                 titleStyle={{ fontSize: 18 }}
                 type="outline"
+                containerStyle={{ width: '100%' }} // Garante que o botão tenha largura para centralizar o texto internamente se necessário
                 onPress={() => {
                   setShowSearchModalByCPF(true);
                 }}>
@@ -481,7 +517,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
           )}
 
           {step === 1 && (
-            <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 16 }}>
+            <ScrollView contentContainerStyle={{ gap: 16 }}>
               <Input
                 label="Tipo de Documento"
                 value={documentType === 1 ? 'CPF' : 'Passaporte'}
@@ -545,38 +581,40 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
                 maxLength={10}
               />
 
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Input
-                  label="Código do País"
-                  placeholder="Ex: 55"
-                  keyboardType="numeric"
-                  containerStyle={{ flex: 1 }}
-                  value={guestPhone.countryCode}
-                  onChangeText={(text) =>
-                    setGuestPhone(prev => ({ ...prev, countryCode: text.replace(/[^\d]/g, '') }))
-                  }
-                />
+
+              <SelectModal
+                label="Código do país"
+                placeholder="Selecione"
+                items={ddiItems}
+                value={guestPhone.countryCode}
+                setValue={(code) => {
+                  setGuestPhone(prev => ({ ...prev, countryCode: code }))
+                }}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
                 <Input
                   label="DDD"
-                  placeholder="Ex: 11"
+                  placeholder="11"
                   keyboardType="numeric"
-                  containerStyle={{ flex: 1 }}
+                  containerStyle={{ flex: 1}}
                   value={guestPhone.dialCode}
+                  maxLength={3}
                   onChangeText={(text) =>
                     setGuestPhone(prev => ({ ...prev, dialCode: text.replace(/[^\d]/g, '') }))
                   }
                 />
-              </View>
 
-              <Input
-                label="Número"
-                placeholder="Ex: 912345678"
-                keyboardType="numeric"
-                value={guestPhone.nationalNumber}
-                onChangeText={(text) =>
-                  setGuestPhone(prev => ({ ...prev, nationalNumber: text.replace(/[^\d]/g, '') }))
-                }
-              />
+                <Input
+                  label="Número"
+                  {...maskedPhoneInputProps}
+                  placeholder="11111-1111"
+                  keyboardType="numeric"
+                  containerStyle={{ flex: 3, paddingHorizontal: 0 }}
+                  
+                />
+
+              </View>
 
               <SelectModal
                 label="Gênero"
@@ -614,7 +652,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
           {step === 2 && (
             <View
               style={{
-                padding: 8,
+
                 marginTop: 20,
                 alignItems: 'center',
                 justifyContent: 'center',

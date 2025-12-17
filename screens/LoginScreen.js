@@ -6,6 +6,7 @@ import AuthHeader from '../components/AuthHeader';
 import GStyles from '../style/global';
 import { AuthContext } from '../context/AuthContext';
 import BASE_URL_V2 from '../constants/api2';
+import { Icon } from '@rneui/base';
 
 const inputErrorMsgs = {
   global: {
@@ -25,7 +26,8 @@ const LoginScreen = ({ navigation }) => {
   const [passwordValidation, setPasswordValidation] = useState({ isValid: true, errorMsg: '' });
   const [codeValidation, setCodeValidation] = useState({ isValid: true, errorMsg: '' });
 
-  const [showValidationStep, setShowValidationStep] = useState(false); // Renomeado para clareza
+  const [showValidationStep, setShowValidationStep] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const auth = useContext(AuthContext);
 
@@ -138,8 +140,18 @@ const LoginScreen = ({ navigation }) => {
                 onChangeText={handlePasswordChange}
                 onBlur={() => validPassword(password)}
                 value={password}
-                secureTextEntry={true}
+                secureTextEntry={!isPasswordVisible}
                 errorMessage={!passwordValidation.isValid ? passwordValidation.errorMsg : ''}
+
+                rightIcon={
+                  <Icon
+                    name={isPasswordVisible ? 'eye' : 'eye-off'}
+                    type="material-community" 
+                    size={24}
+                    color="grey" 
+                    onPress={() => setIsPasswordVisible(!isPasswordVisible)} 
+                  />
+                }
               />
               <Button
                 size="lg"

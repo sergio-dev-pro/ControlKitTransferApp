@@ -321,12 +321,12 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setLoading(true);
     try {
       const deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 2);
-      const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
       let codeIsValid = true;
 
-      if (!currentDeliveryItemEventDay) {
+      if (!deliveryItemResponse.data || !deliveryItemResponse.data.day) {
         setAlertMessage('QR CODE não encontrado.', '#dc143c');
-        codeIsValid = false;
+        setShowQrCodeCamisa(false);
+        return; // Para aqui
       }
 
       if (deliveryItemResponse.data.deliveredAt) {

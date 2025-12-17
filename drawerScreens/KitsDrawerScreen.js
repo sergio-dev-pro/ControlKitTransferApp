@@ -341,12 +341,12 @@ function KitsDrawerScreen({ navigation }) {
     setLoading(true);
     try {
       const deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 1);
-      const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
       let codeIsValid = true;
 
-      if (!currentDeliveryItemEventDay) {
+      if (!deliveryItemResponse.data || !deliveryItemResponse.data.day) {
         setAlertMessage('QR CODE não encontrado.', '#dc143c');
-        codeIsValid = false;
+        setShowQrCodeCamisa(false);
+        return; // Para aqui
       }
       
       if (deliveryItemResponse.data.deliveredAt) {
@@ -354,12 +354,12 @@ function KitsDrawerScreen({ navigation }) {
         codeIsValid = false;
       }
 
-      if (deliveryItemResponse.data.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
+      if (deliveryItemResponse.data.sector && currentTicket?.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
         setAlertMessage(`Setor incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`,'#dc143c'); 
         codeIsValid = false;
       }
 
-      if (deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
+      if (deliveryItemResponse.data.day && currentTicket?.day && deliveryItemResponse.data.day != currentTicket?.day) {
         setAlertMessage(`Dia incorreto! QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
         codeIsValid = false;
       }
