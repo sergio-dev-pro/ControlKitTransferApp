@@ -161,6 +161,23 @@ android {
         }
     }
 
+    flavorDimensions "default"
+
+    productFlavors {
+        dev {
+            dimension "default"
+            applicationId "com.controlkit.transfer.dev"
+            versionNameSuffix "-dev"
+            resValue "string", "app_name", "ControlKit DEV"
+        }
+
+        prod {
+            dimension "default"
+            applicationId "com.controlkit.transfer"
+            resValue "string", "app_name", "ControlKit"
+        }
+    }
+
     if (isNewArchitectureEnabled()) {
         // We configure the NDK build only if you decide to opt-in for the New Architecture.
         externalNativeBuild {
