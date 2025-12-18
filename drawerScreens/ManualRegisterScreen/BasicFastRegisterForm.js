@@ -163,7 +163,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       sponsorId: sponsorId
     };
 
-    var userByApi = await getBasicUserByEmail(guestEmail, authContext.selectedEventId, authContext.userToken);
+    var userByApi = await getBasicUserByEmail(payload.userEmail, authContext.selectedEventId, authContext.userToken);
     if(userByApi?.document && payload.userDocument != userByApi?.document)
     {
       Alert.alert('', `O email preenchido pertence ao documento ${userByApi?.document}`);
