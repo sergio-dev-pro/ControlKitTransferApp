@@ -9,6 +9,7 @@ import { getAccessPolicies, getEventDays, getEventSectors, getSponsors } from '.
 import { AuthContext } from '../../context/AuthContext';
 import uuid from 'react-native-uuid';
 import { TouchableOpacity } from 'react-native';
+import { getBasicUserByEmail } from '../../api/UserApi';
 
 const inputErrorMsgs = {
   cpf: 'CPF inválido.',
@@ -124,7 +125,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   }, [authContext.selectedEventId, authContext.userToken]);
 
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const isNameValid = validName(name);
     const isLastnameValid = validLastname(lastname); // Validação do sobrenome
     const isDocumentValid = documentType === 'cpf' ? validCPF(cpf) : validPassport(cpf);
@@ -161,6 +162,13 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       eventId: authContext.selectedEventId,
       sponsorId: sponsorId
     };
+
+    var userByApi = await getBasicUserByEmail(guestEmail, authContext.selectedEventId, authContext.userToken);
+    if(userByApi?.document && payload.userDocument != userByApi?.document)
+    {
+      Alert.alert('', `O email preenchido pertence ao documento ${userByApi?.document}`);
+      return;
+    }
 
 
     if (selectedType === 1) {

@@ -142,7 +142,7 @@ export const getBasicUserByEmail = async (email, eventId, token) =>
     url:
       BASE_URL_V2 +
       '/users/byEmail?email=' +
-      email +
+      encodeURIComponent(email) +
       '&eventId=' +
       eventId,
     method: 'GET',
