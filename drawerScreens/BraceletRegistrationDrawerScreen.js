@@ -126,8 +126,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       );
 
       if (!ticket?.sectorVisibleToMeetingPoint) {
-          throw new Error("Ingresso não encontrado.");
-       }
+        throw new Error("Ingresso não encontrado.");
+      }
 
       if (ticket.braceletDeliveredAt) {
         setHasKitAlreadyDelivered(true);
@@ -139,7 +139,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
       setTicketFounds(prevTicketFounds => {
         const newTickets = [...prevTicketFounds, newTicketFound];
-        // Define este novo bilhete como o próximo a escanear (se for o primeiro)
         if (newTickets.length >= 1) {
           setNextTicketToScan(newTicketFound.ticketId);
         }
@@ -335,7 +334,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       }
 
       if (deliveryItemResponse.data.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
-        setAlertMessage(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`,'#dc143c');
+        setAlertMessage(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`, '#dc143c');
         codeIsValid = false;
       }
 
@@ -376,8 +375,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const allCodesScanned = ticketFounds?.length === Object.keys(kitCodesRead || {}).length
 
   const isDocumentationValid = !completeDelivery || (documentImg && signature);
-
-
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -782,13 +779,15 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [isValidBoolean, setIsValidBoolean] = useState(false);
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
   const [reasonType, setReasonType] = useState(null);
+  const [staffType, setStaffType] = useState(null);
+
 
 
   const handleUserFound = (user, searchedFor) => {
     if (!user) return;
 
     const updatedUser = { ...user };
-    updatedUser.tickets = user.tickets.filter(t => t.sectorVisibleToMeetingPoint);
+    updatedUser.tickets = user.tickets.filter(t => t.sectorVisibleToMeetingPoint || t.type == 2 || t.type == 3);
 
     setUser(updatedUser);
   };
@@ -811,6 +810,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     setEventAllowed(false);
     setIsValidBoolean(false)
     setIncompleteRegistrationReason()
+    setStaffType(null)
   };
 
   const registerDelivery = async () => {
@@ -919,7 +919,30 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       try {
         const selectedTickets = user.tickets.filter(ticket => ticketIds.includes(ticket.id));
 
-        console.log('selectedTickets: ', selectedTickets)
+
+        if (selectedTickets.length > 0) {
+          const ticketWithValidType = selectedTickets.find(tickets => tickets.type != null);
+
+          console.log('ticketWithValidType: ', ticketWithValidType)
+
+          if (ticketWithValidType) {
+            const ticketType = ticketWithValidType.type;
+            console.log('ticketType :' + ticketType)
+
+            if (ticketType === 1) {
+              setStaffType('Operação Ingresso');
+            } else if (ticketType === 2) {
+              setStaffType('Operação Staff');
+            } else if (ticketType === 3) {
+              setStaffType('Outra Montagem');
+            } else {
+              setStaffType(null);
+            }
+          }
+        } else {
+          setStaffType(null);
+        }
+
 
         for (let i = 0; i < selectedTickets.length; i++) {
           const ticket = selectedTickets[i];
@@ -1117,12 +1140,18 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         }}
       />
 
+      {staffType && (
+        <Text style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 5 }}>
+          {staffType}
+        </Text>
+      )}
+
       <Button
         onPress={() => {
           onCancelDeliveryByCPF();
           clearState();
         }}
-        type="clear"
+        type="outline"
         size="sm">
         Cancelar
       </Button>
@@ -1148,7 +1177,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                   backgroundColor: isNextTicketToScan ? 'rgba(221, 240, 216, 0.7)' : 'white'
                 }} key={ticketId}>
                   <Text style={{ fontSize: 15, fontWeight: '700' }}>
-                    {ticket.sector} - {ticket.day}
+                    {ticket.accessPolicy ? ticket.accessPolicy : `${ticket.sector || ''} - ${ticket.day || ''}`}
                   </Text>
 
                   {shirtCodesRead[ticketId] && (
@@ -1413,6 +1442,7 @@ const TicketCodeSelectionModal = ({
     );
   };
 
+  console.log('tickets: ', tickets)
 
   const handleConfirm = () => {
     if (selecteds.length === 0)
@@ -1430,6 +1460,7 @@ const TicketCodeSelectionModal = ({
       setSelecteds(allTicketIds);
     }
   }
+
 
   return (
     <ReactNativeModal
@@ -1457,8 +1488,6 @@ const TicketCodeSelectionModal = ({
         <Text style={{ marginBottom: 8 }}>
           <Text style={{ fontWeight: 'bold' }}>Documento: {user.id ?? 'Cpf não disponível'}</Text>
         </Text>
-
-
 
         <View
           style={{
@@ -1511,7 +1540,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {[ticket.sector || '', ticket.day || '', ticket.braceletDeliveredAt ? "ENTREGUE" : null]
+                {[ticket.accessPolicy || '', ticket.sector || '', ticket.day || '', ticket.braceletDeliveredAt ? "ENTREGUE" : null]
                   .filter(Boolean)
                   .join(' - ')}
               </Text>

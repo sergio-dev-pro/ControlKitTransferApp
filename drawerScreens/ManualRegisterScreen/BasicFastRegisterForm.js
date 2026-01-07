@@ -9,7 +9,6 @@ import { getAccessPolicies, getEventDays, getEventSectors, getSponsors } from '.
 import { AuthContext } from '../../context/AuthContext';
 import uuid from 'react-native-uuid';
 import { TouchableOpacity } from 'react-native';
-import { getBasicUserByEmail } from '../../api/UserApi';
 
 const inputErrorMsgs = {
   cpf: 'CPF inválido.',
@@ -125,7 +124,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   }, [authContext.selectedEventId, authContext.userToken]);
 
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     const isNameValid = validName(name);
     const isLastnameValid = validLastname(lastname); // Validação do sobrenome
     const isDocumentValid = documentType === 'cpf' ? validCPF(cpf) : validPassport(cpf);
@@ -162,13 +161,6 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       eventId: authContext.selectedEventId,
       sponsorId: sponsorId
     };
-
-    var userByApi = await getBasicUserByEmail(payload.userEmail, authContext.selectedEventId, authContext.userToken);
-    if(userByApi?.document && payload.userDocument != userByApi?.document)
-    {
-      Alert.alert('', `O email preenchido pertence ao documento ${userByApi?.document}`);
-      return;
-    }
 
 
     if (selectedType === 1) {
@@ -261,7 +253,8 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
 
   const typeItems = [
     { key: 1, value: 'Ingresso' },
-    { key: 2, value: 'Credencial' },
+    { key: 2, value: 'Staff' },
+    { key: 3, value: 'Montagem' },
   ];
 
 
@@ -306,7 +299,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     return isValid;
   };
 
-
+  console.log(selectedType)
 
   return (
     <View style={{ flex: 1, marginBottom: 40 }}>
@@ -401,22 +394,24 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
         <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />
       ) : (
         <>
-          <SelectModal
-            label={'Selecione o setor'}
-            items={itemsSector}
-            setValue={setSectorId}
-            value={sectorId}
-          />
 
-          <SelectModal
-            label={'Selecione o patrocinador'}
-            items={itemsSponsors}
-            setValue={setSponsorId}
-            value={sponsorId}
-          />
 
           {selectedType === 1 && (
             <>
+              <SelectModal
+                label={'Selecione o setor'}
+                items={itemsSector}
+                setValue={setSectorId}
+                value={sectorId}
+              />
+
+              <SelectModal
+                label={'Selecione o patrocinador'}
+                items={itemsSponsors}
+                setValue={setSponsorId}
+                value={sponsorId}
+              />
+
               <SelectModal
                 label={'Selecione o dia'}
                 items={itemsDay}
@@ -428,7 +423,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
         </>
       )}
 
-      {selectedType === 2 && (
+      {(selectedType === 2 || selectedType === 3) && (
         <>
           {isLoading ? (
             <ActivityIndicator size="large" style={{ marginVertical: 20 }} />
