@@ -140,9 +140,19 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     if (selectedType === 1 && !eventDay) {
       return Alert.alert('Campo Obrigatório', 'Selecione o dia do evento do ingresso.');
     }
+
+    if (selectedType === 2 || selectedType === 3 && !sponsorId) {
+      return Alert.alert('Campo Obrigatório', 'Selecione o parceiro.');
+    }
+
     if (selectedType === 2 && !selectedPolicyId) {
       return Alert.alert('Campo Obrigatório', 'Selecione a política de acesso.');
     }
+
+    if (selectedType === 2 && !workingHours) {
+      return Alert.alert('Campo Obrigatório', 'Selecione a carga horária.');
+    }
+
     if (!sectorId && selectedType === 1) {
       return Alert.alert('Campo Obrigatório', 'Selecione o setor.');
     }
@@ -394,7 +404,12 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
         <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />
       ) : (
         <>
-
+          <SelectModal
+            label={selectedType != 1 ? 'Selecione o parceiro' : 'Selecione o patrocinador'}
+            items={itemsSponsors}
+            setValue={setSponsorId}
+            value={sponsorId}
+          />
 
           {selectedType === 1 && (
             <>
@@ -403,13 +418,6 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
                 items={itemsSector}
                 setValue={setSectorId}
                 value={sectorId}
-              />
-
-              <SelectModal
-                label={'Selecione o patrocinador'}
-                items={itemsSponsors}
-                setValue={setSponsorId}
-                value={sponsorId}
               />
 
               <SelectModal
@@ -422,6 +430,16 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
           )}
         </>
       )}
+
+      {selectedType === 2 && (
+        <SelectModal
+          label="Selecione a carga horária"
+          items={hourItems}
+          value={workingHours}
+          setValue={setWorkingHours}
+        />
+      )}
+
 
       {(selectedType === 2 || selectedType === 3) && (
         <>
@@ -439,12 +457,6 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
             />
           )}
 
-          <SelectModal
-            label="Selecione a carga horária"
-            items={hourItems}
-            value={workingHours}
-            setValue={setWorkingHours}
-          />
           <Input
             label="Função"
             value={workJobDescription}
