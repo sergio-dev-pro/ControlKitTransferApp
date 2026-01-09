@@ -9,6 +9,7 @@ import { getAccessPolicies, getEventDays, getEventSectors, getSponsors } from '.
 import { AuthContext } from '../../context/AuthContext';
 import uuid from 'react-native-uuid';
 import { TouchableOpacity } from 'react-native';
+import { countryCodes } from '../../helpers/countryCodes';
 
 const inputErrorMsgs = {
   cpf: 'CPF inválido.',
@@ -65,6 +66,12 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   const [sponsors, setSponsors] = useState([]);
   const [suggestionsEmail, setSuggestionsEmail] = useState([]);
   const [emailValidation, setEmailValidation] = useState({ isValid: true, errorMsg: '' });
+
+  const [guestPhone, setGuestPhone] = useState({
+    countryCode: '',
+    dialCode: '',
+    nationalNumber: '',
+  });
 
   useEffect(() => {
     setUser(prevState => ({
@@ -141,10 +148,11 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       return Alert.alert('Campo Obrigatório', 'Selecione o dia do evento do ingresso.');
     }
 
+    /*
     if (selectedType === 2 || selectedType === 3 && !sponsorId) {
       return Alert.alert('Campo Obrigatório', 'Selecione o parceiro.');
     }
-
+*/
     if (selectedType === 2 && !selectedPolicyId) {
       return Alert.alert('Campo Obrigatório', 'Selecione a política de acesso.');
     }
@@ -157,6 +165,19 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       return Alert.alert('Campo Obrigatório', 'Selecione o setor.');
     }
 
+    /*
+    if ((selectedType === 2 || selectedType === 3) && !guestPhone.countryCode) {
+      return Alert.alert('Campo Obrigatório', 'Selecione o código do país.');
+    }
+
+    if ((selectedType === 2 || selectedType === 3) && !guestPhone.dialCode) {
+      return Alert.alert('Campo Obrigatório', 'Selecione o DDD.');
+    }
+
+    if ((selectedType === 2 || selectedType === 3) && !guestPhone.nationalNumber) {
+      return Alert.alert('Campo Obrigatório', 'Selecione o número do telefone.');
+    }
+*/
     const userEmail = email;
 
 
@@ -172,6 +193,13 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       sponsorId: sponsorId
     };
 
+    if (selectedType === 2 || selectedType === 3) {
+      payload.UserPhone = {
+        CountryCode: guestPhone.countryCode,
+        DialCode: guestPhone.dialCode,
+        NationalNumber: guestPhone.nationalNumber,
+      };
+    }
 
     if (selectedType === 1) {
       payload.dayId = eventDay;
@@ -269,10 +297,8 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
 
 
   const handleEmailChange = (text) => {
-    // 1. Atualiza o estado do 'user.email'
     setUser(prev => ({ ...prev, email: text }));
 
-    // 2. Lógica de autocomplete que você sugeriu
     if (text.includes('@')) {
       const [localPart, domainPart] = text.split('@');
       if (localPart.length > 0) {
@@ -309,7 +335,34 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     return isValid;
   };
 
-  console.log(selectedType)
+  const phoneMask = (text) => {
+    if (text.replace(/\D/g, '').length > 8) {
+      return [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]; // 9 dígitos
+    } else {
+      return [/\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]; // 8 dígitos
+    }
+  };
+
+  const maskedPhoneInputProps = useMaskedInputProps({
+    value: guestPhone.nationalNumber,
+    onChangeText: (text, rawText) => {
+      setGuestPhone(prev => ({ ...prev, nationalNumber: rawText }));
+    },
+    mask: phoneMask,
+  });
+
+  const uniqueCodes = countryCodes.filter((item, index, self) =>
+    index === self.findIndex((t) => t.code === item.code)
+  );
+
+  const ddiItems = uniqueCodes
+    .sort((a, b) => a.country.localeCompare(b.country))
+    .map((item) => ({
+      key: item.code,
+      value: `${item.country} (${item.code})`,
+      dialCode: item.code
+    }));
+
 
   return (
     <View style={{ flex: 1, marginBottom: 40 }}>
@@ -399,7 +452,45 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       )}
 
 
-      {/* Se estiver carregando, mostre um loading, senão mostre o form */}
+      {(selectedType === 2 || selectedType === 3) && (
+        <>
+          <SelectModal
+            label="Código do país"
+            placeholder="Selecione"
+            items={ddiItems}
+            value={guestPhone.countryCode}
+            setValue={(code) => {
+              setGuestPhone(prev => ({ ...prev, countryCode: code }));
+            }}
+          />
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Input
+              label="DDD"
+              placeholder="11"
+              keyboardType="numeric"
+              containerStyle={{ flex: 1 }}
+              value={guestPhone.dialCode}
+              maxLength={3}
+              onChangeText={(text) =>
+                setGuestPhone(prev => ({
+                  ...prev,
+                  dialCode: text.replace(/\D/g, ''),
+                }))
+              }
+            />
+
+            <Input
+              label="Número"
+              {...maskedPhoneInputProps}
+              placeholder="11111-1111"
+              keyboardType="numeric"
+              containerStyle={{ flex: 3, paddingHorizontal: 0 }}
+            />
+          </View>
+        </>
+      )}
+
       {isLoading ? (
         <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />
       ) : (

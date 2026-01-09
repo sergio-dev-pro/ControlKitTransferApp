@@ -164,8 +164,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     }
 
     var userByApi = await getBasicUserByEmail(guestEmail, selectedEventId, userToken);
-    if(userByApi?.document && guestDocument != userByApi?.document)
-    {
+    if (userByApi?.document && guestDocument != userByApi?.document) {
       Alert.alert('', `O email preenchido pertence ao documento ${userByApi?.document}`);
       return;
     }
@@ -456,8 +455,6 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
     }, [])
   );
 
-  
-
   const phoneMask = (text) => {
     if (text.replace(/\D/g, '').length > 8) {
       return [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]; // 9 dígitos
@@ -600,7 +597,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
                   label="DDD"
                   placeholder="11"
                   keyboardType="numeric"
-                  containerStyle={{ flex: 1}}
+                  containerStyle={{ flex: 1 }}
                   value={guestPhone.dialCode}
                   maxLength={3}
                   onChangeText={(text) =>
@@ -614,7 +611,7 @@ const CompleteRegisterDrawerScreen = ({ navigation }) => {
                   placeholder="11111-1111"
                   keyboardType="numeric"
                   containerStyle={{ flex: 3, paddingHorizontal: 0 }}
-                  
+
                 />
 
               </View>

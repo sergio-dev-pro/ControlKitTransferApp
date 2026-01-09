@@ -328,7 +328,7 @@ const NewFastTicket = ({ navigation }) => {
 
 
         </ScrollView>
-        {takePhoto && <TakePictureScreen  />}
+        {takePhoto && <TakePictureScreen />}
         <Loading isActive={loading} />
       </View>
     </RegisterStateContext.Provider >
