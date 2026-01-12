@@ -211,11 +211,10 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       return Alert.alert('Campo Obrigatório', 'Selecione o dia do evento do ingresso.');
     }
 
-    /*
-    if (selectedType === 2 || selectedType === 3 && !sponsorId) {
+
+    if ((selectedType === 2 || selectedType === 3) && !sponsorId) {
       return Alert.alert('Campo Obrigatório', 'Selecione o parceiro.');
     }
-*/
     if (selectedType === 2 && !selectedPolicyId) {
       return Alert.alert('Campo Obrigatório', 'Selecione a política de acesso.');
     }
@@ -253,7 +252,8 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       sectorId: sectorId,
       Type: selectedType,
       eventId: authContext.selectedEventId,
-      partnerId: sponsorId
+      partnerId: sponsorId,
+
     };
 
     if (selectedType === 2 || selectedType === 3) {
