@@ -101,6 +101,19 @@ export function AuthProvider({ children }) {
     const token = await AsyncStorage.getItem('userToken');
     const refreshToken = await AsyncStorage.getItem('refreshToken');
     const companiesString = await AsyncStorage.getItem('userCompanies');
+    const lastLoginAt = await AsyncStorage.getItem('lastLoginAt');
+    if(lastLoginAt)
+    {
+      const lastLoginDate = new Date(lastLoginAt);
+      const now = new Date();
+      var hasPassed24Hours = now.getTime() - lastLoginDate.getTime() >= (24 * 60 * 60 * 1000)
+      if(hasPassed24Hours)
+      {
+        await logout();
+        return;
+      }
+    }
+
     if (token) {
       const eventInJsonFormat = await AsyncStorage.getItem('event');
       const event = JSON.parse(eventInJsonFormat);
@@ -201,6 +214,9 @@ export function AuthProvider({ children }) {
       await AsyncStorage.setItem('userToken', token);
       await AsyncStorage.setItem('refreshToken', refreshToken);
       await AsyncStorage.setItem('userCompanies', JSON.stringify(dataResponse.data.companies));
+      const lastLogin = new Date().toISOString();
+      await AsyncStorage.setItem('lastLoginAt', lastLogin);
+
       // decode token to get events.
       var decodedToken = jwt_decode(token);
       console.log('decodedToken=' + JSON.stringify(decodedToken));
@@ -268,7 +284,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await AsyncStorage.multiRemove(['userToken', 'event']);
+      await AsyncStorage.multiRemove(['userToken', 'event', 'lastLoginAt']);
       setAuthState(initialState);
     } catch (e) {
       console.error(e);
