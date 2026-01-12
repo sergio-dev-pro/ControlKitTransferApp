@@ -38,17 +38,17 @@ export const refreshAccessToken = async () => {
     }
 
     const response = await axios({
-    url:
-      `${BASE_URL_V2}/CompanyUsers/RefreshToken`,
-    data: {
-      refreshToken: oldRefreshToken,
-    },
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'X-Device-Id': await getDeviceId()
-    },
-  });
+      url:
+        `${BASE_URL_V2}/CompanyUsers/RefreshToken`,
+      data: {
+        refreshToken: oldRefreshToken,
+      },
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'X-Device-Id': await getDeviceId()
+      },
+    });
 
     const newAccessToken = response.data?.accessToken;
     const newRefreshToken = response.data?.refreshToken || oldRefreshToken;
@@ -101,7 +101,7 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
         });
         var result = retryResponse.data;
 
-        return {newToken: tokens?.accessToken, refreshToken: tokens?.refreshToken, ...result}
+        return { newToken: tokens?.accessToken, refreshToken: tokens?.refreshToken, ...result }
       }
     }
 
@@ -116,8 +116,7 @@ export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
   }
 };
 
-export const getUserByEmail = async (email, eventId, token) =>
-{
+export const getUserByEmail = async (email, eventId, token) => {
   var response = await axios({
     url:
       BASE_URL_V2 +
@@ -136,8 +135,7 @@ export const getUserByEmail = async (email, eventId, token) =>
   return response.data;
 }
 
-export const getBasicUserByEmail = async (email, eventId, token) =>
-{
+export const getBasicUserByEmail = async (email, eventId, token) => {
   var response = await axios({
     url:
       BASE_URL_V2 +
@@ -289,7 +287,7 @@ export const completeFastTicketRegister = async (formData, userToken) => {
     data: formData,
     headers: {
       'Content-Type': 'multipart/form-data',
-      Authorization: `Bearer ${userToken}` ,
+      Authorization: `Bearer ${userToken}`,
       'X-Device-Id': await getDeviceId()
     },
   });

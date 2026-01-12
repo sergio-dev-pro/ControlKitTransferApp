@@ -43,6 +43,11 @@ const NewFastTicket = ({ navigation }) => {
   const [valueInitialSector, setValueInitialSector] = useState(null);
   const [valueInitialSponsor, setValueInitialSponsor] = useState(null);
   const [valueInitialDay, setValueInitialDay] = useState(null);
+  const [valueInitialType, setValueInitialType] = useState(null);
+  const [valueInitialPhone, setValueInitialPhone] = useState(null);
+  const [valueInitialWorkingHours, setValueInitialWorkingHours] = useState(null);
+  const [valueInitialAccessPolicy, setValueInitialAccessPolicy] = useState(null);
+  const [valueInitialJobDescription, setValueInitialJobDescription] = useState('');
 
   const handleUserFormCompleted = data => {
 
@@ -80,7 +85,14 @@ const NewFastTicket = ({ navigation }) => {
     setEmailValue('')
     setValueInitialSector(null)
     setValueInitialSponsor(null)
+    setValueInitialSponsor(null)
+    setValueInitialSponsor(null)
     setValueInitialDay(null)
+    setValueInitialType(null)
+    setValueInitialPhone(null)
+    setValueInitialWorkingHours(null)
+    setValueInitialAccessPolicy(null)
+    setValueInitialJobDescription('')
 
   };
 
@@ -112,18 +124,21 @@ const NewFastTicket = ({ navigation }) => {
         clearStates();
       }
     } catch (error) {
-      console.error('❌ Erro ao cadastrar ingresso');
+      console.error('❌ Erro ao cadastrar ingresso:', error.message);
 
       if (error.response) {
         console.error('Status:', error.response.status);
-        console.error('Data:', error.response.data);
-        setAlertMessage(error.response.data.message, '#dc143c');
-      } else {
-        alert('Erro ao cadastrar ingresso!');
-      }
+        console.error('Data:', JSON.stringify(error.response.data, null, 2));
 
-      if (error.response) {
+        const msg = error.response.data?.message || 'Erro ao processar a requisição.';
+        setAlertMessage(msg, '#dc143c');
         setValuePicturePath(null);
+      } else if (error.request) {
+        console.error('Sem resposta do servidor:', error.request);
+        setAlertMessage('Sem resposta do servidor. Verifique sua conexão.', '#dc143c');
+      } else {
+        console.error('Erro de configuração:', error.message);
+        setAlertMessage(`Erro: ${error.message}`, '#dc143c');
       }
 
       console.error('Stack trace:', error.stack);
@@ -171,7 +186,13 @@ const NewFastTicket = ({ navigation }) => {
       setEmailValue('')
       setValueInitialSector(null)
       setValueInitialSponsor(null)
+      setValueInitialSponsor(null)
       setValueInitialDay(null)
+      setValueInitialType(null)
+      setValueInitialPhone(null)
+      setValueInitialWorkingHours(null)
+      setValueInitialAccessPolicy(null)
+      setValueInitialJobDescription('')
     }, [])
   );
 
@@ -181,10 +202,18 @@ const NewFastTicket = ({ navigation }) => {
 
 
     for (const key in userData) {
-      if (Object.prototype.hasOwnProperty.call(userData, key) && userData[key] !== null) {
-        formData.append(key, userData[key]);
+      if (Object.prototype.hasOwnProperty.call(userData, key) && userData[key] !== null && userData[key] !== undefined) {
+        let value = userData[key];
+        if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        } else {
+          value = String(value);
+        }
+        formData.append(key, value);
       }
     }
+
+    console.log('formData: ', JSON.stringify(formData))
 
     if (!isUserActive && valuePicturePath) {
       formData.append('Face', {
@@ -209,9 +238,14 @@ const NewFastTicket = ({ navigation }) => {
       setEmailValue(email);
 
       setValueInitialSector(userData.sectorId || null);
-      setValueInitialSponsor(userData.sponsorId || null);
+      setValueInitialSponsor(userData.partnerId || userData.sponsorId || null);
 
       setValueInitialDay(userData.dayId || null);
+      setValueInitialType(userData.Type || null);
+      setValueInitialPhone(userData.UserPhone || null);
+      setValueInitialWorkingHours(userData.workhours || null);
+      setValueInitialAccessPolicy(userData.accessPolicyId || null);
+      setValueInitialJobDescription(userData.workJobDescription || '');
     }
 
     setValuePicturePath(null);
@@ -277,6 +311,11 @@ const NewFastTicket = ({ navigation }) => {
               initialSector={valueInitialSector}
               initialSponsor={valueInitialSponsor}
               initialDay={valueInitialDay}
+              selectType={valueInitialType}
+              initialPhone={valueInitialPhone}
+              initialWorkingHours={valueInitialWorkingHours}
+              initialAccessPolicy={valueInitialAccessPolicy}
+              initialJobDescription={valueInitialJobDescription}
             />
           )}
 

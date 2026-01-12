@@ -31,7 +31,7 @@ const DOMAINS = [
 
 
 const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initialDocument, initialFirstName, initialLastName,
-  selectType, initialEmail, initialSector, initialSponsor, initialDay }) => {
+  selectType, initialEmail, initialSector, initialSponsor, initialDay, initialPhone, initialWorkingHours, initialAccessPolicy, initialJobDescription }) => {
 
   const [user, setUser] = useState({
     name: initialFirstName || '',
@@ -85,8 +85,36 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
     if (initialSector) setSectorId(initialSector);
     if (initialSponsor) setSponsorId(initialSponsor);
     if (initialDay) setEventDay(initialDay);
+    if (selectType) setSelectedType(selectType);
 
-  }, [initialFirstName, initialLastName, initialEmail, initialDocument, initialSector, initialSponsor, initialDay]);
+    if (initialPhone) {
+      if (typeof initialPhone === 'string') {
+        try {
+          // Caso venha como string JSON
+          const phoneObj = JSON.parse(initialPhone);
+          setGuestPhone({
+            countryCode: phoneObj.CountryCode || '',
+            dialCode: phoneObj.DialCode || '',
+            nationalNumber: phoneObj.NationalNumber || '',
+          });
+        } catch (e) {
+          console.warn("Erro ao parsear initialPhone", e);
+          // Tenta usar direto caso seja uma string plana
+          setGuestPhone(prev => ({ ...prev, nationalNumber: initialPhone }));
+        }
+      } else {
+        setGuestPhone({
+          countryCode: initialPhone.CountryCode || '',
+          dialCode: initialPhone.DialCode || '',
+          nationalNumber: initialPhone.NationalNumber || '',
+        });
+      }
+    }
+
+    if (initialWorkingHours) setWorkingHours(initialWorkingHours);
+    if (initialJobDescription) setWorkJobDescription(initialJobDescription);
+
+  }, [initialFirstName, initialLastName, initialEmail, initialDocument, initialSector, initialSponsor, initialDay, selectType, initialPhone, initialWorkingHours, initialJobDescription]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,9 +136,6 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
           setSponsors([]);
         }
 
-        const policiesData = await getAccessPolicies(authContext.selectedEventId, authContext.userToken);
-        setAccessPolicies(policiesData);
-
         const daysData = await getEventDays(authContext.selectedEventId, authContext.userToken);
         setDays(daysData);
 
@@ -129,6 +154,44 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
 
     fetchData();
   }, [authContext.selectedEventId, authContext.userToken]);
+
+  useEffect(() => {
+    const fetchPolicies = async () => {
+      setSelectedPolicyId(null);
+
+      if ((selectedType === 2 || selectedType === 3) && sponsorId) {
+        setIsLoading(true);
+        try {
+          const policiesData = await getAccessPolicies(authContext.selectedEventId, authContext.userToken, sponsorId);
+          setAccessPolicies(policiesData);
+
+          // Se tiver uma política inicial E for o mesmo parceiro (ou primeira carga), tenta selecionar
+          // Como garantimos o mesmo parceiro? Bom, se initialSponsor == sponsorId.
+          if (initialAccessPolicy && policiesData.some(p => p.id === initialAccessPolicy)) {
+            // Verificação simplificada: se o ID existe na lista retornada, seleciona.
+            // O risco é selecionar uma política de outro parceiro se houver colisão de ID (impossível com UUID)
+            // ou persistir seleção errada. Mas como a lista vem do sponsorId atual, é seguro.
+            setSelectedPolicyId(initialAccessPolicy);
+          }
+
+        } catch (error) {
+          console.error("❌ Erro ao buscar políticas:", error);
+          if (error.response) {
+            console.error("Detalhes do erro:", JSON.stringify(error.response.data, null, 2));
+          }
+          setAccessPolicies([]);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setAccessPolicies([]);
+      }
+    };
+
+    if (authContext.selectedEventId && authContext.userToken) {
+      fetchPolicies();
+    }
+  }, [sponsorId, selectedType, authContext.selectedEventId, authContext.userToken]);
 
 
   const handleComplete = () => {
@@ -190,7 +253,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       sectorId: sectorId,
       Type: selectedType,
       eventId: authContext.selectedEventId,
-      sponsorId: sponsorId
+      partnerId: sponsorId
     };
 
     if (selectedType === 2 || selectedType === 3) {

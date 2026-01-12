@@ -26,7 +26,7 @@ export const getEventRequiredFields = async eventId =>
 
 export const getSponsors = async (eventId, token) => {
   const response = await axios({
-    url: BASE_URL_V2 + `/events/${eventId}/sponsors`,
+    url: BASE_URL_V2 + `/events/${eventId}/partners`,
     method: 'GET',
     headers: {
       Accept: 'text/plain',
@@ -109,7 +109,7 @@ export const getEventsList = async (token, companyId) => {
             'X-Device-Id': await getDeviceId()
           },
         });
-         return {newToken: tokens?.accessToken, refreshToken: tokens?.refreshToken, ...retryResponse.data}
+        return { newToken: tokens?.accessToken, refreshToken: tokens?.refreshToken, ...retryResponse.data }
       }
     }
 
@@ -119,9 +119,13 @@ export const getEventsList = async (token, companyId) => {
 };
 
 
-export const getAccessPolicies = async (eventId, token) => {
+export const getAccessPolicies = async (eventId, token, partnerId) => {
+  const url = partnerId
+    ? `${BASE_URL_V2}/Events/${eventId}/accessPolicies?partnerId=${partnerId}`
+    : `${BASE_URL_V2}/Events/${eventId}/accessPolicies`;
+
   const response = await axios({
-    url: `${BASE_URL_V2}/Events/${eventId}/accessPolicies`,
+    url,
     method: 'GET',
     headers: {
       Accept: 'application/json',
