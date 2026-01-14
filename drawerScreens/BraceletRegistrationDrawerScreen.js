@@ -333,13 +333,13 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         codeIsValid = false;
       }
 
-      if (deliveryItemResponse.data.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
-        setAlertMessage(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`, '#dc143c');
+      if (currentTicket?.sector && deliveryItemResponse.data.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
+        setAlertMessage(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}", mas o ingresso é do setor "${currentTicket?.sector}".`, '#dc143c');
         codeIsValid = false;
       }
 
-      if (deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
-        setAlertMessage(`Dia Incorreto! O QR CODE pertence ao dia: "${deliveryItemResponse.data.day}"`, '#dc143c');
+      if (currentTicket?.day && deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
+        setAlertMessage(`Dia Incorreto! O QR CODE pertence ao dia: "${deliveryItemResponse.data.day}", mas o ingresso é do dia "${currentTicket?.day}".`, '#dc143c');
         codeIsValid = false;
       }
 
@@ -352,7 +352,27 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       }
     }
     catch (error) {
-      console.log('errooor=' + error)
+      console.log('Erro handleQRCodeCamisa:', error);
+
+      let errorMessage = 'Erro ao consultar no estoque.';
+
+      if (error.response?.data) {
+        const data = error.response.data;
+
+        if (data.message) {
+          errorMessage = data.message;
+        } else if (data.errors) {
+          errorMessage = typeof data.errors === 'object' ? JSON.stringify(data.errors) : data.errors;
+        } else if (typeof data === 'string') {
+          errorMessage = data;
+        } else {
+          errorMessage = JSON.stringify(data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setAlertMessage(errorMessage, '#dc143c');
     } finally {
       setLoading(false);
       setShowQrCodeCamisa(false);
@@ -1014,6 +1034,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     try {
       const deliveryItemResponse = await getDeliveryByCode(authContext.selectedEventId, ticketCode, authContext.userToken, 2);
 
+      console.log('deliveryItemResponse.data', deliveryItemResponse.data)
+
       const currentDeliveryItemEventDay = deliveryItemResponse.data?.day;
 
       if (!currentDeliveryItemEventDay) {
@@ -1024,21 +1046,37 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         throw new Error('QR Code já escaneado.');
       }
 
-      if (deliveryItemResponse.data.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
-        throw new Error(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`);
+      if (currentTicket?.sector && deliveryItemResponse.data.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
+        throw new Error(`Setor Incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}", mas o ingresso é do setor "${currentTicket?.sector}".`);
       }
 
-      if (deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
-        throw new Error(`Dia Incorreto! QR CODE pertence ao dia: ${deliveryItemResponse.data?.day}.`);
+      if (currentTicket?.day && deliveryItemResponse.data.day && deliveryItemResponse.data.day != currentTicket?.day) {
+        throw new Error(`Dia Incorreto! QR CODE pertence ao dia: "${deliveryItemResponse.data?.day}", mas o ingresso é do dia "${currentTicket?.day}".`);
       }
 
       setCurrentTicketCode(ticketCode);
       addToArray(ticketCode);
 
     } catch (error) {
-      console.log('Erro handleQRCodeCamisa:', error);
+      console.error('Erro handleQRCodeCamisa:', error);
 
-      const errorMessage = error.response?.data?.message || error.message || 'Erro ao consultar no estoque.';
+      let errorMessage = 'Erro ao consultar no estoque.';
+
+      if (error.response?.data) {
+        const data = error.response.data;
+
+        if (data.message) {
+          errorMessage = data.message;
+        } else if (data.errors) {
+          errorMessage = typeof data.errors === 'object' ? JSON.stringify(data.errors) : data.errors;
+        } else if (typeof data === 'string') {
+          errorMessage = data;
+        } else {
+          errorMessage = JSON.stringify(data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
 
       setAlertMessage(errorMessage, '#dc143c');
 
@@ -1479,7 +1517,7 @@ const TicketCodeSelectionModal = ({
           width: `95%`,
         }}>
         <Text h4 h4Style={{ marginBottom: 8 }}>
-          Selecione o dia para a entrega do kit
+          Selecione o dia para a entrega do qrcode
         </Text>
 
         <Text style={{ marginBottom: 8 }}>
