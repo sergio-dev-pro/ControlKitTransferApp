@@ -133,8 +133,8 @@ function KitsDrawerScreen({ navigation }) {
       );
 
       if (!ticket?.sectorVisibleToMeetingPoint) {
-          throw new Error("Ingresso não encontrado.");
-       }
+        throw new Error("Ingresso não encontrado.");
+      }
 
       if (ticket.kitDeliveredAt) {
         setHasKitAlreadyDelivered(true);
@@ -348,14 +348,14 @@ function KitsDrawerScreen({ navigation }) {
         setShowQrCodeCamisa(false);
         return; // Para aqui
       }
-      
+
       if (deliveryItemResponse.data.deliveredAt) {
         setAlertMessage('QR Code já escaneado.', '#dc143c');
         codeIsValid = false;
       }
 
       if (deliveryItemResponse.data.sector && currentTicket?.sector && deliveryItemResponse.data.sector != currentTicket?.sector) {
-        setAlertMessage(`Setor incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`,'#dc143c'); 
+        setAlertMessage(`Setor incorreto! O QR CODE pertence ao setor "${deliveryItemResponse.data.sector}".`, '#dc143c');
         codeIsValid = false;
       }
 
@@ -555,124 +555,125 @@ function KitsDrawerScreen({ navigation }) {
             </View>
             <Card
               containerStyle={{ backgroundColor: 'ghostwhite', marginTop: 0 }}>
-              {!!documentImg ? (
-                <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                  <Image
-                    style={{ height: 120, width: 120, marginRight: 8 }}
-                    source={{
-                      uri:
-                        Platform.OS === 'android'
-                          ? 'file://' + documentImg
-                          : documentImg,
+              {eventAllowed && ticketFounds.length > Object.keys(kitCodesRead).length ? (
+                <View style={{ marginVertical: 10 }}>
+                  <Button
+                    type="outline"
+                    onPress={() => {
+                      setShowQrCodeCamisa(true);
                     }}
-                  />
-                  {!!signature && (
-                    <View>
+                  >
+                    Ler Código Camisa
+                  </Button>
+                </View>
+              ) : (
+                <>
+                  {!!documentImg ? (
+                    <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
                       <Image
                         style={{ height: 120, width: 120, marginRight: 8 }}
                         source={{
                           uri:
                             Platform.OS === 'android'
-                              ? 'data:image/png;base64,' +
-                              signature?.encoded +
-                              ';'
-                              : signature.pathName,
+                              ? 'file://' + documentImg
+                              : documentImg,
                         }}
                       />
-                      <Text
-                        h5
-                        style={{
-                          color: THEME.cor.primary,
-                          width: '100%',
-                          textAlign: 'center',
-                        }}>
-                        Assinado
-                      </Text>
+                      {!!signature && (
+                        <View>
+                          <Image
+                            style={{ height: 120, width: 120, marginRight: 8 }}
+                            source={{
+                              uri:
+                                Platform.OS === 'android'
+                                  ? 'data:image/png;base64,' +
+                                  signature?.encoded +
+                                  ';'
+                                  : signature.pathName,
+                            }}
+                          />
+                          <Text
+                            h5
+                            style={{
+                              color: THEME.cor.primary,
+                              width: '100%',
+                              textAlign: 'center',
+                            }}>
+                            Assinado
+                          </Text>
+                        </View>
+                      )}
                     </View>
-                  )}
-                </View>
-              ) : (
-                <>
-                  <TakePictureModal
-                    isVisible={isVisible}
-                    cancelPhoto={() => {
-                      setIsVisible(false);
-                    }}
-                    savePhoto={picture => {
-                      setIsVisible(false);
-                      setDocumentImg(picture);
-                    }}
-                  />
-                  {/* <Text h5 h5Style={{padding: 8}}>
+                  ) : (
+                    <>
+                      <TakePictureModal
+                        isVisible={isVisible}
+                        cancelPhoto={() => {
+                          setIsVisible(false);
+                        }}
+                        savePhoto={picture => {
+                          setIsVisible(false);
+                          setDocumentImg(picture);
+                        }}
+                      />
+                      {/* <Text h5 h5Style={{padding: 8}}>
                     Confira os ingressos antes de continuar.
                   </Text> */}
 
-                  {eventAllowed && !documentImg && !enableTakeDocumentPicture && (
-                    <View style={{ marginVertical: 10 }}>
-                      <Button
-                        type="outline"
-                        onPress={() => {
-                          setShowQrCodeCamisa(true);
-                        }}
-                      >
-                        Ler Código Camisa
-                      </Button>
-                    </View>
+                      {enableTakeDocumentPicture && (
+                        <View style={{ marginVertical: 10 }}>
+                          <Button
+                            type="outline"
+                            onPress={() => {
+                              setIsVisible(true);
+                            }}>
+                            Tire uma foto do documento
+                          </Button>
+                        </View>
+                      )}
+                    </>
                   )}
 
-                  {enableTakeDocumentPicture && (
-                    <View style={{ marginVertical: 10 }}>
-                      <Button
-                        type="outline"
-                        onPress={() => {
-                          setIsVisible(true);
+                  {!!signature ? (
+                    <>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                          // backgroundColor: THEME.cor.whitesmoke,
+                          padding: 8,
+                          marginTop: 20,
                         }}>
-                        Tire uma foto do documento
-                      </Button>
-                    </View>
+                        <Button
+                          type="outline"
+                          containerStyle={{ marginRight: 20 }}
+                          onPress={cancel}>
+                          Cancelar
+                        </Button>
+                        <Button
+                          containerStyle={{ flex: 1 }}
+                          onPress={() => setIsConfirmDelivery(true)}>
+                          Entregar
+                        </Button>
+                      </View>
+                    </>
+                  ) : (
+                    !!documentImg && (
+                      <>
+                        <Text h4 h4Style={{ fontSize: 22, marginBottom: 8 }}>
+                          Assinatura do proprietário do ingresso
+                        </Text>
+                        <Button
+                          type="outline"
+                          onPress={() => {
+                            requestSubscription();
+                          }}>
+                          Assinar
+                        </Button>
+                      </>
+                    )
                   )}
-
                 </>
-              )}
-
-              {!!signature ? (
-                <>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'center',
-                      // backgroundColor: THEME.cor.whitesmoke,
-                      padding: 8,
-                      marginTop: 20,
-                    }}>
-                    <Button
-                      type="outline"
-                      containerStyle={{ marginRight: 20 }}
-                      onPress={cancel}>
-                      Cancelar
-                    </Button>
-                    <Button
-                      containerStyle={{ flex: 1 }}
-                      onPress={() => setIsConfirmDelivery(true)}>
-                      Entregar
-                    </Button>
-                  </View>
-                </>
-              ) : (
-                !!documentImg && (
-                  <>
-                    <Text h4 h4Style={{ fontSize: 22, marginBottom: 8 }}>
-                      Assinatura do proprietário do ingresso
-                    </Text>
-                    <Button
-                      type="outline"
-                      onPress={() => {
-                        requestSubscription();
-                      }}>
-                      Assinar
-                    </Button>
-                  </>
-                )
               )}
             </Card>
             <Signature
@@ -1242,26 +1243,12 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         </>
       )}
 
-      {user && selectedTicketCodes && !documentImg && (
-        <>
-          <TakePictureModal
-            isVisible={showModalToTakePhotoOfDocument}
-            cancelPhoto={() => {
-              setShowModalToTakePhotoOfDocument(false);
-            }}
-            savePhoto={picture => {
-              setShowModalToTakePhotoOfDocument(false);
-              setDocumentImg(picture);
-            }}
-          />
-
-          {eventAllowed && !documentImg && (
+      {user && selectedTicketCodes && (
+        eventAllowed && Object.keys(shirtCodesRead).length < selectedTicketCodes.length ? (
+          <>
             <Text style={{ marginTop: 10, fontSize: 15, fontWeight: '900', textAlign: 'center', textDecorationLine: 'underline' }} >
               Quantidade de kits escaneados {Object.keys(shirtCodesRead).length} / {selectedTicketCodes.length}
             </Text>
-          )}
-
-          {eventAllowed && !documentImg && !enableTakeDocumentPicture && (
             <View style={{ marginVertical: 10 }}>
               <Button
                 type="outline"
@@ -1272,86 +1259,100 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
                 Ler Código Camisa
               </Button>
             </View>
-          )}
-
-          {enableTakeDocumentPicture && (
-            <Button
-              type="outline"
-              containerStyle={{ paddingTop: 10 }}
-              onPress={() => {
-                setShowModalToTakePhotoOfDocument(true);
-              }}>
-              Tire uma foto do documento
-            </Button>
-          )}
-
-        </>
-      )}
-      {user && selectedTicketCodes && documentImg && (
-        <Card>
-          <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-            <Image
-              style={{ height: 120, width: 120, marginRight: 8 }}
-              source={{
-                uri:
-                  Platform.OS === 'android'
-                    ? 'file://' + documentImg
-                    : documentImg,
-              }}
-            />
-            {!!signature && (
-              <View>
-                <Image
-                  style={{ height: 120, width: 120, marginRight: 8 }}
-                  source={{
-                    uri:
-                      Platform.OS === 'android'
-                        ? 'data:image/png;base64,' + signature?.encoded + ';'
-                        : signature.pathName,
+          </>
+        ) : (
+          <>
+            {!documentImg ? (
+              <>
+                <TakePictureModal
+                  isVisible={showModalToTakePhotoOfDocument}
+                  cancelPhoto={() => {
+                    setShowModalToTakePhotoOfDocument(false);
+                  }}
+                  savePhoto={picture => {
+                    setShowModalToTakePhotoOfDocument(false);
+                    setDocumentImg(picture);
                   }}
                 />
-                <Text
-                  h5
-                  style={{
-                    color: THEME.cor.primary,
-                    width: '100%',
-                    textAlign: 'center',
+                <Button
+                  type="outline"
+                  containerStyle={{ paddingTop: 10 }}
+                  onPress={() => {
+                    setShowModalToTakePhotoOfDocument(true);
                   }}>
-                  Assinado
-                </Text>
-              </View>
+                  Tire uma foto do documento
+                </Button>
+              </>
+            ) : (
+              <>
+                <Card>
+                  <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+                    <Image
+                      style={{ height: 120, width: 120, marginRight: 8 }}
+                      source={{
+                        uri:
+                          Platform.OS === 'android'
+                            ? 'file://' + documentImg
+                            : documentImg,
+                      }}
+                    />
+                    {!!signature && (
+                      <View>
+                        <Image
+                          style={{ height: 120, width: 120, marginRight: 8 }}
+                          source={{
+                            uri:
+                              Platform.OS === 'android'
+                                ? 'data:image/png;base64,' + signature?.encoded + ';'
+                                : signature.pathName,
+                          }}
+                        />
+                        <Text
+                          h5
+                          style={{
+                            color: THEME.cor.primary,
+                            width: '100%',
+                            textAlign: 'center',
+                          }}>
+                          Assinado
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </Card>
+
+                {!signature ? (
+                  <>
+                    <Text h5 style={{ fontSize: 18, marginBottom: 8 }}>
+                      Colete a assinatura do proprietário do ingresso
+                    </Text>
+                    <Button
+                      type="outline"
+                      onPress={() => {
+                        setShowSubscriptionModal(true);
+                      }}>
+                      Assinar
+                    </Button>
+                    <Signature
+                      show={showSubscriptionModal}
+                      onNotShow={() => setShowSubscriptionModal(false)}
+                      onSigned={data => {
+                        setShowSubscriptionModal(false);
+                        setSignature(data);
+                      }}
+                    />
+                  </>
+                ) : (
+                  <Button
+                    containerStyle={{ marginTop: 10 }}
+                    onPress={() => setIsConfirmDelivery(true)}>
+                    Entregar
+                  </Button>
+                )}
+              </>
             )}
-          </View>
-        </Card>
-      )}
-      {user && selectedTicketCodes && documentImg && !signature && (
-        <>
-          <Text h5 style={{ fontSize: 18, marginBottom: 8 }}>
-            Colete a assinatura do proprietário do ingresso
-          </Text>
-          <Button
-            type="outline"
-            onPress={() => {
-              setShowSubscriptionModal(true);
-            }}>
-            Assinar
-          </Button>
-          <Signature
-            show={showSubscriptionModal}
-            onNotShow={() => setShowSubscriptionModal(false)}
-            onSigned={data => {
-              setShowSubscriptionModal(false);
-              setSignature(data);
-            }}
-          />
-        </>
-      )}
-      {user && selectedTicketCodes && documentImg && signature && (
-        <Button
-          containerStyle={{ marginTop: 10 }}
-          onPress={() => setIsConfirmDelivery(true)}>
-          Entregar
-        </Button>
+          </>
+        )
       )}
       <ReactNativeModal
         isVisible={isConfirmDelivery}
