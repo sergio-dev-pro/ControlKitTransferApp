@@ -19,6 +19,7 @@ import TicketOfficeManualRegisterScreen from '../drawerScreens/ManualRegisterScr
 import ManualRegisterByTickets from '../drawerScreens/ManualRegisterScreen/ManualRegisterByTickets';
 import BoardingDrawerScreen from '../drawerScreens/BoardingDrawerScreen';
 import CompleteRegisterDrawerScreen from '../drawerScreens/CompleteRegisterDrawerScreen';
+import BuscaGeral from '../drawerScreens/BuscaGeral';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -75,7 +76,7 @@ function Navigators() {
     <>
       {userToken && selectedEventId && eventPermissions ? (
         <Drawer.Navigator
-         key={selectedEventId}
+          key={selectedEventId}
           screenOptions={{
             headerShown: false,
             drawerLabelStyle: {
@@ -123,6 +124,10 @@ function Navigators() {
           )}
           {eventPermissions.includes("page.transport.boarding.add") && (
             <Drawer.Screen name="Embarque" component={BoardingDrawerScreen} />
+          )}
+
+          {eventPermissions.includes("page.delivery.kit") && (
+            <Drawer.Screen name="Busca Geral" component={BuscaGeral} />
           )}
         </Drawer.Navigator>
       ) : (

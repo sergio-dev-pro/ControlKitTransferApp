@@ -35,7 +35,10 @@ const SearchUserModal = ({
   const isFocused = useIsFocused();
   useEffect(() => {
     isFocused && ref.current && ref.current.focus();
-  }, [isFocused]);
+    if (isVisible) {
+      setInputValue('');
+    }
+  }, [isFocused, isVisible]);
 
   const validateInputValue = () => {
     if (!inputValue)
@@ -66,11 +69,11 @@ const SearchUserModal = ({
     try {
       setLoading(true);
       const isEmailSearch = validatedInputValueType === INPUT_VALUE_TYPE.email;
-      
+
       const userResponse = isEmailSearch
         ? await getUserByEmail(inputValue, authContext.selectedEventId, authContext.userToken)
         : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken, fromKitDelivery, fromBlaceletRegistration);
-      
+
       // Nota: Assumindo que a sua API retorna o objeto user diretamente ou dentro de .data
       // Se as suas funções 'getUser...' já retornam response.data, então 'user' já é os dados.
       // Se retornam o objeto axios completo, então use 'userResponse.data'.
@@ -79,11 +82,11 @@ const SearchUserModal = ({
       const searchedFor = {};
       if (isEmailSearch) searchedFor.email = inputValue;
       else searchedFor.cpf = inputValue;
-      
+
       onUserFound({ ...user, id: inputValue }, searchedFor);
-      
-      if(user?.newToken) {
-        authContext.updateTokens({accessToken: user?.newToken, refreshToken: user?.refreshToken})
+
+      if (user?.newToken) {
+        authContext.updateTokens({ accessToken: user?.newToken, refreshToken: user?.refreshToken })
       }
 
     } catch (error) {
@@ -94,9 +97,9 @@ const SearchUserModal = ({
         const status = error.response.status;
         const data = error.response.data;
 
-        if(status === 401){
+        if (status === 401) {
           setAlertMessage('Sessão Expirada: A sua sessão expirou. Por favor, faça login novamente.');
-          authContext.logout(); 
+          authContext.logout();
           return;
         }
 
@@ -114,19 +117,19 @@ const SearchUserModal = ({
             : typeof errors === 'string'
               ? errors
               : JSON.stringify(errors);
-          
-         setAlertMessage('Erro de Validação', errorMessages || 'Dados inválidos.');
+
+          setAlertMessage('Erro de Validação', errorMessages || 'Dados inválidos.');
           return;
         }
 
-       setAlertMessage('Erro', `Erro inesperado do servidor (status ${status}). Tente novamente.`);
-        
+        setAlertMessage('Erro', `Erro inesperado do servidor (status ${status}). Tente novamente.`);
+
       } else if (error.request) {
         // --- 5. TRATAMENTO DE ERRO DE REDE ---
         // A requisição foi feita mas não houve resposta
         console.error('Erro de rede:', error.message);
-       setAlertMessage('Erro de Conexão', 'Verifique a sua internet e tente novamente.');
-      
+        setAlertMessage('Erro de Conexão', 'Verifique a sua internet e tente novamente.');
+
       } else {
         // Erro na configuração da requisição
         console.error('Erro de configuração:', error.message);

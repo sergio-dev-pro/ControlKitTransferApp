@@ -24,31 +24,31 @@ export const fetchTickets = async (deviceId, eventId, userToken) =>
     },
   });
 
-  export const getTicketDelivery = async (eventId, accessKey, token, type) => {
-    return await axios({
-      url: BASE_URL_V2 + `/Deliveries?eventId=${eventId}&accessKey=${accessKey}&type=${type}`,
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json-patch+json',
-        Authorization: 'Bearer ' + token,
-        'X-Device-Id': await getDeviceId()
-      },
-    });
-  };
+export const getTicketDelivery = async (eventId, accessKey, token, type) => {
+  return await axios({
+    url: BASE_URL_V2 + `/Deliveries?eventId=${eventId}&accessKey=${accessKey}&type=${type}`,
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json-patch+json',
+      Authorization: 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
+    },
+  });
+};
 
-  export const getDeliveryByCode = async (eventId, code, token, type) => {
-    return await axios({
-      url: BASE_URL_V2 + `/Deliveries/${code}?eventId=${eventId}&type=${type}`,
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json-patch+json',
-        Authorization: 'Bearer ' + token,
-        'X-Device-Id': await getDeviceId()
-      },
-    });
-  };
+export const getDeliveryByCode = async (eventId, code, token, type) => {
+  return await axios({
+    url: BASE_URL_V2 + `/Deliveries/${code}?eventId=${eventId}&type=${type}`,
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json-patch+json',
+      Authorization: 'Bearer ' + token,
+      'X-Device-Id': await getDeviceId()
+    },
+  });
+};
 
 export const registerBraceletDelivery = async (token, formData) => {
 
@@ -100,4 +100,18 @@ export const hasBraceleteCode = async (userToken, accessKey, eventId) => {
     console.error('Erro ao verificar o código da pulseira:', error);
     throw error;
   }
+};
+
+export const forceFacialSync = async (userToken, ticketId, eventId) => {
+  return await axios({
+    url: BASE_URL_V2 + `/tickets/ForceFacialSync`,
+    method: 'POST',
+    data: { ticketId, eventId },
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json-patch+json',
+      Authorization: 'Bearer ' + userToken,
+      'X-Device-Id': await getDeviceId()
+    },
+  });
 };
