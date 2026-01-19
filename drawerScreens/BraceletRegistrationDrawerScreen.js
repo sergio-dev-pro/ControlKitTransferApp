@@ -1014,6 +1014,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       return;
     }
 
+    if (!showQrCodeCamisa) return;
+
     const isAlreadyScanned = Object.values(shirtCodesRead).some(item => item.code === ticketCode);
     if (isAlreadyScanned) {
       setShowQrCodeCamisa(false);
@@ -1021,7 +1023,13 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       return;
     }
 
-    if (!showQrCodeCamisa || authContext.braceletDeliveryMode != 1) return;
+    if(authContext.braceletDeliveryMode != 1)
+    {
+      setShowQrCodeCamisa(false);
+      setCurrentTicketCode(ticketCode);
+      addToArray(ticketCode);
+      return;
+    }
 
     const currentTicketId = selectedTicketsAvailable[0];
     if (!currentTicketId) {
