@@ -15,7 +15,11 @@ import { useAlert } from '../context/AlertContext';
 const BuscaGeral = () => {
     const navigation = useNavigation();
     const isFocused = useIsFocused();
-    const { userToken, selectedEventId } = useContext(AuthContext);
+    const { userToken, selectedEventId, facialProvider } = useContext(AuthContext);
+    if(!facialProvider)
+    {
+        facialProvider = 3;
+    }
     const [user, setUser] = useState(null);
     const [loadingTicketId, setLoadingTicketId] = useState(null);
     const setAlertMessage = useAlert();
@@ -142,7 +146,7 @@ const BuscaGeral = () => {
                                             <Text style={styles.ticketTitle}>
                                                 {item.sector || 'Setor desconhecido'}
                                             </Text>
-                                            {user.status === 2 && user.photoUrl && (
+                                            {user.status === 2 && user.photoUrl && facialProvider == 3 && (
                                                 <Button
                                                     title="Forçar Sincronização"
                                                     onPress={() => handleForceSync(item.id)}

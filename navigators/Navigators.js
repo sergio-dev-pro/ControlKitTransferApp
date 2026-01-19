@@ -126,7 +126,7 @@ function Navigators() {
             <Drawer.Screen name="Embarque" component={BoardingDrawerScreen} />
           )}
 
-          {eventPermissions.includes("page.delivery.kit") && (
+          {eventPermissions.includes("page.ticket.force.sync.facial") && (
             <Drawer.Screen name="Busca Geral" component={BuscaGeral} />
           )}
         </Drawer.Navigator>

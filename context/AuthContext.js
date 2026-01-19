@@ -134,12 +134,9 @@ export function AuthProvider({ children }) {
         hasPhotoReregisterPermission: decodedToken?.hasPhotoReregisterPermission === "true",
         canCreateTicket: decodedToken.CanCreateTicket,
         canChangeEmail: decodedToken.CanChangeEmail,
-        // // TODO: setado temporariamente para testar, excluir linha a baixo.
-        // token: 'ZiU3aYBWAg1LPl+061DrVA==',
+        facialProvider: event.facialProvider,
         isAuthenticated: true,
         selectedEventId: parseInt(event?.id),
-        //requiredForms: event?.requiredForms,
-        // events,
         permissions: decodedToken.Permissions ? JSON.parse(decodedToken.Permissions) : null,
         companies: companies,
         kitDeliveryMode: event?.kitDeliveryMode,
@@ -153,7 +150,7 @@ export function AuthProvider({ children }) {
     setIsAuthenticating(false);
   };
 
-  const setSelectedEventId = async (id, kitdeliveryMode, canManageBraceletDelivery, braceletDeliveryMode, braceletDeliveryRequireSignature) => {
+  const setSelectedEventId = async (id, kitdeliveryMode, canManageBraceletDelivery, braceletDeliveryMode, braceletDeliveryRequireSignature, facialProvider) => {
     try {
       setIsSearchingEventSettings(true);
       //const { data: requiredFieldsForUserRegistration } = await getEventRequiredFields(id);
@@ -165,7 +162,8 @@ export function AuthProvider({ children }) {
           kitDeliveryMode: kitdeliveryMode,
           braceletDeliveryMode: braceletDeliveryMode,
           canManageBraceletDelivery: canManageBraceletDelivery,
-          braceletDeliveryRequireSignature: braceletDeliveryRequireSignature
+          braceletDeliveryRequireSignature: braceletDeliveryRequireSignature,
+          facialProvider: facialProvider
         }),
       );
       setIsSearchingEventSettings(false);
@@ -175,8 +173,8 @@ export function AuthProvider({ children }) {
         kitDeliveryMode: kitdeliveryMode,
         braceletDeliveryMode: braceletDeliveryMode,
         canManageBraceletDelivery: canManageBraceletDelivery,
-        braceletDeliveryRequireSignature: braceletDeliveryRequireSignature
-        //requiredForms: getRequiredForms(requiredFieldsForUserRegistration),
+        braceletDeliveryRequireSignature: braceletDeliveryRequireSignature,
+        facialProvider: facialProvider
       }));
     } catch (e) {
       console.log(e.response?.data?.errors)

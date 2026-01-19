@@ -96,9 +96,9 @@ function EventSelectionDrawerScreen({ navigation }) {
   }
 
 
-  const handleEventSelection = async (eventId, kitDeliveryMode, canManageBraceletDelivery, braceletDeliveryMode, braceletDeliveryRequireSignature) => {
+  const handleEventSelection = async (eventId, kitDeliveryMode, canManageBraceletDelivery, braceletDeliveryMode, braceletDeliveryRequireSignature, facialProvider) => {
     if (eventId !== selectedEventId) {
-      await setSelectedEventId(eventId, kitDeliveryMode, canManageBraceletDelivery, braceletDeliveryMode, braceletDeliveryRequireSignature);
+      await setSelectedEventId(eventId, kitDeliveryMode, canManageBraceletDelivery, braceletDeliveryMode, braceletDeliveryRequireSignature, facialProvider);
     }
 
     const selectedEvent = events.find(event => event.id === eventId);
@@ -161,7 +161,7 @@ function EventSelectionDrawerScreen({ navigation }) {
               renderItem={({ item }) => (
                 <ListItem containerStyle={GStyles.maxWidth}>
                   <Button
-                    onPress={() => handleEventSelection(item.id, item.kitDeliveryMode, item.canManageBraceletDelivery, item.braceletDeliveryMode, item.braceletDeliveryRequireSignature)}
+                    onPress={() => handleEventSelection(item.id, item.kitDeliveryMode, item.canManageBraceletDelivery, item.braceletDeliveryMode, item.braceletDeliveryRequireSignature, item.facialProvider)}
                     type={selectedEventId === item.id ? 'solid' : 'outline'}
                     size="lg"
                     containerStyle={{ width: '100%' }}
