@@ -118,6 +118,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setShowQrcodereader(false);
 
     try {
+      if(authContext.braceletDeliveryMode != 1) return;
+
       setLoading(true);
       const { data: ticket } = await getTicketDelivery(
         authContext.selectedEventId,
@@ -1019,7 +1021,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       return;
     }
 
-    if (!showQrCodeCamisa) return;
+    if (!showQrCodeCamisa || authContext.braceletDeliveryMode != 1) return;
 
     const currentTicketId = selectedTicketsAvailable[0];
     if (!currentTicketId) {
