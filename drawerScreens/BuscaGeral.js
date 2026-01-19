@@ -16,10 +16,7 @@ const BuscaGeral = () => {
     const navigation = useNavigation();
     const isFocused = useIsFocused();
     const { userToken, selectedEventId, facialProvider } = useContext(AuthContext);
-    if(!facialProvider)
-    {
-        facialProvider = 3;
-    }
+    console.log('@@@facialProvider='+ facialProvider);
     const [user, setUser] = useState(null);
     const [loadingTicketId, setLoadingTicketId] = useState(null);
     const setAlertMessage = useAlert();
@@ -146,7 +143,7 @@ const BuscaGeral = () => {
                                             <Text style={styles.ticketTitle}>
                                                 {item.sector || 'Setor desconhecido'}
                                             </Text>
-                                            {user.status === 2 && user.photoUrl && facialProvider == 3 && (
+                                            {item.status === 2 && user.photoUrl && facialProvider == 3 && (
                                                 <Button
                                                     title="Forçar Sincronização"
                                                     onPress={() => handleForceSync(item.id)}
@@ -165,7 +162,7 @@ const BuscaGeral = () => {
                                             <Text style={styles.ticketSubtitle}>
                                                 Credencial
                                             </Text>
-                                            {user.status === 2 && user.photoUrl && (
+                                            {item.status === 2 && user.photoUrl && (
                                                 <Button
                                                     title="Forçar Sincronização"
                                                     onPress={() => handleForceSync(item.id)}
