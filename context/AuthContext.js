@@ -90,25 +90,23 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-  getUserToken().then(() => {
-    //setupAxiosInterceptor(updateTokens);
-  });
+    getUserToken().then(() => {
+      //setupAxiosInterceptor(updateTokens);
+    });
   }, []);
 
-  
+
 
   const getUserToken = async () => {
     const token = await AsyncStorage.getItem('userToken');
     const refreshToken = await AsyncStorage.getItem('refreshToken');
     const companiesString = await AsyncStorage.getItem('userCompanies');
     const lastLoginAt = await AsyncStorage.getItem('lastLoginAt');
-    if(lastLoginAt)
-    {
+    if (lastLoginAt) {
       const lastLoginDate = new Date(lastLoginAt);
       const now = new Date();
       var hasPassed24Hours = now.getTime() - lastLoginDate.getTime() >= (24 * 60 * 60 * 1000)
-      if(hasPassed24Hours)
-      {
+      if (hasPassed24Hours) {
         await logout();
         return;
       }
@@ -192,7 +190,7 @@ export function AuthProvider({ children }) {
   const confirmLogin = async (code, document) => {
     setIsAuthenticating(true);
     var deviceId = await getAndroidId();
-    console.log('@@@deviceId='+ deviceId);
+    console.log('@@@deviceId=' + deviceId);
     try {
       const url = BASE_URL_V2 + '/companyusers/loginConfirm';
       const dataResponse = await axios({
@@ -272,8 +270,16 @@ export function AuthProvider({ children }) {
 
       return true;
     } catch (error) {
-      console.log(error);
-      setAlertMessage(error.response.data.message);
+      console.log(error)
+      let errorMessage = error.response?.data?.message;
+
+      if (errorMessage === "One or more validation errors occurred." && error.response?.data?.detail?.[0]?.errors?.[0]?.message) {
+        errorMessage = error.response.data.detail[0].errors[0].message;
+      } else {
+        errorMessage = errorMessage || 'Ocorreu um erro inesperado.';
+      }
+
+      setAlertMessage(errorMessage);
       return null;
     } finally {
       setIsAuthenticating(false);
