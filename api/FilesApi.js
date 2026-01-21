@@ -27,7 +27,7 @@ export const ticketOwnerDocumentRegistration = (token, formData) => {
 
 
 export const ticketOwnerSignatureRegistration = async (token, formData) => {
-  await axios({
+  var response = await axios({
     url: BASE_URL_V2 + `/Deliveries`,
     method: 'POST',
     data: formData,
@@ -39,7 +39,11 @@ export const ticketOwnerSignatureRegistration = async (token, formData) => {
     },
   });
 
-  return true;
+  if (response.data.length == 0) {
+    return true
+  }
+
+  return response.data.map(item => item.errorMessage).join('\n')
 };
 
-  
+

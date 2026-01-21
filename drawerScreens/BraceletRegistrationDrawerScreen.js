@@ -108,7 +108,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     const isCodeWithHashtag = ticketCode.includes('#');
     const code = isCodeWithHashtag ? ticketCode.split('#')[0] : ticketCode;
 
-    // Verificação de duplicados na lista atual
     if (ticketFounds.length > 0) {
       const ticketCodeFounds = ticketFounds.map(ticket => ticket.code);
       if (ticketCodeFounds.includes(code))
@@ -118,7 +117,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setShowQrcodereader(false);
 
     try {
-      if(authContext.braceletDeliveryMode != 1) return;
+      //if (authContext.braceletDeliveryMode != 1) return;
 
       setLoading(true);
       const { data: ticket } = await getTicketDelivery(
@@ -242,7 +241,13 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         formData.append('EventId', authContext.selectedEventId);
         formData.append('Type', 'Bracelet');
 
-        await ticketOwnerSignatureRegistration(authContext.userToken, formData);
+        const response = await ticketOwnerSignatureRegistration(authContext.userToken, formData);
+
+        if (response !== true) {
+          setAlertMessage(response, '#dc143c');
+          return;
+        }
+
         setAlertMessage('Entrega de qrcode registrada', '#32cd32');
         cancel();
         setKitCodesRead({});
@@ -884,11 +889,16 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       }
 
       formData.append('EventId', authContext.selectedEventId);
-      formData.append('Type', 'Bracelet');
+      formData.append('Type', 'Bracelet')
 
       console.log('Enviando dados para registrar a assinatura do kit...');
-      await ticketOwnerSignatureRegistration(authContext.userToken, formData);
-      console.log('Assinatura registrada com sucesso.');
+      const response = await ticketOwnerSignatureRegistration(authContext.userToken, formData);
+
+      if (response !== true) {
+        setAlertMessage(response, '#dc143c');
+        return;
+      }
+
       setAlertMessage('Entrega de qrcode registrada', '#32cd32');
       onCancelDeliveryByCPF();
     } catch (error) {
@@ -901,6 +911,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
         if (data.message) {
           errorMessage = data.message;
+        } else if (Array.isArray(data)) {
+          errorMessage = data.map(item => item.errorMessage).join('\n');
         } else if (data.errors) {
 
           errorMessage = typeof data.errors === 'object' ? JSON.stringify(data.errors) : data.errors;
@@ -1023,8 +1035,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       return;
     }
 
-    if(authContext.braceletDeliveryMode != 1)
-    {
+    if (authContext.braceletDeliveryMode != 1) {
       setShowQrCodeCamisa(false);
       setCurrentTicketCode(ticketCode);
       addToArray(ticketCode);
