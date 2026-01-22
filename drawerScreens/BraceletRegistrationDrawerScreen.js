@@ -314,12 +314,19 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
     if (!showQrCodeCamisa) return;
 
-    // Pega o bilhete destacado (próximo da fila)
+    // Pega o bilhete destacado (próximo daW fila)
     const currentTicketId = nextTicketToScan;
 
     if (!currentTicketId) {
       setShowQrCodeCamisa(false);
       return setAlertMessage('Todos os bilhetes selecionados já têm um qrcode associado.', '#dc143c');
+    }
+
+    if (authContext.braceletDeliveryMode != 1) {
+      setCurrentTicketCode(ticketCode);
+      addToArray(ticketCode, currentTicketId);
+      setShowQrCodeCamisa(false);
+      return;
     }
 
     const currentTicket = ticketFounds.find(ticket => ticket.ticketId == currentTicketId);
@@ -330,7 +337,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       let codeIsValid = true;
 
       if (!deliveryItemResponse.data || !deliveryItemResponse.data.day) {
-        setAlertMessage('QR CODE não encontrado.', '#dc143c');
+        setAlertMessage('QR CODE não encontradoo.', '#dc143c');
         setShowQrCodeCamisa(false);
         return; // Para aqui
       }
