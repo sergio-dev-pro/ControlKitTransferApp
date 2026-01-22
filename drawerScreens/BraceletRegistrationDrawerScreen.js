@@ -602,9 +602,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
               Quantidade de qrcodes escaneados {Object.keys(kitCodesRead || {}).length} / {ticketFounds?.length}
             </Text>
 
-
-
-            {eventAllowed && !enableTakeDocumentPicture && !allCodesScanned && (
+            {!enableTakeDocumentPicture && !allCodesScanned && (
               <View style={{ marginVertical: 10 }}>
                 <Button
                   type="outline"
@@ -616,8 +614,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
                 </Button>
               </View>
             )}
-
-
 
             <TakePictureModal
               isVisible={isVisible}

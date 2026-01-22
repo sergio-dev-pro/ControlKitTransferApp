@@ -89,7 +89,7 @@ function Navigators() {
           {eventPermissions.includes("page.delivery.kit") && (
             <Drawer.Screen name="Kits" component={KitsDrawerScreen} />
           )}
-          {eventPermissions.includes("page.ticket.accesskeys.add") && (
+          {eventPermissions.includes("page.delivery.bracelet") && (
             <Drawer.Screen
               name="Entrega de qrcode"
               component={BraceletRegistrationDrawerScreen}
