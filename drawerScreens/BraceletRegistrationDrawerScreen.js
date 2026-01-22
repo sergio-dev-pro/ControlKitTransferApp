@@ -294,7 +294,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   }, [ticketFounds]);
 
 
-  let enableTakeDocumentPicture = !eventAllowed || (ticketFounds.length > 0 && Object.keys(kitCodesRead).length === ticketFounds.length);
+  let enableTakeDocumentPicture = (ticketFounds.length > 0 && Object.keys(kitCodesRead).length === ticketFounds.length);
 
   const handleJustificationSubmit = justification => {
     setIncompleteRegistrationReason(justification);
