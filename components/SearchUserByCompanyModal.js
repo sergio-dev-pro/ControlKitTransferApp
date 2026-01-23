@@ -72,8 +72,7 @@ const SearchUserByCompanyModal = ({
       const user = userResponse; // Ajuste conforme a sua API
 
       const searchedFor = {};
-      if (isEmailSearch) searchedFor.email = inputValue;
-      else searchedFor.cpf = inputValue;
+      searchedFor.cpf = inputValue;
 
       onUserFound({ ...user, id: inputValue }, searchedFor);
 
