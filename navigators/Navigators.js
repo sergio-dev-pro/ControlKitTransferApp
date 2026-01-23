@@ -20,6 +20,7 @@ import ManualRegisterByTickets from '../drawerScreens/ManualRegisterScreen/Manua
 import BoardingDrawerScreen from '../drawerScreens/BoardingDrawerScreen';
 import CompleteRegisterDrawerScreen from '../drawerScreens/CompleteRegisterDrawerScreen';
 import BuscaGeral from '../drawerScreens/BuscaGeral';
+import CreateUser from '../drawerScreens/CreateUser';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -115,6 +116,9 @@ function Navigators() {
           )} */}
           {eventPermissions.includes("page.ticket.add") && (
             <Drawer.Screen name="Gerar ingresso" component={NewFastTicket} />
+          )}
+          {eventPermissions.includes("page.ticket.add") && (
+            <Drawer.Screen name="Criar conta" component={CreateUser} />
           )}
           {!hasOnlyOneEvent && (
             <Drawer.Screen

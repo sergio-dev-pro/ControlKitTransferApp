@@ -3,7 +3,6 @@ import { StyleSheet, View, Image, Alert } from 'react-native';
 import { Button, Card, Divider, Icon, Text } from '@rneui/themed';
 import { FlatList } from 'react-native-gesture-handler';
 import Header from '../components/Header';
-import SearchUserModal from '../components/SearchUserModal';
 import Loading from '../components/Loading';
 import GStyles from '../style/global';
 import THEME from '../style/theme';
@@ -11,6 +10,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { forceFacialSync } from '../api/TicketApi';
 import { useAlert } from '../context/AlertContext';
+import SearchUserByCompanyModal from '../components/SearchUserByCompanyModal';
 
 const BuscaGeral = () => {
     const navigation = useNavigation();
@@ -67,12 +67,11 @@ const BuscaGeral = () => {
             </View>
 
             <View style={[GStyles.container]}>
-                <SearchUserModal
+                <SearchUserByCompanyModal
                     title="Buscar Usuário"
                     onUserFound={handleUserFound}
                     placeholderText="Busque pelo CPF"
                     isVisible={!user && isFocused}
-                    fromKitDelivery={true}
                     onClose={() => {
                         if (navigation.canGoBack()) {
                             navigation.goBack();
