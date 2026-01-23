@@ -339,6 +339,7 @@ export const completeFastTicketRegister = async (formData, userToken) => {
   return true;
 };
 
+
 export const completeManualRegisterByTickets = async (data, userToken) => {
   axios({
     url: BASE_URL_V2 + '/users/manual',
@@ -351,4 +352,18 @@ export const completeManualRegisterByTickets = async (data, userToken) => {
     },
   });
 };
+
+export const createUser = async (formData, userToken) => {
+  return axios({
+    url: BASE_URL_V2 + '/users',
+    method: 'POST',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      Authorization: 'Bearer ' + userToken,
+      'X-Device-Id': await getDeviceId()
+    },
+  });
+};
+
 
