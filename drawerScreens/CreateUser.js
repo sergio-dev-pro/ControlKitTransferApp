@@ -59,6 +59,8 @@ const CreateUser = () => {
     );
 
     const handleUserFound = (foundUser) => {
+        console.log('@@@handleUserFound=' + JSON.stringify(foundUser));
+
         if (foundUser.email || foundUser.document || foundUser.company) {
             setAlertMessage("CPF já possui conta na empresa " + foundUser.company + ".", '#dc143c');
         } else {
@@ -160,9 +162,6 @@ const CreateUser = () => {
             }
 
             const response = await createUser(data, userToken);
-            console.log('@@@@@@@@@@@@@@@@@PASSOU');
-
-            console.log('@@@response=' + response);
 
             if (response) {
                 setAlertMessage('Usuário criado com sucesso', '#32cd32');
@@ -327,7 +326,10 @@ const CreateUser = () => {
                                         <Button
                                             title="Cancelar"
                                             type="clear"
-                                            onPress={() => setShowCreateForm(false)}
+                                            onPress={() => {
+                                                setShowCreateForm(false);
+                                                setUser(null);
+                                            }}
                                             disabled={loading}
                                             buttonStyle={{ marginTop: 10 }}
                                         />
