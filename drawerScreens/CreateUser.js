@@ -59,6 +59,8 @@ const CreateUser = () => {
     );
 
     const handleUserFound = (foundUser) => {
+        console.log('@@@handleUserFound=' + JSON.stringify(foundUser));
+
         if (foundUser.email || foundUser.document || foundUser.company) {
             setAlertMessage("CPF já possui conta na empresa " + foundUser.company + ".", '#dc143c');
         } else {
@@ -160,9 +162,6 @@ const CreateUser = () => {
             }
 
             const response = await createUser(data, userToken);
-            console.log('@@@@@@@@@@@@@@@@@PASSOU');
-
-            console.log('@@@response=' + response);
 
             if (response) {
                 setAlertMessage('Usuário criado com sucesso', '#32cd32');
@@ -327,7 +326,10 @@ const CreateUser = () => {
                                         <Button
                                             title="Cancelar"
                                             type="clear"
-                                            onPress={() => setShowCreateForm(false)}
+                                            onPress={() => {
+                                                setShowCreateForm(false);
+                                                setUser(null);
+                                            }}
                                             disabled={loading}
                                             buttonStyle={{ marginTop: 10 }}
                                         />
@@ -364,17 +366,17 @@ const CreateUser = () => {
                                             titleStyle={{ color: 'gray', fontSize: 14 }}
                                             type="clear"
                                             onPress={() => {
-                                                Alert.alert("Cancelar?", "Todos os dados serão perdidos.", [
-                                                    { text: "Não" },
-                                                    {
-                                                        text: "Sim, cancelar", onPress: () => {
-                                                            setShowCreateForm(false);
-                                                            setUser(null);
-                                                            setIsReviewing(false);
-                                                            setPicturePath(null);
-                                                        }
-                                                    }
-                                                ])
+                                                setAlertMessage(
+                                                    "Cancelar? Todos os dados serão perdidos.",
+                                                    '#ffa500',
+                                                    () => {
+                                                        setShowCreateForm(false);
+                                                        setUser(null);
+                                                        setIsReviewing(false);
+                                                        setPicturePath(null);
+                                                    },
+                                                    true
+                                                );
                                             }}>
                                             Cancelar processo
                                         </Button>
