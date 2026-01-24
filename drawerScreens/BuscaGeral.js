@@ -16,7 +16,6 @@ const BuscaGeral = () => {
     const navigation = useNavigation();
     const isFocused = useIsFocused();
     const { userToken, selectedEventId, facialProvider } = useContext(AuthContext);
-    console.log('@@@facialProvider='+ facialProvider);
     const [user, setUser] = useState(null);
     const [loadingTicketId, setLoadingTicketId] = useState(null);
     const setAlertMessage = useAlert();

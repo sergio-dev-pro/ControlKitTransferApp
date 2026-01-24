@@ -1,5 +1,5 @@
 import React, { useContext, useState, useCallback } from 'react';
-import { StyleSheet, View, Image, Alert, ScrollView } from 'react-native';
+import { StyleSheet, View, Image, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { Button, Card, Divider, Icon, Text, Input } from '@rneui/themed';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
@@ -10,6 +10,20 @@ import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/n
 import { useAlert } from '../context/AlertContext';
 import SearchUserByCompanyModal from '../components/SearchUserByCompanyModal';
 import { createUser } from '../api/UserApi';
+import SelectModal from '../components/SelectModal';
+import TakePictureScreen from './ManualRegisterScreen/TakePictureScreen';
+import { RegisterStateContext } from './ManualRegisterScreen/registerContext';
+
+const DOMAINS = [
+    'gmail.com',
+    'outlook.com',
+    'hotmail.com',
+    'yahoo.com',
+    'icloud.com',
+    'live.com',
+    'bol.com.br',
+    'uol.com.br',
+];
 
 const CreateUser = () => {
     const navigation = useNavigation();
@@ -22,77 +36,171 @@ const CreateUser = () => {
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [showCreateForm, setShowCreateForm] = useState(false);
-    const [formData, setFormData] = useState({
-        documentType: 'CPF',
-        document: '',
-        firstName: '',
-        lastName: '',
-        email: ''
-    });
+
     const [loading, setLoading] = useState(false);
+
+    // Photo states
+    const [takePhoto, setTakePhoto] = useState(false);
+    const [picturePath, setPicturePath] = useState(null);
+    const [isReviewing, setIsReviewing] = useState(false);
+    const [suggestionsEmail, setSuggestionsEmail] = useState([]);
 
     useFocusEffect(
         useCallback(() => {
             return () => {
                 setUser(null);
                 setShowCreateForm(false);
-                setFormData({
-                    documentType: 'CPF',
-                    document: '',
-                    firstName: '',
-                    lastName: '',
-                    email: ''
-                });
+                setTakePhoto(false);
+                setPicturePath(null);
+                setIsReviewing(false);
+                setSuggestionsEmail([]);
             };
         }, [])
     );
 
     const handleUserFound = (foundUser) => {
-        console.log(foundUser.firstname)
-        console.log(foundUser.lastname)
-        console.log(foundUser.email)
-        console.log(foundUser.document)
-        console.log(foundUser.company)
-
-        console.log('entrou')
-
-        if (foundUser.firstname || foundUser.email || foundUser.document || foundUser.company) {
+        if (foundUser.email || foundUser.document || foundUser.company) {
             setAlertMessage("CPF já possui conta na empresa " + foundUser.company + ".", '#dc143c');
         } else {
-            handleUserNotFound(foundUser)
+            handleUserNotFound(foundUser.id || foundUser.cpf || foundUser)
         }
     };
 
     const handleUserNotFound = (searchedValue) => {
-        setFormData(prev => ({ ...prev, document: searchedValue }));
+        console.log('@@@handleUserNotFound=' + searchedValue);
+
+        setUser({
+            documentType: 'CPF',
+            document: searchedValue,
+            firstName: '',
+            lastName: '',
+            email: ''
+        });
         setShowCreateForm(true);
     };
 
-    const handleCreateUser = async () => {
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.document) {
-            setAlertMessage('Preencha todos os campos', '#dc143c');
+    const validateUserData = () => {
+        const firstName = (user.firstName || '').trim();
+        const lastName = (user.lastName || '').trim();
+        const email = (user.email || '').trim();
+        const document = (user.document || '').trim();
+
+        if (firstName.length < 2) return 'O primeiro nome é obrigatório e deve ter no mínimo 2 caracteres.';
+        if (lastName.length < 2) return 'O sobrenome é obrigatório e deve ter no mínimo 2 caracteres.';
+        if (!email || !email.includes('@')) return 'E-mail inválido.';
+        if (document.length < 3) return 'Documento inválido.';
+
+        return null;
+    };
+
+    const handleContinue = () => {
+        const validationError = validateUserData();
+        if (validationError) {
+            setAlertMessage(validationError, '#ffa500');
+            return;
+        }
+        setIsReviewing(true);
+    };
+
+    const savePhoto = async (path) => {
+        setPicturePath(path);
+        setTakePhoto(false);
+    };
+
+    const handleEmailChange = (text) => {
+        setUser({ ...user, email: text });
+        if (text.includes('@')) {
+            const [, domainPart] = text.split('@');
+            if (!domainPart) {
+                setSuggestionsEmail(DOMAINS.map((domain) => `@${domain}`));
+            } else {
+                const filteredDomains = DOMAINS.filter((domain) =>
+                    domain.startsWith(domainPart.toLowerCase())
+                );
+                setSuggestionsEmail(filteredDomains.map((domain) => `@${domain}`));
+            }
+        } else {
+            setSuggestionsEmail([]);
+        }
+    };
+
+    const onSuggestionPress = (domain) => {
+        const [namePart] = user.email.split('@');
+        const newEmail = `${namePart}${domain}`;
+        setUser({ ...user, email: newEmail });
+        setSuggestionsEmail([]);
+    };
+
+
+
+    const completeUserCreation = async (photoPath) => {
+        // Validação antes do envio
+        const validationError = validateUserData();
+        if (validationError) {
+            setAlertMessage(validationError, '#ffa500');
             return;
         }
 
         try {
             setLoading(true);
             const data = new FormData();
-            data.append('DocumentType', formData.documentType);
-            data.append('Document', formData.document);
-            data.append('Firstname', formData.firstName);
-            data.append('Lastname', formData.lastName);
-            data.append('Email', formData.email);
+            data.append('DocumentType', user.documentType === 'CPF' ? 1 : 2);
+            data.append('Document', user.document);
+            data.append('Firstname', user.firstName);
+            data.append('Lastname', user.lastName);
+            data.append('Email', user.email);
+            data.append('EventId', selectedEventId);
 
-            await createUser(data, userToken);
-            setAlertMessage('Usuário criado com sucesso', 'green');
-            setShowCreateForm(false);
-            setUser(null);
-        } catch (error) {
-            console.log(error);
-            let msg = 'Erro ao criar usuário';
-            if (error.response?.data?.errors) {
-                msg = typeof error.response.data.errors === 'string' ? error.response.data.errors : JSON.stringify(error.response.data.errors);
+            if (photoPath) {
+                data.append('Face', {
+                    uri: photoPath,
+                    type: 'image/jpeg',
+                    name: 'userImage.jpg',
+                });
             }
+
+            const response = await createUser(data, userToken);
+            console.log('@@@@@@@@@@@@@@@@@PASSOU');
+
+            console.log('@@@response=' + response);
+
+            if (response) {
+                setAlertMessage('Usuário criado com sucesso', '#32cd32');
+            }
+
+            // Cleanup com delay para garantir que o Alerta apareça antes do Modal de Busca (que aparece quando o user é null)
+            setTimeout(() => {
+                setShowCreateForm(false);
+                setUser(null);
+                setPicturePath(null);
+                setIsReviewing(false);
+            }, 1500);
+        } catch (error) {
+            console.error('❌ Erro ao criar usuário:', error);
+
+            let msg = 'Erro ao processar a requisição.';
+
+            if (error.response) {
+                // Erro retornado pela API
+                console.error('Status:', error.response.status);
+                console.error('Data:', JSON.stringify(error.response.data, null, 2));
+
+                if (error.response.data?.message) {
+                    msg = error.response.data.message;
+                } else if (error.response.data?.errors) {
+                    // Caso errors seja string ou objeto
+                    msg = typeof error.response.data.errors === 'string'
+                        ? error.response.data.errors
+                        : JSON.stringify(error.response.data.errors);
+                }
+            } else if (error.request) {
+                // Erro de rede (sem resposta)
+                msg = 'Sem resposta do servidor. Verifique sua conexão.';
+            } else {
+                // Erro na configuração ou outro
+                msg = error.message;
+            }
+
             setAlertMessage(msg, '#dc143c');
         } finally {
             setLoading(false);
@@ -100,106 +208,197 @@ const CreateUser = () => {
     };
 
     const clearState = () => {
+
+
     };
 
     return (
-        <View style={{ ...GStyles.view }}>
-            <Header
-                style={{ marginBottom: 0 }}
-                openDrawer={() => navigation.openDrawer()}
-            />
-            <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
-                <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
-                    Criar conta
-                </Text>
-                <Divider />
-            </View>
-
-            <View style={[GStyles.container]}>
-                <SearchUserByCompanyModal
-                    title="Buscar Usuário"
-                    onUserFound={handleUserFound}
-                    placeholderText="Busque pelo CPF"
-                    isVisible={!user && !showCreateForm && isFocused}
-                    onClose={() => {
-                        if (navigation.canGoBack()) {
-                            navigation.goBack();
-                        }
-                    }}
+        <RegisterStateContext.Provider
+            value={{
+                cancelPhoto: () => setTakePhoto(false),
+                savePhoto,
+                isSavingPhoto: loading,
+            }}>
+            <View style={{ ...GStyles.view }}>
+                <Header
+                    style={{ marginBottom: 0 }}
+                    openDrawer={() => navigation.openDrawer()}
                 />
+                <View style={{ width: '100%', backgroundColor: THEME.cor.whitesmoke }}>
+                    <Text h3 h3Style={{ padding: 8, textAlign: 'center' }}>
+                        Criar conta
+                    </Text>
+                    <Divider />
+                </View>
 
-                {showCreateForm && (
-                    <ScrollView contentContainerStyle={{ padding: 10 }}>
-                        <Card containerStyle={styles.cardBase}>
-                            <Card.Title>Novo Usuário</Card.Title>
-                            <Card.Divider />
+                <View style={[GStyles.container]}>
+                    <SearchUserByCompanyModal
+                        title="Buscar Usuário"
+                        onUserFound={handleUserFound}
+                        placeholderText="Busque pelo CPF"
+                        isVisible={!user && !showCreateForm && isFocused}
+                        onClose={() => {
+                            if (navigation.canGoBack()) {
+                                navigation.goBack();
+                            }
+                        }}
+                    />
 
-                            <Input
-                                label="Tipo de Documento"
-                                value={formData.documentType}
-                                onChangeText={text => setFormData({ ...formData, documentType: text })}
-                                disabled
-                            />
+                    {showCreateForm && user && (
+                        <ScrollView contentContainerStyle={{ padding: 10 }}>
+                            <Card containerStyle={styles.cardBase}>
+                                <Card.Title>Novo Usuário</Card.Title>
+                                <Card.Divider />
 
-                            <Input
-                                label="Documento"
-                                value={formData.document}
-                                onChangeText={text => setFormData({ ...formData, document: text })}
-                                keyboardType="numeric"
-                            />
+                                {!isReviewing ? (
+                                    <>
+                                        <SelectModal
+                                            label={'Tipo do documento'}
+                                            items={[{ key: 'CPF', value: 'CPF' }, { key: 'Passport', value: 'Passaporte' }]}
+                                            setValue={value => {
+                                                setUser(prev => ({
+                                                    ...prev,
+                                                    documentType: value,
+                                                    document: ''
+                                                }));
+                                            }}
+                                            value={user.documentType}
+                                        />
 
-                            <Input
-                                label="Primeiro Nome"
-                                value={formData.firstName}
-                                onChangeText={text => setFormData({ ...formData, firstName: text })}
-                            />
+                                        {user.documentType === 'CPF' ? (
+                                            <Input
+                                                label={`Documento (CPF)`}
+                                                value={user.document}
+                                                onChangeText={text => setUser({ ...user, document: text })}
+                                                keyboardType="numeric"
+                                            />
+                                        ) : (
+                                            <Input
+                                                label={`Documento (Passaporte)`}
+                                                value={user.document}
+                                                onChangeText={text => setUser({ ...user, document: text })}
+                                            />
+                                        )}
 
-                            <Input
-                                label="Sobrenome"
-                                value={formData.lastName}
-                                onChangeText={text => setFormData({ ...formData, lastName: text })}
-                            />
+                                        <Input
+                                            label="Primeiro Nome"
+                                            value={user.firstName}
+                                            onChangeText={text => setUser({ ...user, firstName: text })}
+                                        />
 
-                            <Input
-                                label="Email"
-                                value={formData.email}
-                                onChangeText={text => setFormData({ ...formData, email: text })}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                            />
+                                        <Input
+                                            label="Sobrenome"
+                                            value={user.lastName}
+                                            onChangeText={text => setUser({ ...user, lastName: text })}
+                                        />
 
-                            <Button
-                                title="Criar Usuário"
-                                onPress={handleCreateUser}
-                                loading={loading}
-                                buttonStyle={{ backgroundColor: THEME.cor.azulEscuro, marginTop: 10 }}
-                            />
+                                        <Input
+                                            label="Email"
+                                            value={user.email}
+                                            onChangeText={handleEmailChange}
+                                            autoCapitalize="none"
+                                            keyboardType="email-address"
+                                        />
 
-                            <Button
-                                title="Cancelar"
-                                type="clear"
-                                onPress={() => setShowCreateForm(false)}
-                                disabled={loading}
-                            />
-                        </Card>
-                    </ScrollView>
-                )}
+                                        {suggestionsEmail.length > 0 && (
+                                            <View style={styles.listContainer}>
+                                                {suggestionsEmail.map((item, index) => (
+                                                    <TouchableOpacity
+                                                        key={item}
+                                                        onPress={() => onSuggestionPress(item)}
+                                                        style={[
+                                                            styles.listItem,
+                                                            index < suggestionsEmail.length - 1 && styles.bottomDivider,
+                                                        ]}
+                                                    >
+                                                        <Text style={styles.suggestionText}>{item}</Text>
+                                                    </TouchableOpacity>
+                                                ))}
+                                            </View>
+                                        )}
+
+                                        <Button
+                                            title="Continuar"
+                                            onPress={handleContinue}
+                                            loading={loading}
+                                            buttonStyle={{ marginTop: 10 }}
+                                        />
+
+                                        <Button
+                                            title="Cancelar"
+                                            type="clear"
+                                            onPress={() => setShowCreateForm(false)}
+                                            disabled={loading}
+                                            buttonStyle={{ marginTop: 10 }}
+                                        />
+                                    </>
+                                ) : (
+                                    <View style={{ paddingHorizontal: 10 }}>
+                                        {!picturePath ? (
+                                            <Button
+                                                type="solid"
+                                                size="lg"
+                                                containerStyle={{ marginTop: 20 }}
+                                                onPress={() => setTakePhoto(true)}>
+                                                Cadastrar foto
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                type="solid"
+                                                size="lg"
+                                                containerStyle={{ marginTop: 20 }}
+                                                onPress={() => completeUserCreation(picturePath)}>
+                                                Enviar ingresso
+                                            </Button>
+                                        )}
+
+                                        <Button
+                                            containerStyle={{ marginTop: 15 }}
+                                            type="outline"
+                                            onPress={() => setIsReviewing(false)}>
+                                            Editar dados
+                                        </Button>
+
+                                        <Button
+                                            containerStyle={{ marginTop: 30 }}
+                                            titleStyle={{ color: 'gray', fontSize: 14 }}
+                                            type="clear"
+                                            onPress={() => {
+                                                Alert.alert("Cancelar?", "Todos os dados serão perdidos.", [
+                                                    { text: "Não" },
+                                                    {
+                                                        text: "Sim, cancelar", onPress: () => {
+                                                            setShowCreateForm(false);
+                                                            setUser(null);
+                                                            setIsReviewing(false);
+                                                            setPicturePath(null);
+                                                        }
+                                                    }
+                                                ])
+                                            }}>
+                                            Cancelar processo
+                                        </Button>
+                                    </View>
+                                )}
+                            </Card>
+                        </ScrollView>
+                    )}
+                </View>
+                <Loading isActive={loadingTicketId !== null || loading} />
+                {takePhoto && <TakePictureScreen />}
             </View>
-            <Loading isActive={loadingTicketId !== null} />
-        </View>
-
-
-
-
+        </RegisterStateContext.Provider>
     );
+
+
 };
 
 const styles = StyleSheet.create({
     cardBase: {
-        width: '100%',
         padding: 15,
         borderRadius: 8,
         marginVertical: 5,
+        marginHorizontal: 0,
         backgroundColor: 'white',
         shadowColor: "#000",
         shadowOffset: {
@@ -274,7 +473,30 @@ const styles = StyleSheet.create({
         color: 'orange',
         fontWeight: 'bold',
         fontSize: 12
-    }
+    },
+    listContainer: {
+        borderColor: '#ddd',
+        borderWidth: 1,
+        borderTopWidth: 0,
+        borderRadius: 5,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        backgroundColor: '#fff',
+        marginTop: -5,
+        marginHorizontal: 10,
+        zIndex: 5,
+    },
+    listItem: {
+        padding: 10,
+    },
+    bottomDivider: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    suggestionText: {
+        fontSize: 16,
+        color: '#333',
+    },
 });
 
 export default CreateUser;
