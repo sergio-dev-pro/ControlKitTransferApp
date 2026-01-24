@@ -281,7 +281,7 @@ const CreateUser = () => {
                                         )}
 
                                         <Input
-                                            label="Primeiro Nome"
+                                            label="Nome"
                                             value={user.firstName}
                                             onChangeText={text => setUser({ ...user, firstName: text })}
                                         />
