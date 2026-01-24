@@ -132,6 +132,13 @@ const BuscaGeral = () => {
                                 </>
                             }
                             renderItem={({ item }) => {
+                                var userName = item.status == 2 ? (item.ownerName ? 'Convidado de '+item.ownerName : item.userName) : item.userName;
+                                if(item.status == 5 || item.status == 6 || item.status == 7)
+                                {
+                                    var currentOwnerUser = item.ownerName ? item.ownerName : item.userName;
+                                    userName = "Convidado de " + currentOwnerUser;
+                                }
+                                console.log("@@@userName="+ userName)
                                 if (item.type === 1) {
                                     return (
                                         <Card containerStyle={styles.ticketCard}>
@@ -141,6 +148,9 @@ const BuscaGeral = () => {
                                             <Text style={styles.ticketTitle}>
                                                 {item.sector || 'Setor desconhecido'}
                                             </Text>
+                                            {userName && (<Text style={styles.userTitle}>
+                                                {userName}
+                                            </Text>)}
                                             {item.status === 2 && user.photoUrl && facialProvider == 3 && (
                                                 <Button
                                                     title="Forçar Sincronização"
@@ -162,6 +172,7 @@ const BuscaGeral = () => {
                                             </Text>
                                             {item.status === 2 && user.photoUrl && (
                                                 <Button
+                                                    style={{marginTop: 5}}
                                                     title="Forçar Sincronização"
                                                     onPress={() => handleForceSync(item.id)}
                                                     loading={loadingTicketId === item.id}
@@ -241,7 +252,12 @@ const styles = StyleSheet.create({
         marginVertical: 4,
     },
     ticketTitle: {
-        fontSize: 16,
+        fontSize: 14,
+        fontWeight: 'medium',
+        color: '#333',
+    },
+    userTitle: {
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#333',
     },

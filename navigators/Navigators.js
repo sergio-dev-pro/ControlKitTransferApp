@@ -117,7 +117,7 @@ function Navigators() {
           {eventPermissions.includes("page.ticket.add") && (
             <Drawer.Screen name="Gerar ingresso" component={NewFastTicket} />
           )}
-          {eventPermissions.includes("page.ticket.add") && (
+          {eventPermissions.includes("page.user.add") && (
             <Drawer.Screen name="Criar conta" component={CreateUser} />
           )}
           {!hasOnlyOneEvent && (
