@@ -366,17 +366,17 @@ const CreateUser = () => {
                                             titleStyle={{ color: 'gray', fontSize: 14 }}
                                             type="clear"
                                             onPress={() => {
-                                                setAlertMessage(
-                                                    "Cancelar? Todos os dados serão perdidos.",
-                                                    '#ffa500',
-                                                    () => {
-                                                        setShowCreateForm(false);
-                                                        setUser(null);
-                                                        setIsReviewing(false);
-                                                        setPicturePath(null);
-                                                    },
-                                                    true
-                                                );
+                                                Alert.alert("Cancelar?", "Todos os dados serão perdidos.", [
+                                                    { text: "Não" },
+                                                    {
+                                                        text: "Sim, cancelar", onPress: () => {
+                                                            setShowCreateForm(false);
+                                                            setUser(null);
+                                                            setIsReviewing(false);
+                                                            setPicturePath(null);
+                                                        }
+                                                    }
+                                                ])
                                             }}>
                                             Cancelar processo
                                         </Button>
