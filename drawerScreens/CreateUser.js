@@ -31,7 +31,6 @@ const CreateUser = () => {
     const { userToken, selectedEventId, facialProvider } = useContext(AuthContext);
     console.log('@@@facialProvider=' + facialProvider);
     const [user, setUser] = useState(null);
-    const [currentDocument, setCurrentDocument] = useState(null);
     const [loadingTicketId, setLoadingTicketId] = useState(null);
     const setAlertMessage = useAlert();
 
@@ -50,7 +49,6 @@ const CreateUser = () => {
         useCallback(() => {
             return () => {
                 setUser(null);
-                setCurrentDocument(null);
                 setShowCreateForm(false);
                 setTakePhoto(false);
                 setPicturePath(null);
@@ -72,8 +70,6 @@ const CreateUser = () => {
 
     const handleUserNotFound = (searchedValue) => {
         console.log('@@@handleUserNotFound=' + searchedValue);
-
-        setCurrentDocument(searchedValue);
 
         setUser({
             documentType: 'CPF',
@@ -175,7 +171,6 @@ const CreateUser = () => {
             setTimeout(() => {
                 setShowCreateForm(false);
                 setUser(null);
-                setCurrentDocument(null);
                 setPicturePath(null);
                 setIsReviewing(false);
             }, 1500);
@@ -272,8 +267,8 @@ const CreateUser = () => {
                                         {user.documentType === 'CPF' ? (
                                             <Input
                                                 label={`Documento (CPF)`}
-                                                value={currentDocument}
-                                                onChangeText={text => {setUser({ ...user, document: text }); setCurrentDocument(document);}}
+                                                value={user.document}
+                                                onChangeText={text => setUser({ ...user, document: text })}
                                                 keyboardType="numeric"
                                             />
                                         ) : (
@@ -334,7 +329,6 @@ const CreateUser = () => {
                                             onPress={() => {
                                                 setShowCreateForm(false);
                                                 setUser(null);
-                                                setCurrentDocument(null);
                                             }}
                                             disabled={loading}
                                             buttonStyle={{ marginTop: 10 }}
@@ -378,7 +372,6 @@ const CreateUser = () => {
                                                         text: "Sim, cancelar", onPress: () => {
                                                             setShowCreateForm(false);
                                                             setUser(null);
-                                                            setCurrentDocument(null);
                                                             setIsReviewing(false);
                                                             setPicturePath(null);
                                                         }
