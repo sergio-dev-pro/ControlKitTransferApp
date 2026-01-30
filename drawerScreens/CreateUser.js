@@ -64,7 +64,7 @@ const CreateUser = () => {
         if (foundUser.email || foundUser.document || foundUser.company) {
             setAlertMessage("CPF já possui conta na empresa " + foundUser.company + ".", '#dc143c');
         } else {
-            handleUserNotFound(foundUser.id || foundUser.cpf || foundUser)
+            handleUserNotFound(foundUser.id)
         }
     };
 
