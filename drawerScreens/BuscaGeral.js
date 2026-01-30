@@ -15,7 +15,7 @@ import SearchUserByCompanyModal from '../components/SearchUserByCompanyModal';
 const BuscaGeral = () => {
     const navigation = useNavigation();
     const isFocused = useIsFocused();
-    const { userToken, selectedEventId, facialProvider } = useContext(AuthContext);
+    const { userToken, selectedEventId, facialProvider, logout } = useContext(AuthContext);
     const [user, setUser] = useState(null);
     const [loadingTicketId, setLoadingTicketId] = useState(null);
     const setAlertMessage = useAlert();
@@ -41,16 +41,51 @@ const BuscaGeral = () => {
         try {
             setLoadingTicketId(ticketId);
             await forceFacialSync(userToken, ticketId, selectedEventId);
+
             setAlertMessage("Sincronização enviada com sucesso!", '#32cd32');
         } catch (error) {
-            const errorMessage = error.response?.data?.message || "Erro ao enviar sincronização.";
-            setAlertMessage(errorMessage, '#dc143c');
+            console.log(error);
+            if (error.response) {
+                console.error('Erro response:', error.response);
+                const { status, data } = error.response;
+
+                if (status === 401) {
+                    setAlertMessage('A sua sessão expirou. Por favor, faça login novamente.', '#dc143c');
+                    logout();
+                    return;
+                }
+
+                if (status === 404) {
+                    setAlertMessage('Aviso: Ingresso ou recurso não encontrado.', '#dc143c');
+                    return;
+                }
+
+                if (status === 400 || data?.errors) {
+                    const errors = data?.errors;
+                    const errorMessages = Array.isArray(errors)
+                        ? errors.join('\n')
+                        : typeof errors === 'string'
+                            ? errors
+                            : JSON.stringify(errors) || 'Dados inválidos.';
+
+                    setAlertMessage(`Erro de Validação: ${errorMessages}`, '#dc143c');
+                    return;
+                }
+
+                setAlertMessage(`Erro: Erro inesperado do servidor (status ${status}). Tente novamente.`, '#dc143c');
+
+            } else if (error.request) {
+                console.error('Erro de rede:', error.message);
+                setAlertMessage('Erro de Conexão: Verifique a sua internet e tente novamente.', '#dc143c');
+
+            } else {
+                console.error('Erro de configuração:', error.message);
+                setAlertMessage('Erro: Ocorreu um erro interno na aplicação.', '#dc143c');
+            }
         } finally {
             setLoadingTicketId(null);
         }
     }
-
-    console.log(user)
 
     return (
         <View style={{ ...GStyles.view }}>
@@ -132,13 +167,12 @@ const BuscaGeral = () => {
                                 </>
                             }
                             renderItem={({ item }) => {
-                                var userName = item.status == 2 ? (item.ownerName ? 'Convidado de '+item.ownerName : item.userName) : item.userName;
-                                if(item.status == 5 || item.status == 6 || item.status == 7)
-                                {
+                                var userName = item.status == 2 ? (item.ownerName ? 'Convidado de ' + item.ownerName : item.userName) : item.userName;
+                                if (item.status == 5 || item.status == 6 || item.status == 7) {
                                     var currentOwnerUser = item.ownerName ? item.ownerName : item.userName;
                                     userName = "Convidado de " + currentOwnerUser;
                                 }
-                                console.log("@@@userName="+ userName)
+                                console.log("@@@userName=" + userName)
                                 if (item.type === 1) {
                                     return (
                                         <Card containerStyle={styles.ticketCard}>
@@ -172,7 +206,7 @@ const BuscaGeral = () => {
                                             </Text>
                                             {item.status === 2 && user.photoUrl && (
                                                 <Button
-                                                    style={{marginTop: 5}}
+                                                    style={{ marginTop: 5 }}
                                                     title="Forçar Sincronização"
                                                     onPress={() => handleForceSync(item.id)}
                                                     loading={loadingTicketId === item.id}
