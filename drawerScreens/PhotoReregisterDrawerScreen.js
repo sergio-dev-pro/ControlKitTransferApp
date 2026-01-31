@@ -4,12 +4,12 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { saveUserPhotoAgain } from '../api/UserApi';
 import Header from '../components/Header';
-import SearchUserModal from '../components/SearchUserModal';
 import TakePictureModal from '../components/TakePictureModal';
 import { useAlert } from '../context/AlertContext';
 import { AuthContext } from '../context/AuthContext';
 import GStyles from '../style/global';
 import THEME from '../style/theme';
+import SearchUserByCompanyModal from '../components/SearchUserByCompanyModal';
 
 function PhotoReregisterDrawerScreen({ navigation }) {
   const [isVisible, setIsVisible] = useState(true);
@@ -120,7 +120,7 @@ function PhotoReregisterDrawerScreen({ navigation }) {
           </>
         )}
         {!user && (
-          <SearchUserModal
+          <SearchUserByCompanyModal
             onUserFound={handleUserFound}
             isVisible={isVisible}
             onClose={() => {

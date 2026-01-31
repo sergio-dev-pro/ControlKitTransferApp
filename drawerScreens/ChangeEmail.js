@@ -7,7 +7,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import THEME from '../style/theme';
 import { Button, Input, Text, Divider } from '@rneui/themed';
 import { cpfValidation, isValidEmail } from '../helpers/validation';
-import { getUserByCpfWithAuth, updateEmail } from '../api/UserApi';
+import { getUserByCpfGeneral, updateEmail } from '../api/UserApi';
 import { AuthContext } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
 import { useMaskedInputProps } from 'react-native-mask-input';
@@ -49,7 +49,7 @@ const ChangeEmail = ({ navigation }) => {
     try {
 
       setLoading(true);
-      const data = await getUserByCpfWithAuth(
+      const data = await getUserByCpfGeneral(
         inputValue,
         authContext.selectedEventId,
         authContext.userToken,
