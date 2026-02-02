@@ -350,7 +350,7 @@ const CreateUser = () => {
                                                 size="lg"
                                                 containerStyle={{ marginTop: 20 }}
                                                 onPress={() => completeUserCreation(picturePath)}>
-                                                Enviar ingresso
+                                                Finalizar Cadastro
                                             </Button>
                                         )}
 
