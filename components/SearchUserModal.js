@@ -40,26 +40,61 @@ const SearchUserModal = ({
     }
   }, [isFocused, isVisible]);
 
+  const validateStrictCPF = (cpf) => {
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+    let soma = 0;
+    let resto;
+    for (let i = 1; i <= 9; i++)
+      soma = soma + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto !== parseInt(cpf.substring(9, 10))) return false;
+    soma = 0;
+    for (let i = 1; i <= 10; i++)
+      soma = soma + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto !== parseInt(cpf.substring(10, 11))) return false;
+    return true;
+  };
+
   const validateInputValue = () => {
     if (!inputValue)
       return invalidInputValue ? setInvalidInputValue(null) : null;
 
-    const isValid = isValidEmail(inputValue);
-    const isValidCPF = cpfValidation(inputValue);
-    const isValidPassport = inputValue.length >= 4;
-
-    const isInputValueValid = isValid || isValidCPF || isValidPassport;
-    if (!isInputValueValid) {
-      return !invalidInputValue
-        ? setInvalidInputValue('E-mail ou documento inválido.')
-        : null;
+    if (isValidEmail(inputValue)) {
+      invalidInputValue && setInvalidInputValue(null);
+      return INPUT_VALUE_TYPE.email;
     }
 
-    invalidInputValue && setInvalidInputValue(null);
+    // Verifica se contém letras
+    const hasLetters = /[a-zA-Z]/.test(inputValue);
 
-    if (isValid) return INPUT_VALUE_TYPE.email;
-    if (isValidCPF) return INPUT_VALUE_TYPE.cpf;
-    if (isValidPassport) return INPUT_VALUE_TYPE.passport;
+    if (hasLetters) {
+      // Se tem letras, assumimos que é um documento estrangeiro/passaporte
+      if (inputValue.length >= 4) {
+        invalidInputValue && setInvalidInputValue(null);
+        return INPUT_VALUE_TYPE.passport;
+      }
+    } else {
+      // Se NÃO tem letras, assumimos que é CPF (ou tentativa de CPF)
+      // Removemos caracteres não numéricos para validar
+      const cleanedValue = inputValue.replace(/\D/g, '');
+
+      if (validateStrictCPF(cleanedValue)) {
+        invalidInputValue && setInvalidInputValue(null);
+        return INPUT_VALUE_TYPE.cpf;
+      } else {
+        // Se for apenas números e falhar na validação do CPF, é inválido.
+        // Isso impede que "000000000000" passe como passaporte.
+        setInvalidInputValue('CPF inválido.');
+        return null;
+      }
+    }
+
+    setInvalidInputValue('E-mail ou documento inválido.');
+    return null;
   };
 
   const handleSearch = async () => {
