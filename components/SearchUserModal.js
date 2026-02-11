@@ -88,12 +88,12 @@ const SearchUserModal = ({
       } else {
         // Se for apenas números e falhar na validação do CPF, é inválido.
         // Isso impede que "000000000000" passe como passaporte.
-        setInvalidInputValue('CPF inválido.');
+        setAlertMessage('CPF inválido.');
         return null;
       }
     }
 
-    setInvalidInputValue('E-mail ou documento inválido.');
+    setAlertMessage('E-mail ou documento inválido.');
     return null;
   };
 
@@ -109,10 +109,18 @@ const SearchUserModal = ({
         ? await getUserByEmail(inputValue, authContext.selectedEventId, authContext.userToken)
         : await getUserByCpfWithAuth(inputValue, authContext.selectedEventId, authContext.userToken, fromKitDelivery, fromBlaceletRegistration);
 
-      // Nota: Assumindo que a sua API retorna o objeto user diretamente ou dentro de .data
-      // Se as suas funções 'getUser...' já retornam response.data, então 'user' já é os dados.
-      // Se retornam o objeto axios completo, então use 'userResponse.data'.
-      const user = userResponse; // Ajuste conforme a sua API
+      const user = userResponse;
+
+
+      console.log('userrr', user);
+
+      if (fromKitDelivery) {
+        if (!user || (!user.cpf && !user.email)) {
+          setAlertMessage('Usuário não encontrado.');
+          setLoading(false);
+          return;
+        }
+      }
 
       const searchedFor = {};
       if (isEmailSearch) searchedFor.email = inputValue;
@@ -125,7 +133,7 @@ const SearchUserModal = ({
       }
 
     } catch (error) {
-      console.error('Erro geral:', error);
+      console.error('Erro geralllllll:', error.message);
 
       if (error.response) {
         console.error('Erro response:', error.response);
@@ -157,7 +165,7 @@ const SearchUserModal = ({
           return;
         }
 
-        setAlertMessage('Erro', `Erro inesperado do servidor (status ${status}). Tente novamente.`);
+        setAlertMessage('Errooo', `Erro inesperado do servidor (status ${status}). Tente novamente.`);
 
       } else if (error.request) {
         // --- 5. TRATAMENTO DE ERRO DE REDE ---
@@ -168,7 +176,7 @@ const SearchUserModal = ({
       } else {
         // Erro na configuração da requisição
         console.error('Erro de configuração:', error.message);
-        setAlertMessage('Erro', 'Ocorreu um erro interno na aplicação.');
+        setAlertMessage('Ocorreu um erro interno na aplicação.');
       }
 
     } finally {

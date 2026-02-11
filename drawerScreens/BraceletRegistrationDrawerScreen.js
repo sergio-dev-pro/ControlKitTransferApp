@@ -1496,6 +1496,89 @@ const TicketCodeSelectionModal = ({
   const [selecteds, setSelecteds] = useState([]);
   const [hasAllSelected, setHasAllSelected] = useState(false);
   const setAlertMessage = useAlert();
+
+  // Novos estados para filtro
+  const [ticketsUser, setTicketsUser] = useState(tickets);
+  const [selectedSector, setSelectedSector] = useState('all');
+  const [selectedDay, setSelectedDay] = useState('all');
+  const [selectedSectorDelivered, setSelectedSectorDelivered] = useState(false);
+  const [selectedSectorNotDelivered, setSelectedSectorNotDelivered] = useState(false);
+
+  // Extrair setores únicos
+  const uniqueSectors = useMemo(() => {
+    const sectors = [...new Set(tickets.map(t => t.sector).filter(Boolean))];
+    return [
+      { key: 'all', value: 'Todos' },
+      ...sectors.map(s => ({ key: s, value: s }))
+    ];
+  }, [tickets]);
+
+  // Extrair dias únicos
+  const uniqueDays = useMemo(() => {
+    const days = [...new Set(tickets.map(t => t.day).filter(Boolean))];
+    return [
+      { key: 'all', value: 'Todos' },
+      ...days.map(d => ({ key: d, value: d }))
+    ];
+  }, [tickets]);
+
+  const selectAllDelivered = () => {
+    if (selectedSectorDelivered) {
+      setSelectedSectorDelivered(false);
+    } else {
+      setSelectedSectorDelivered(true);
+      setSelectedSectorNotDelivered(false);
+    }
+  };
+
+  const selectAllNotDelivered = () => {
+    if (selectedSectorNotDelivered) {
+      setSelectedSectorNotDelivered(false);
+    } else {
+      setSelectedSectorNotDelivered(true);
+      setSelectedSectorDelivered(false);
+    }
+  };
+
+  // Efeito para aplicar os filtros
+  useEffect(() => {
+    const hasSectorFilter = selectedSector !== 'all';
+    const hasDayFilter = selectedDay !== 'all';
+
+    if (!hasSectorFilter && !hasDayFilter && !selectedSectorDelivered && !selectedSectorNotDelivered) {
+      setTicketsUser(tickets);
+    } else {
+      const filtered = tickets.filter(ticket => {
+        // Validação de Setor
+        let matchesSector = true;
+        if (hasSectorFilter) {
+          matchesSector = ticket.sector === selectedSector;
+        }
+
+        // Validação de Dia
+        let matchesDay = true;
+        if (hasDayFilter) {
+          matchesDay = ticket.day === selectedDay;
+        }
+
+        // Validação de Status (hasBraceletCode)
+        let matchesStatus = true;
+        if (selectedSectorDelivered) {
+          matchesStatus = !!ticket.hasBraceletCode;
+        } else if (selectedSectorNotDelivered) {
+          matchesStatus = !ticket.hasBraceletCode;
+        }
+
+        return matchesSector && matchesDay && matchesStatus;
+      });
+      setTicketsUser(filtered);
+    }
+    // Ao filtrar, limpamos a seleção atual para evitar inconsistências
+    setSelecteds([]);
+    setHasAllSelected(false);
+  }, [selectedSector, selectedDay, selectedSectorDelivered, selectedSectorNotDelivered, tickets]);
+
+
   const toggleCheckbox = ticketId => {
     setSelecteds(prev =>
       prev.includes(ticketId)
@@ -1503,8 +1586,6 @@ const TicketCodeSelectionModal = ({
         : [...prev, ticketId]
     );
   };
-
-  console.log('tickets: ', tickets)
 
   const handleConfirm = () => {
     if (selecteds.length === 0)
@@ -1518,7 +1599,7 @@ const TicketCodeSelectionModal = ({
       setSelecteds([]);
     } else {
       setHasAllSelected(true);
-      const allTicketIds = tickets.map(ticket => ticket.id);
+      const allTicketIds = ticketsUser.map(ticket => ticket.id);
       setSelecteds(allTicketIds);
     }
   }
@@ -1530,7 +1611,6 @@ const TicketCodeSelectionModal = ({
       backdropOpacity={0.1}
       style={{ alignItems: 'center' }}
       onBackdropPress={onClose}>
-      {/* {tickets} */}
       <View
         style={{
           flex: 1,
@@ -1551,35 +1631,101 @@ const TicketCodeSelectionModal = ({
           <Text style={{ fontWeight: 'bold' }}>Documento: {user.id ?? 'Cpf não disponível'}</Text>
         </Text>
 
+        {/* --- NOVOS FILTROS --- */}
+        <View style={{ marginBottom: 15 }}>
+          <Text style={{ fontSize: 14, color: "#7A7A7A", fontWeight: "bold", marginBottom: 0, marginLeft: 5 }}>
+            Filtrar por:
+          </Text>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1, marginRight: 5 }}>
+              <SelectModal
+                label="Setor"
+                value={selectedSector}
+                setValue={setSelectedSector}
+                items={uniqueSectors}
+                placeholder="Selecione"
+              />
+            </View>
+
+            <View style={{ flex: 1, marginLeft: 5 }}>
+              <SelectModal
+                label="Dia"
+                value={selectedDay}
+                setValue={setSelectedDay}
+                items={uniqueDays}
+                placeholder="Selecione"
+              />
+            </View>
+          </View>
+
+          {/* Filtro de Status */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginLeft: 5, gap: 10 }}>
+            <Button
+              title="Entregues"
+              type={selectedSectorDelivered ? "solid" : "outline"}
+              buttonStyle={{
+                borderRadius: 20,
+                paddingHorizontal: 15,
+                borderColor: selectedSectorDelivered ? THEME.cor.primary : '#ccc',
+                backgroundColor: selectedSectorDelivered ? THEME.cor.primary : 'transparent',
+              }}
+              titleStyle={{
+                fontSize: 12,
+                color: selectedSectorDelivered ? 'white' : '#7A7A7A'
+              }}
+              onPress={selectAllDelivered}
+            />
+            <Button
+              title="Não Entregues"
+              type={selectedSectorNotDelivered ? "solid" : "outline"}
+              buttonStyle={{
+                borderRadius: 20,
+                paddingHorizontal: 15,
+                borderColor: selectedSectorNotDelivered ? THEME.cor.primary : '#ccc',
+                backgroundColor: selectedSectorNotDelivered ? THEME.cor.primary : 'transparent',
+                marginLeft: 5,
+              }}
+              titleStyle={{
+                fontSize: 12,
+                color: selectedSectorNotDelivered ? 'white' : '#7A7A7A'
+              }}
+              onPress={selectAllNotDelivered}
+            />
+          </View>
+        </View>
+
+        {/* --- FIM DOS FILTROS --- */}
+
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 5,
-            backgroundColor: "#F9F9F9",
-            borderBottomWidth: 1,
-            borderBottomColor: "#E0E0E0",
+            justifyContent: "space-between", // Mudado para space-between para alinhar melhor o checkbox
+            paddingVertical: 10,
+            paddingHorizontal: 10,
+            backgroundColor: "#F0F0F0", // Cor de fundo suave para destacar a barra
+            borderRadius: 8,
             marginBottom: 8,
           }}>
           <Text h5
-            style={{ fontSize: 16, color: "#7A7A7A", fontWeight: "bold" }}
+            style={{ fontSize: 16, color: "#333", fontWeight: "bold" }}
           >
             Selecionar todos
           </Text>
           <CheckBox
-            size={30}
-            containerStyle={{ padding: 0, backgroundColor: "#F9F9F9" }}
-            uncheckedColor='#7A7A7A'
+            size={28}
+            containerStyle={{ padding: 0, margin: 0, backgroundColor: "transparent" }}
             checked={hasAllSelected}
             onPress={() => selectAll()}
             iconType="material-community"
-            checkedIcon="checkbox-outline"
+            checkedIcon="checkbox-marked" // Ícone preenchido quando marcado
             uncheckedIcon={'checkbox-blank-outline'}
+            checkedColor={THEME.cor.primary}
           />
         </View>
         <FlatList
-          data={tickets} // Agora é um array de objetos `ticket`
+          data={ticketsUser} // Agora usa a lista filtrada
           renderItem={({ item: ticket, index }) => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }} key={ticket.id}>
               <Text
@@ -1602,7 +1748,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {[ticket.accessPolicy || '', ticket.sector || '', ticket.day || '', ticket.braceletDeliveredAt ? "ENTREGUE" : null]
+                {[ticket.accessPolicy || '', ticket.sector || '', ticket.day || '', ticket.hasBraceletCode ? "ENTREGUE" : null]
                   .filter(Boolean)
                   .join(' - ')}
               </Text>

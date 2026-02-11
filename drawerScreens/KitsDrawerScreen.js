@@ -833,7 +833,7 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     if (!user) return;
 
     const updatedUser = { ...user };
-    updatedUser.tickets = user.tickets.filter(t => t.sectorVisibleToMeetingPoint);
+    updatedUser.tickets = (user.tickets || []).filter(t => t.sectorVisibleToMeetingPoint);
 
     setUser(updatedUser);
   };
@@ -1079,6 +1079,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   };
 
   useEffect(() => {
+    console.log('user', user);
+
     if (user) {
       if (!user.isValid) {
         setIsValidBoolean(true)
@@ -1471,23 +1473,81 @@ const TicketCodeSelectionModal = ({
   const [hasAllSelected, setHasAllSelected] = useState(false);
   const setAlertMessage = useAlert();
   const [ticketsUser, setTicketsUser] = useState(tickets);
-  const [selectedSectorMale, setSelectedSectorMale] = useState(false);
-  const [selectedSectorFemale, setSelectedSectorFemale] = useState(false);
+  const [selectedSector, setSelectedSector] = useState('all');
+  const [selectedDay, setSelectedDay] = useState('all');
   const [selectedSectorDelivered, setSelectedSectorDelivered] = useState(false);
+  const [selectedSectorNotDelivered, setSelectedSectorNotDelivered] = useState(false);
 
-  const toggleCheckbox = ticketId => {
-    setSelecteds(prev =>
-      prev.includes(ticketId)
-        ? prev.filter(c => c !== ticketId)
-        : [...prev, ticketId]
-    );
+  const uniqueSectors = useMemo(() => {
+    const sectors = [...new Set(tickets.map(t => t.sector).filter(Boolean))];
+    return [
+      { key: 'all', value: 'Todos' },
+      ...sectors.map(s => ({ key: s, value: s }))
+    ];
+  }, [tickets]);
+
+  const uniqueDays = useMemo(() => {
+    const days = [...new Set(tickets.map(t => t.day).filter(Boolean))];
+    return [
+      { key: 'all', value: 'Todos' },
+      ...days.map(d => ({ key: d, value: d }))
+    ];
+  }, [tickets]);
+
+  const selectAllDelivered = () => {
+    if (selectedSectorDelivered) {
+      setSelectedSectorDelivered(false);
+    } else {
+      setSelectedSectorDelivered(true);
+      setSelectedSectorNotDelivered(false);
+    }
   };
 
-  const handleConfirm = () => {
-    if (selecteds.length === 0)
-      return setAlertMessage('Nenhum dia selecionado.');
-    onConfirm(selecteds);
+  const selectAllNotDelivered = () => {
+    if (selectedSectorNotDelivered) {
+      setSelectedSectorNotDelivered(false);
+    } else {
+      setSelectedSectorNotDelivered(true);
+      setSelectedSectorDelivered(false);
+    }
   };
+
+
+  useEffect(() => {
+    const hasSectorFilter = selectedSector !== 'all';
+    const hasDayFilter = selectedDay !== 'all';
+
+    if (!hasSectorFilter && !hasDayFilter && !selectedSectorDelivered && !selectedSectorNotDelivered) {
+      setTicketsUser(tickets);
+    } else {
+      const filtered = tickets.filter(ticket => {
+        // Validação de Setor (Igualdade)
+        let matchesSector = true;
+        if (hasSectorFilter) {
+          matchesSector = ticket.sector === selectedSector;
+        }
+
+        // Validação de Dia (Igualdade)
+        let matchesDay = true;
+        if (hasDayFilter) {
+          matchesDay = ticket.day === selectedDay;
+        }
+
+        // Validação de Status (E)
+        let matchesStatus = true;
+        if (selectedSectorDelivered) {
+          matchesStatus = !!ticket.kitDeliveredAt;
+        } else if (selectedSectorNotDelivered) {
+          matchesStatus = !ticket.kitDeliveredAt;
+        }
+
+        return matchesSector && matchesDay && matchesStatus;
+      });
+      setTicketsUser(filtered);
+    }
+    setSelecteds([]);
+    setHasAllSelected(false);
+  }, [selectedSector, selectedDay, selectedSectorDelivered, selectedSectorNotDelivered, tickets]);
 
   const selectAll = () => {
     if (hasAllSelected) {
@@ -1496,47 +1556,15 @@ const TicketCodeSelectionModal = ({
     } else {
       setHasAllSelected(true);
       const allTicketIds = ticketsUser.map(ticket => ticket.id);
-
-      console.log('allTicketIds', allTicketIds)
-
       setSelecteds(allTicketIds);
     }
   }
 
-  const selectAllMale = () => setSelectedSectorMale(prev => !prev);
-  const selectAllFemale = () => setSelectedSectorFemale(prev => !prev);
-  const selectAllDelivered = () => setSelectedSectorDelivered(prev => !prev);
-
-  useEffect(() => {
-    if (!selectedSectorMale && !selectedSectorFemale && !selectedSectorDelivered) {
-      setTicketsUser(tickets);
-    } else {
-      const filtered = tickets.filter(ticket => {
-        // 1. Lógica de Gênero (OU): Verifica se o ingresso é Masculino OU Feminino
-        // Se nenhum filtro de gênero estiver ativo, assumimos que todos os gêneros são aceitos (matchesGender = true)
-        let matchesGender = true;
-        const hasGenderFilter = selectedSectorMale || selectedSectorFemale;
-
-        if (hasGenderFilter) {
-          matchesGender = (selectedSectorMale && ticket.sector === 'Ingresso Masculino') ||
-            (selectedSectorFemale && ticket.sector === 'Ingresso Feminino');
-        }
-
-        // 2. Lógica de Status (E): Verifica se o kit já foi entregue
-        // Se o filtro "Entregue" estiver ativo, só aceitamos ingressos com data de entrega
-        let matchesStatus = true;
-        if (selectedSectorDelivered) {
-          matchesStatus = !!ticket.kitDeliveredAt;
-        }
-
-        // 3. Resultado Final: O ingresso precisa passar no teste de Gênero E no teste de Status
-        return matchesGender && matchesStatus;
-      });
-      setTicketsUser(filtered);
-    }
-    setSelecteds([]);
-    setHasAllSelected(false);
-  }, [selectedSectorMale, selectedSectorFemale, selectedSectorDelivered, tickets]);
+  const handleConfirm = () => {
+    if (selecteds.length === 0)
+      return setAlertMessage('Nenhum dia selecionado.');
+    onConfirm(selecteds);
+  };
 
   return (
     <ReactNativeModal
@@ -1565,46 +1593,38 @@ const TicketCodeSelectionModal = ({
           <Text style={{ fontWeight: 'bold' }}>Documento: {user.id ?? 'Cpf não disponível'}</Text>
         </Text>
 
-
-
-        {/* Seção de Filtros */}
+        {/* Seção de Filtros com Selects */}
         <View style={{ marginBottom: 15 }}>
-          <Text style={{ fontSize: 14, color: "#7A7A7A", fontWeight: "bold", marginBottom: 8, marginLeft: 5 }}>
+          <Text style={{ fontSize: 14, color: "#7A7A7A", fontWeight: "bold", marginBottom: 0, marginLeft: 5 }}>
             Filtrar por:
           </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 5 }}>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1, marginRight: 5 }}>
+              <SelectModal
+                label="Setor"
+                value={selectedSector}
+                setValue={setSelectedSector}
+                items={uniqueSectors}
+                placeholder="Selecione"
+              />
+            </View>
+
+            <View style={{ flex: 1, marginLeft: 5 }}>
+              <SelectModal
+                label="Dia"
+                value={selectedDay}
+                setValue={setSelectedDay}
+                items={uniqueDays}
+                placeholder="Selecione"
+              />
+            </View>
+          </View>
+
+          {/* Filtro de Status (Entregue / Pendente) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, marginLeft: 5, gap: 10 }}>
             <Button
-              title="Masculino"
-              type={selectedSectorMale ? "solid" : "outline"}
-              buttonStyle={{
-                borderRadius: 20,
-                paddingHorizontal: 15,
-                borderColor: selectedSectorMale ? THEME.cor.primary : '#ccc',
-                backgroundColor: selectedSectorMale ? THEME.cor.primary : 'transparent',
-              }}
-              titleStyle={{
-                fontSize: 12,
-                color: selectedSectorMale ? 'white' : '#7A7A7A'
-              }}
-              onPress={selectAllMale}
-            />
-            <Button
-              title="Feminino"
-              type={selectedSectorFemale ? "solid" : "outline"}
-              buttonStyle={{
-                borderRadius: 20,
-                paddingHorizontal: 15,
-                borderColor: selectedSectorFemale ? THEME.cor.primary : '#ccc',
-                backgroundColor: selectedSectorFemale ? THEME.cor.primary : 'transparent',
-              }}
-              titleStyle={{
-                fontSize: 12,
-                color: selectedSectorFemale ? 'white' : '#7A7A7A'
-              }}
-              onPress={selectAllFemale}
-            />
-            <Button
-              title="Entregue"
+              title="Entregues"
               type={selectedSectorDelivered ? "solid" : "outline"}
               buttonStyle={{
                 borderRadius: 20,
@@ -1617,6 +1637,22 @@ const TicketCodeSelectionModal = ({
                 color: selectedSectorDelivered ? 'white' : '#7A7A7A'
               }}
               onPress={selectAllDelivered}
+            />
+            <Button
+              title="Não Entregues"
+              type={selectedSectorNotDelivered ? "solid" : "outline"}
+              buttonStyle={{
+                borderRadius: 20,
+                paddingHorizontal: 15,
+                borderColor: selectedSectorNotDelivered ? THEME.cor.primary : '#ccc',
+                backgroundColor: selectedSectorNotDelivered ? THEME.cor.primary : 'transparent',
+                marginLeft: 5,
+              }}
+              titleStyle={{
+                fontSize: 12,
+                color: selectedSectorNotDelivered ? 'white' : '#7A7A7A'
+              }}
+              onPress={selectAllNotDelivered}
             />
           </View>
         </View>
@@ -1634,7 +1670,7 @@ const TicketCodeSelectionModal = ({
             marginBottom: 8,
           }}>
           <Text h5 style={{ fontSize: 16, color: "#333", fontWeight: "bold" }}>
-            Selecionar todos os listados
+            Selecionar todos
           </Text>
           <CheckBox
             size={28}
