@@ -1566,6 +1566,16 @@ const TicketCodeSelectionModal = ({
     onConfirm(selecteds);
   };
 
+  const toggleCheckbox = (ticketId) => {
+    setSelecteds(prev => {
+      if (prev.includes(ticketId)) {
+        return prev.filter(id => id !== ticketId);
+      } else {
+        return [...prev, ticketId];
+      }
+    });
+  };
+
   return (
     <ReactNativeModal
       isVisible={isVisible}
