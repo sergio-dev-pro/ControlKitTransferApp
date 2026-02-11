@@ -1470,6 +1470,11 @@ const TicketCodeSelectionModal = ({
   const [selecteds, setSelecteds] = useState([]);
   const [hasAllSelected, setHasAllSelected] = useState(false);
   const setAlertMessage = useAlert();
+  const [ticketsUser, setTicketsUser] = useState(tickets);
+  const [selectedSectorMale, setSelectedSectorMale] = useState(false);
+  const [selectedSectorFemale, setSelectedSectorFemale] = useState(false);
+  const [selectedSectorDelivered, setSelectedSectorDelivered] = useState(false);
+
   const toggleCheckbox = ticketId => {
     setSelecteds(prev =>
       prev.includes(ticketId)
@@ -1477,7 +1482,6 @@ const TicketCodeSelectionModal = ({
         : [...prev, ticketId]
     );
   };
-
 
   const handleConfirm = () => {
     if (selecteds.length === 0)
@@ -1491,10 +1495,48 @@ const TicketCodeSelectionModal = ({
       setSelecteds([]);
     } else {
       setHasAllSelected(true);
-      const allTicketIds = tickets.map(ticket => ticket.id);
+      const allTicketIds = ticketsUser.map(ticket => ticket.id);
+
+      console.log('allTicketIds', allTicketIds)
+
       setSelecteds(allTicketIds);
     }
   }
+
+  const selectAllMale = () => setSelectedSectorMale(prev => !prev);
+  const selectAllFemale = () => setSelectedSectorFemale(prev => !prev);
+  const selectAllDelivered = () => setSelectedSectorDelivered(prev => !prev);
+
+  useEffect(() => {
+    if (!selectedSectorMale && !selectedSectorFemale && !selectedSectorDelivered) {
+      setTicketsUser(tickets);
+    } else {
+      const filtered = tickets.filter(ticket => {
+        // 1. Lógica de Gênero (OU): Verifica se o ingresso é Masculino OU Feminino
+        // Se nenhum filtro de gênero estiver ativo, assumimos que todos os gêneros são aceitos (matchesGender = true)
+        let matchesGender = true;
+        const hasGenderFilter = selectedSectorMale || selectedSectorFemale;
+
+        if (hasGenderFilter) {
+          matchesGender = (selectedSectorMale && ticket.sector === 'Ingresso Masculino') ||
+            (selectedSectorFemale && ticket.sector === 'Ingresso Feminino');
+        }
+
+        // 2. Lógica de Status (E): Verifica se o kit já foi entregue
+        // Se o filtro "Entregue" estiver ativo, só aceitamos ingressos com data de entrega
+        let matchesStatus = true;
+        if (selectedSectorDelivered) {
+          matchesStatus = !!ticket.kitDeliveredAt;
+        }
+
+        // 3. Resultado Final: O ingresso precisa passar no teste de Gênero E no teste de Status
+        return matchesGender && matchesStatus;
+      });
+      setTicketsUser(filtered);
+    }
+    setSelecteds([]);
+    setHasAllSelected(false);
+  }, [selectedSectorMale, selectedSectorFemale, selectedSectorDelivered, tickets]);
 
   return (
     <ReactNativeModal
@@ -1525,37 +1567,90 @@ const TicketCodeSelectionModal = ({
 
 
 
+        {/* Seção de Filtros */}
+        <View style={{ marginBottom: 15 }}>
+          <Text style={{ fontSize: 14, color: "#7A7A7A", fontWeight: "bold", marginBottom: 8, marginLeft: 5 }}>
+            Filtrar por:
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 5 }}>
+            <Button
+              title="Masculino"
+              type={selectedSectorMale ? "solid" : "outline"}
+              buttonStyle={{
+                borderRadius: 20,
+                paddingHorizontal: 15,
+                borderColor: selectedSectorMale ? THEME.cor.primary : '#ccc',
+                backgroundColor: selectedSectorMale ? THEME.cor.primary : 'transparent',
+              }}
+              titleStyle={{
+                fontSize: 12,
+                color: selectedSectorMale ? 'white' : '#7A7A7A'
+              }}
+              onPress={selectAllMale}
+            />
+            <Button
+              title="Feminino"
+              type={selectedSectorFemale ? "solid" : "outline"}
+              buttonStyle={{
+                borderRadius: 20,
+                paddingHorizontal: 15,
+                borderColor: selectedSectorFemale ? THEME.cor.primary : '#ccc',
+                backgroundColor: selectedSectorFemale ? THEME.cor.primary : 'transparent',
+              }}
+              titleStyle={{
+                fontSize: 12,
+                color: selectedSectorFemale ? 'white' : '#7A7A7A'
+              }}
+              onPress={selectAllFemale}
+            />
+            <Button
+              title="Entregue"
+              type={selectedSectorDelivered ? "solid" : "outline"}
+              buttonStyle={{
+                borderRadius: 20,
+                paddingHorizontal: 15,
+                borderColor: selectedSectorDelivered ? THEME.cor.primary : '#ccc',
+                backgroundColor: selectedSectorDelivered ? THEME.cor.primary : 'transparent',
+              }}
+              titleStyle={{
+                fontSize: 12,
+                color: selectedSectorDelivered ? 'white' : '#7A7A7A'
+              }}
+              onPress={selectAllDelivered}
+            />
+          </View>
+        </View>
+
+        {/* Seção de Ação em Lote */}
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 5,
-            backgroundColor: "#F9F9F9",
-            borderBottomWidth: 1,
-            borderBottomColor: "#E0E0E0",
+            justifyContent: "space-between",
+            paddingVertical: 10,
+            paddingHorizontal: 10,
+            backgroundColor: "#F0F0F0",
+            borderRadius: 8,
             marginBottom: 8,
           }}>
-          <Text h5
-            style={{ fontSize: 16, color: "#7A7A7A", fontWeight: "bold" }}
-          >
-            Selecionar todos
+          <Text h5 style={{ fontSize: 16, color: "#333", fontWeight: "bold" }}>
+            Selecionar todos os listados
           </Text>
           <CheckBox
-            size={30}
-            containerStyle={{ padding: 0, backgroundColor: "#F9F9F9" }}
-            uncheckedColor='#7A7A7A'
+            size={28}
+            containerStyle={{ padding: 0, margin: 0, backgroundColor: "transparent" }}
             checked={hasAllSelected}
             onPress={() => selectAll()}
             iconType="material-community"
-            checkedIcon="checkbox-outline"
+            checkedIcon="checkbox-marked"
             uncheckedIcon={'checkbox-blank-outline'}
+            checkedColor={THEME.cor.primary}
           />
         </View>
         <FlatList
-          data={tickets} // Agora é um array de objetos `ticket`
-          renderItem={({ item: ticket, index }) => (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }} key={ticket.id}>
+          data={ticketsUser} // Agora é um array de objetos `ticket`
+          renderItem={({ item: ticketsUser, index }) => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }} key={ticketsUser.id}>
               <Text
                 style={{
                   fontSize: 16,
@@ -1569,14 +1664,14 @@ const TicketCodeSelectionModal = ({
               <CheckBox
                 size={28}
                 containerStyle={{ padding: 0, marginLeft: -5, marginRight: 10 }}
-                checked={selecteds.includes(ticket.id)}
-                onPress={() => toggleCheckbox(ticket.id)}
+                checked={selecteds.includes(ticketsUser.id)}
+                onPress={() => toggleCheckbox(ticketsUser.id)}
                 iconType="material-community"
                 checkedIcon="checkbox-outline"
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {[ticket.sector || '', ticket.day || '', ticket.kitDeliveredAt ? "ENTREGUE" : null]
+                {[ticketsUser.sector || '', ticketsUser.day || '', ticketsUser.kitDeliveredAt ? "ENTREGUE" : null]
                   .filter(Boolean)
                   .join(' - ')}
               </Text>
