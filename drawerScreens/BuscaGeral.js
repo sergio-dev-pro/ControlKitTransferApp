@@ -167,6 +167,7 @@ const BuscaGeral = () => {
                                 </>
                             }
                             renderItem={({ item }) => {
+                                
                                 var userName = item.status == 2 ? (item.ownerName ? 'Convidado de ' + item.ownerName : item.userName) : item.userName;
                                 if (item.status == 5 || item.status == 6 || item.status == 7) {
                                     var currentOwnerUser = item.ownerName ? item.ownerName : item.userName;
@@ -176,6 +177,9 @@ const BuscaGeral = () => {
                                 if (item.type === 1) {
                                     return (
                                         <Card containerStyle={styles.ticketCard}>
+                                            {item.ticketProviderExternald && (<Text style={styles.ticketSubtitle}>
+                                                {item.ticketProviderExternald}
+                                            </Text>)}
                                             <Text style={styles.ticketSubtitle}>
                                                 {item.day || 'Data não especificada'}
                                             </Text>
