@@ -177,7 +177,7 @@ const BuscaGeral = () => {
                                 if (item.type === 1) {
                                     return (
                                         <Card containerStyle={styles.ticketCard}>
-                                            {item.ticketProviderExternalId && (<Text style={styles.ticketSubtitle}>
+                                            {item.ticketProviderExternalId && (<Text style={{...styles.ticketSubtitle, fontWeight: 'bold'}}>
                                                 {item.ticketProviderExternalId}
                                             </Text>)}
                                             <Text style={styles.ticketSubtitle}>
