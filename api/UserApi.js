@@ -73,7 +73,7 @@ export const refreshAccessToken = async () => {
 
 
 export const getUserByCpfWithAuth = async (cpf, eventId, token) => {
-  const cleanCpf = cpf.replace(/\D/g, '');
+  const cleanCpf = cpf.replace(/[./\s]/g, '');
   const url = `${BASE_URL_V2}/users?searchTerm=${cleanCpf}&eventid=${eventId}`;
 
   try {

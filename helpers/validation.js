@@ -40,38 +40,39 @@ export const validateDate = date => {
 };
 
 export function cpfValidation(cpf) {
-  const numberOfCharactersAllowed = [11, 14];
-  if (!numberOfCharactersAllowed.includes(cpf.length)) return false;
+  if (!cpf) return false;
 
-  const isFakeCpf = [
-    '00000000000',
-    '11111111111',
-    '22222222222',
-    '33333333333',
-    '44444444444',
-    '55555555555',
-    '66666666666',
-    '77777777777',
-    '88888888888',
-    '99999999999',
-    '00000000000',
-    '111.111.111-11',
-    '222.222.222-22',
-    '333.333.333-33',
-    '444.444.444-44',
-    '555.555.555-55',
-    '666.666.666-66',
-    '777.777.777-77',
-    '888.888.888-88',
-    '999.999.999-99',
-  ].includes(cpf);
-  if (isFakeCpf) return false;
+  // Remove tudo que não for número
+  const cleanCpf = cpf.replace(/\D/g, '');
 
-  const isCPF =
-    /([0-9]{2}[\.]?[0-9]{3}[\.]?[0-9]{3}[\/]?[0-9]{4}[-]?[0-9]{2})|([0-9]{3}[\.]?[0-9]{3}[\.]?[0-9]{3}[-]?[0-9]{2})/.test(
-      cpf,
-    );
-  if (!isCPF) return false;
+  // CPF precisa ter 11 dígitos
+  if (cleanCpf.length !== 11) return false;
+
+  // Elimina CPFs com todos os dígitos iguais
+  if (/^(\d)\1{10}$/.test(cleanCpf)) return false;
+
+  // =========================
+  // Validação do 1º dígito
+  // =========================
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanCpf.charAt(i)) * (10 - i);
+  }
+
+  let firstDigit = (sum * 10) % 11;
+  if (firstDigit === 10) firstDigit = 0;
+
+  if (firstDigit !== parseInt(cleanCpf.charAt(9))) return false;
+  
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanCpf.charAt(i)) * (11 - i);
+  }
+
+  let secondDigit = (sum * 10) % 11;
+  if (secondDigit === 10) secondDigit = 0;
+
+  if (secondDigit !== parseInt(cleanCpf.charAt(10))) return false;
 
   return true;
 }
