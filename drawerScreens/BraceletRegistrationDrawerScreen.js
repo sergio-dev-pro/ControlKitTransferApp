@@ -33,6 +33,7 @@ import SelectModal from '../components/SelectModal';
 import SearchUserModal from '../components/SearchUserModal';
 import ReasonForKitDeliveryModal from '../components/ReasonForKitDeliveryModal';
 import CustomModal from '../components/CustomModal';
+import ScanPreviewModal from '../components/ScanPreviewModal';
 
 function BraceletRegistrationDrawerScreen({ navigation }) {
   const authContext = useContext(AuthContext);
@@ -71,6 +72,9 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
 
   const [shirtCodesRead, setShirtCodesRead] = useState({});
+
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
+  const [scannedCodeToConfirm, setScannedCodeToConfirm] = useState(null);
 
   // ✅ --- ESTADOS PARA A LÓGICA DO "FLUXO 1" (Leitura Direta) ---
   const [kitCodesRead, setKitCodesRead] = useState({}); // Substitui 'kitCodes'
@@ -301,6 +305,31 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
     setIsValidBoolean(false);
   };
 
+  const previewResumeTicket = (code) => {
+    if (!code) return;
+
+    // Check for duplicates
+    const isAlreadyScanned = Object.values(kitCodesRead).some(item => item.code === code);
+    if (isAlreadyScanned) {
+      setShowQrCodeCamisa(false);
+      setAlertMessage('Erro: Código já escaneado.', '#dc143c');
+      return;
+    }
+
+    const currentTicketId = nextTicketToScan;
+
+    if (!currentTicketId) {
+      setShowQrCodeCamisa(false);
+      setAlertMessage('Todos os bilhetes selecionados já têm um qrcode associado.', '#dc143c');
+      return;
+    }
+
+    // Prepare preview
+    setShowQrCodeCamisa(false);
+    setScannedCodeToConfirm(code);
+    setPreviewModalVisible(true);
+  };
+
   const handleQRCodeCamisa = async (ticketCode) => {
     if (!ticketCode) return;
 
@@ -311,8 +340,6 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
       setAlertMessage('Erro: Código já escaneado.', '#dc143c');
       return;
     }
-
-    if (!showQrCodeCamisa) return;
 
     // Pega o bilhete destacado (próximo daW fila)
     const currentTicketId = nextTicketToScan;
@@ -409,6 +436,8 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
   const allCodesScanned = ticketFounds?.length === Object.keys(kitCodesRead || {}).length
 
   const isDocumentationValid = !completeDelivery || (documentImg && signature);
+
+
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -734,7 +763,7 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
 
       {showQrCodeCamisa && (
         <QrCodeReader
-          onRead={handleQRCodeCamisa}
+          onRead={previewResumeTicket}
           onClose={() => setShowQrCodeCamisa(false)} // Fecha o QR Code
         />
       )}
@@ -771,9 +800,21 @@ function BraceletRegistrationDrawerScreen({ navigation }) {
         message={`Cadastro do usuário ínvalido. Informe um motivo para continuar com a entrega do kit.`}
       /> */}
 
-
+      <ScanPreviewModal
+        isVisible={previewModalVisible}
+        onCancel={() => {
+          setPreviewModalVisible(false);
+          setScannedCodeToConfirm(null);
+        }}
+        onConfirm={() => {
+          setPreviewModalVisible(false);
+          handleQRCodeCamisa(scannedCodeToConfirm);
+        }}
+        scannedCode={scannedCodeToConfirm}
+        ticketData={nextTicketToScan ? ticketFounds.find(t => t.ticketId === nextTicketToScan) : null}
+        labelCode="Código da Pulseira"
+      />
     </View>
-
 
   );
 }
@@ -810,6 +851,9 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   const [incompleteRegistrationReason, setIncompleteRegistrationReason] = useState();
   const [reasonType, setReasonType] = useState(null);
   const [staffType, setStaffType] = useState(null);
+
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
+  const [scannedCodeToConfirm, setScannedCodeToConfirm] = useState(null);
 
 
 
@@ -1023,13 +1067,38 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
         }, {})
     );
 
+  const selectedTicketsAvailable = selectedTicketCodes && selectedTicketCodes.filter(ticketId => !shirtCodesRead[ticketId]);
+
+  const previewResumeTicket = (code) => {
+    if (!code) return;
+
+    // Check for duplicates
+    const isAlreadyScanned = Object.values(shirtCodesRead).some(item => item.code === code);
+    if (isAlreadyScanned) {
+      setShowQrCodeCamisa(false);
+      setAlertMessage('Erro: Código já escaneado.', '#dc143c');
+      return;
+    }
+
+    const currentTicketId = selectedTicketsAvailable ? selectedTicketsAvailable[0] : null;
+
+    if (!currentTicketId) {
+      setShowQrCodeCamisa(false);
+      setAlertMessage('Todos os bilhetes selecionados já têm um qrcode associado.', '#dc143c');
+      return;
+    }
+
+    // Prepare preview
+    setShowQrCodeCamisa(false);
+    setScannedCodeToConfirm(code);
+    setPreviewModalVisible(true);
+  };
+
   const handleQRCodeCamisa = async (ticketCode) => {
     if (!ticketCode) {
       console.error("ticketCode está indefinido ou nulo");
       return;
     }
-
-    if (!showQrCodeCamisa) return;
 
     const isAlreadyScanned = Object.values(shirtCodesRead).some(item => item.code === ticketCode);
     if (isAlreadyScanned) {
@@ -1109,7 +1178,6 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
     }
   };
 
-  const selectedTicketsAvailable = selectedTicketCodes && selectedTicketCodes.filter(ticketId => !shirtCodesRead[ticketId]);
   const addToArray = (ticketCode) => {
     const nextTicketId = selectedTicketsAvailable[0];
     if (nextTicketId) {
@@ -1430,10 +1498,28 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
 
       {showQrCodeCamisa && (
         <QrCodeReader
-          onRead={handleQRCodeCamisa}
-          onClose={() => setShowQrCodeCamisa(false)} // Fecha o QR Code
+          onRead={previewResumeTicket}
+          onClose={() => setShowQrCodeCamisa(false)}
         />
       )}
+
+      <ScanPreviewModal
+        isVisible={previewModalVisible}
+        onCancel={() => {
+          setPreviewModalVisible(false);
+          setScannedCodeToConfirm(null);
+        }}
+        onConfirm={() => {
+          setPreviewModalVisible(false);
+          handleQRCodeCamisa(scannedCodeToConfirm);
+        }}
+        scannedCode={scannedCodeToConfirm}
+        ticketData={(() => {
+          const currentTicketId = selectedTicketsAvailable ? selectedTicketsAvailable[0] : null;
+          return currentTicketId ? user?.tickets?.find(t => t.id === currentTicketId) : null;
+        })()}
+        labelCode="Código da Pulseira"
+      />
 
       {showModalResponse && (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
