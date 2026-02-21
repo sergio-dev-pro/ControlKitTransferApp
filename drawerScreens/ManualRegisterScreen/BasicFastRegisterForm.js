@@ -335,8 +335,8 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       setPassportValidation({ isValid: false, errorMsg: inputErrorMsgs.global.empty });
       return false;
     }
-    if (passport.length < 4) {
-      setPassportValidation({ isValid: false, errorMsg: 'Campo deve ter no mínimo 4 caracteres.' });
+    if (passport.length < 5) {
+      setPassportValidation({ isValid: false, errorMsg: 'Campo deve ter no mínimo 5 caracteres.' });
       return false;
     }
     setPassportValidation({ isValid: true, errorMsg: '' });

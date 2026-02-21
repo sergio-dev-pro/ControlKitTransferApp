@@ -114,12 +114,14 @@ export function AuthProvider({ children }) {
 
     if (token) {
       const eventInJsonFormat = await AsyncStorage.getItem('event');
+      const operatorName = await AsyncStorage.getItem('userToken');
       const event = JSON.parse(eventInJsonFormat);
       var decodedToken = jwt_decode(token);
       // const events = decodedToken?.Events ? JSON.parse(decodedToken.Events) : [];
       const companies = companiesString ? JSON.parse(companiesString) : [];
       setAuthState({
         userToken: token,
+        userName: operatorName,
         refreshToken: refreshToken,
         hasBraceletDeliveryPermission: decodedToken?.hasBraceletDeliveryPermission === "true",
         hasBraceletRegistrationPermission: decodedToken?.hasBraceletRegistrationPermission === "true",
@@ -206,8 +208,10 @@ export function AuthProvider({ children }) {
 
       var token = dataResponse.data.accessToken;
       var refreshToken = dataResponse.data.refreshToken;
+      var userName = dataResponse.data?.user?.name;
       // save token in async storage.
       await AsyncStorage.setItem('userToken', token);
+      await AsyncStorage.setItem('userName', userName);
       await AsyncStorage.setItem('refreshToken', refreshToken);
       await AsyncStorage.setItem('userCompanies', JSON.stringify(dataResponse.data.companies));
       const lastLogin = new Date().toISOString();
@@ -221,6 +225,7 @@ export function AuthProvider({ children }) {
 
       let authStateChanges = {
         userToken: token,
+        userName: userName,
         refreshToken: refreshToken,
         isAuthenticated: true,
         //events,

@@ -1,19 +1,22 @@
-import {Dialog, Header as HeaderRNE, Text} from '@rneui/themed';
-import React, {useContext, useState} from 'react';
+import { Dialog, Header as HeaderRNE, Text, Icon } from '@rneui/themed';
+import React, { useContext, useState } from 'react';
+import { View } from 'react-native';
 import THEME from '../style/theme';
-import {AuthContext} from '../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import { IS_MOBILE } from '../constants/layout';
 
-/* @props openDawer
- */
-function Header({openDrawer, style = {}}) {
+/* @props openDrawer */
+function Header({ openDrawer, style = {} }) {
   const [showDialog, setShowDialog] = useState(false);
-  const {logout} = useContext(AuthContext);
+  const { logout, userName } = useContext(AuthContext);
+
   if (!openDrawer) {
-    console.error(' openDrawer props is required');
+    console.error('openDrawer props is required');
     return null;
   }
+
   const toggleDialog = () => setShowDialog(prevState => !prevState);
+
   return (
     <>
       <HeaderRNE
@@ -32,37 +35,54 @@ function Header({openDrawer, style = {}}) {
         ]}
         centerComponent={
           IS_MOBILE ? (
-            <Text h4 style={{color: THEME.cor.primary}}>
+            <Text h4 style={{ color: THEME.cor.primary }}>
               Controle Kit/Transfer
             </Text>
           ) : (
-            <Text h3 style={{color: THEME.cor.primary}}>
+            <Text h3 style={{ color: THEME.cor.primary }}>
               Controle Kit/Transfer
             </Text>
           )
         }
         leftComponent={{
           icon: 'menu',
-          iconStyle: {paddingTop: 8},
+          iconStyle: { paddingTop: 8 },
           color: THEME.cor.primary,
           size: 35,
           onPress: openDrawer,
         }}
-        rightComponent={{
-          icon: 'logout',
-          iconStyle: {padding: 8},
-          size: 35,
-          color: THEME.cor.grey,
-          onPress: toggleDialog,
-        }}
+        rightComponent={
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {userName ? (
+              <Text
+                style={{
+                  marginRight: 12,
+                  color: THEME.cor.primary,
+                  fontWeight: '600',
+                }}
+                numberOfLines={1}
+              >
+                {userName}
+              </Text>
+            ) : null}
+
+            <Icon
+              name="logout"
+              size={30}
+              color={THEME.cor.grey}
+              onPress={toggleDialog}
+            />
+          </View>
+        }
       />
+
       <Dialog isVisible={showDialog} onBackdropPress={toggleDialog}>
-        <Dialog.Title titleStyle={{fontSize: 32}} title="Deseja sair?" />
+        <Dialog.Title titleStyle={{ fontSize: 32 }} title="Deseja sair?" />
         <Dialog.Actions>
           <Dialog.Button
             type="solid"
             size="lg"
-            containerStyle={{marginLeft: 16}}
+            containerStyle={{ marginLeft: 16 }}
             title="Sim"
             onPress={logout}
           />
