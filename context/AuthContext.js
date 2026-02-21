@@ -208,7 +208,7 @@ export function AuthProvider({ children }) {
 
       var token = dataResponse.data.accessToken;
       var refreshToken = dataResponse.data.refreshToken;
-      var userName = dataResponse.data.name;
+      var userName = dataResponse.data?.user?.name;
       // save token in async storage.
       await AsyncStorage.setItem('userToken', token);
       await AsyncStorage.setItem('userName', userName);
