@@ -10,6 +10,8 @@ import { AuthContext } from '../../context/AuthContext';
 import uuid from 'react-native-uuid';
 import { TouchableOpacity } from 'react-native';
 import { countryCodes } from '../../helpers/countryCodes';
+import { getBasicUserByEmail } from '../../api/UserApi';
+import { useAlert } from '../../context/AlertContext';
 
 const inputErrorMsgs = {
   cpf: 'CPF inválido.',
@@ -66,6 +68,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   const [sponsors, setSponsors] = useState([]);
   const [suggestionsEmail, setSuggestionsEmail] = useState([]);
   const [emailValidation, setEmailValidation] = useState({ isValid: true, errorMsg: '' });
+  const setAlertMessage = useAlert();
 
   const [guestPhone, setGuestPhone] = useState({
     countryCode: '',
@@ -194,7 +197,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
   }, [sponsorId, selectedType, authContext.selectedEventId, authContext.userToken]);
 
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const isNameValid = validName(name);
     const isLastnameValid = validLastname(lastname); // Validação do sobrenome
     const isDocumentValid = documentType === 'cpf' ? validCPF(cpf) : validPassport(cpf);
@@ -225,6 +228,16 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
 
     if (!sectorId && selectedType === 1) {
       return Alert.alert('Campo Obrigatório', 'Selecione o setor.');
+    }
+
+
+    //verificar documento
+
+    const userDocument = await getBasicUserByEmail(email, authContext.selectedEventId, authContext.userToken);
+
+    if (userDocument.document !== cpf.replace(/[^\d]/g, '')) {
+      setAlertMessage(`O email enviando está vinculado ao cpf: ${userDocument.document}`, '#F59E0B');
+      return
     }
 
     /*

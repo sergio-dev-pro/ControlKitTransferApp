@@ -51,8 +51,6 @@ const NewFastTicket = ({ navigation }) => {
 
   const handleUserFormCompleted = data => {
 
-    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ ', data.user)
-
     setUserData(data.user);
 
     // Remove pontos e traços do CPF
