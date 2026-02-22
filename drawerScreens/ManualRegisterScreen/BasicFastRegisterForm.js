@@ -232,15 +232,17 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
 
 
     //verificar documento
-    try {
-      const userDocument = await getBasicUserByEmail(email, authContext.selectedEventId, authContext.userToken);
+    if (email && cpf) {
+      try {
+        const userDocument = await getBasicUserByEmail(email, authContext.selectedEventId, authContext.userToken);
 
-      if (userDocument && userDocument.document && userDocument.document !== cpf.replace(/[^\d]/g, '')) {
-        setAlertMessage(`O email enviado está vinculado ao cpf: ${userDocument.document}`, '#F59E0B');
-        return;
+        if (userDocument && userDocument.document && userDocument.document !== cpf.replace(/[^\d]/g, '')) {
+          setAlertMessage(`O email enviado está vinculado ao cpf: ${userDocument.document}`, '#F59E0B');
+          return;
+        }
+      } catch (error) {
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
     }
 
     /*
