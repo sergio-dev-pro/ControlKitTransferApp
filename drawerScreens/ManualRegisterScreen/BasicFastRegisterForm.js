@@ -236,8 +236,11 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       try {
         const userDocument = await getBasicUserByEmail(email, authContext.selectedEventId, authContext.userToken);
 
-        if (userDocument && userDocument.document && userDocument.document !== cpf.replace(/[^\d]/g, '')) {
-          setAlertMessage(`O email enviado está vinculado ao cpf: ${userDocument.document}`, '#F59E0B');
+        const cleanDocument = documentType === 'cpf' ? cpf.replace(/[^\d]/g, '') : cpf;
+
+        if (userDocument && userDocument.document && userDocument.document !== cleanDocument) {
+          const docLabel = documentType === 'cpf' ? 'cpf' : 'passaporte';
+          setAlertMessage(`O email enviado está vinculado ao ${docLabel}: ${userDocument.document}`, '#F59E0B');
           return;
         }
       } catch (error) {
