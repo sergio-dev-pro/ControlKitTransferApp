@@ -85,6 +85,16 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
       cpf: initialDocument || prevState.cpf,
     }));
 
+    if (initialDocument) {
+      if (/[a-zA-Z]/.test(initialDocument)) {
+        setDocumentType('passport');
+        // Mantém apenas letras e números, removendo _, espaços, ou qualquer caractere especial e mandando para caixa alta
+        setUser(prev => ({ ...prev, cpf: initialDocument.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() }));
+      } else {
+        setDocumentType('cpf');
+      }
+    }
+
     if (initialSector) setSectorId(initialSector);
     if (initialSponsor) setSponsorId(initialSponsor);
     if (initialDay) setEventDay(initialDay);
@@ -232,11 +242,13 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
 
 
     //verificar documento
+    const cleanDocument = documentType === 'cpf' ? cpf.replace(/[^\d]/g, '') : cpf.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
     if (email && cpf) {
       try {
         const userDocument = await getBasicUserByEmail(email, authContext.selectedEventId, authContext.userToken);
 
-        const cleanDocument = documentType === 'cpf' ? cpf.replace(/[^\d]/g, '') : cpf;
+        console.log(userDocument);
 
         if (userDocument && userDocument.document && userDocument.document !== cleanDocument) {
           const docLabel = documentType === 'cpf' ? 'cpf' : 'passaporte';
@@ -266,7 +278,7 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
 
     const payload = {
       userDocumentType: documentType === 'cpf' ? 1 : 2,
-      userDocument: cpf.replace(/[^\d]/g, ''),
+      userDocument: cleanDocument,
       userFirstname: name,
       userLastname: lastname,
       userEmail: userEmail,
@@ -500,9 +512,10 @@ const BasicFastRegisterForm = ({ onUserFormCompleted, onReturn, onCancel, initia
         <Input
           label="Passaporte"
           value={cpf}
-          onChangeText={text => setUser(prev => ({ ...prev, cpf: text }))}
+          onChangeText={text => setUser(prev => ({ ...prev, cpf: text.toUpperCase() }))}
           onBlur={() => validPassport(cpf)}
           errorMessage={!passportValidation.isValid ? passportValidation.errorMsg : ''}
+          autoCapitalize="characters"
         />
       )}
 
