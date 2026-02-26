@@ -1557,7 +1557,6 @@ const TicketCodeSelectionModal = ({
   isConfirming,
 }) => {
   const [selecteds, setSelecteds] = useState([]);
-  const [hasAllSelected, setHasAllSelected] = useState(false);
   const setAlertMessage = useAlert();
   const [ticketsUser, setTicketsUser] = useState(tickets);
   const [selectedSector, setSelectedSector] = useState('all');
@@ -1632,18 +1631,27 @@ const TicketCodeSelectionModal = ({
       });
       setTicketsUser(filtered);
     }
-    setSelecteds([]);
-    setHasAllSelected(false);
   }, [selectedSector, selectedDay, selectedSectorDelivered, selectedSectorNotDelivered, tickets]);
+
+  const hasAllSelected = ticketsUser.length > 0 && ticketsUser.every(ticket => selecteds.includes(ticket.id));
 
   const selectAll = () => {
     if (hasAllSelected) {
-      setHasAllSelected(false);
-      setSelecteds([]);
+      // Unselect all currently visible
+      const visibleIds = ticketsUser.map(t => t.id);
+      setSelecteds(prev => prev.filter(id => !visibleIds.includes(id)));
     } else {
-      setHasAllSelected(true);
-      const allTicketIds = ticketsUser.map(ticket => ticket.id);
-      setSelecteds(allTicketIds);
+      // Select all currently visible
+      const visibleIds = ticketsUser.map(t => t.id);
+      setSelecteds(prev => {
+        const newSelecteds = [...prev];
+        visibleIds.forEach(id => {
+          if (!newSelecteds.includes(id)) {
+            newSelecteds.push(id);
+          }
+        });
+        return newSelecteds;
+      });
     }
   }
 

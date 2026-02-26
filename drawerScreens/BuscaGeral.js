@@ -17,12 +17,14 @@ const BuscaGeral = () => {
     const isFocused = useIsFocused();
     const { userToken, selectedEventId, facialProvider, logout } = useContext(AuthContext);
     const [user, setUser] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(true);
     const [loadingTicketId, setLoadingTicketId] = useState(null);
     const setAlertMessage = useAlert();
     useFocusEffect(
         useCallback(() => {
             return () => {
                 setUser(null);
+                setIsModalVisible(true);
             };
         }, [])
     );
@@ -35,6 +37,7 @@ const BuscaGeral = () => {
 
     const clearState = () => {
         setUser(null);
+        setIsModalVisible(true);
     };
 
     const handleForceSync = async (ticketId) => {
@@ -101,17 +104,29 @@ const BuscaGeral = () => {
             </View>
 
             <View style={[GStyles.container]}>
-                <SearchUserByCompanyModal
-                    title="Buscar Usuário"
-                    onUserFound={handleUserFound}
-                    placeholderText="Busque pelo CPF"
-                    isVisible={!user && isFocused}
-                    onClose={() => {
-                        if (navigation.canGoBack()) {
-                            navigation.goBack();
-                        }
-                    }}
-                />
+                {!user && (
+                    <View style={[{ alignItems: 'center', width: '100%' }]}>
+                        <Button
+                            size="lg"
+                            titleStyle={{ fontSize: 18 }}
+                            type="outline"
+                            containerStyle={{ width: '60%', marginTop: 10 }}
+                            onPress={() => setIsModalVisible(true)}
+                        >
+                            Buscar Usuário
+                        </Button>
+                        <SearchUserByCompanyModal
+                            title="Buscar Usuário"
+                            onUserFound={handleUserFound}
+                            placeholderText="Busque pelo CPF"
+                            isVisible={isModalVisible && isFocused}
+                            onClose={() => {
+                                setIsModalVisible(false);
+                                navigation.openDrawer();
+                            }}
+                        />
+                    </View>
+                )}
 
                 {user && (
                     <View style={{ flex: 1, width: '100%' }}>
@@ -167,7 +182,7 @@ const BuscaGeral = () => {
                                 </>
                             }
                             renderItem={({ item }) => {
-                                
+
                                 var userName = item.status == 2 ? (item.ownerName ? 'Convidado de ' + item.ownerName : item.userName) : item.userName;
                                 if (item.status == 5 || item.status == 6 || item.status == 7) {
                                     var currentOwnerUser = item.ownerName ? item.ownerName : item.userName;
@@ -177,7 +192,7 @@ const BuscaGeral = () => {
                                 if (item.type === 1) {
                                     return (
                                         <Card containerStyle={styles.ticketCard}>
-                                            {item.ticketProviderExternalId && (<Text style={{...styles.ticketSubtitle, fontWeight: 'bold'}}>
+                                            {item.ticketProviderExternalId && (<Text style={{ ...styles.ticketSubtitle, fontWeight: 'bold' }}>
                                                 {item.ticketProviderExternalId}
                                             </Text>)}
                                             <Text style={styles.ticketSubtitle}>

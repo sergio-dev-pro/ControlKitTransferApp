@@ -44,7 +44,7 @@ const ChangeEmail = ({ navigation }) => {
   });
 
   const handleSearch = async () => {
-    const isValid = validCPF(inputValue);
+    const isValid = validateDocument(inputValue);
     if (!isValid) return;
     try {
 
@@ -140,7 +140,7 @@ const ChangeEmail = ({ navigation }) => {
     try {
       const res = await updateEmail(
         {
-          document: inputValue.replace(/\D/g, ''),
+          document: inputValue.replace(/[^a-zA-Z0-9]/g, ''),
           email: userEmailFoundUpdated,
           eventId: authContext.selectedEventId
         },
@@ -172,46 +172,25 @@ const ChangeEmail = ({ navigation }) => {
     }
   };
 
-  const validCPF = currentCPF => {
-    const isValid = cpfValidation(currentCPF);
-    const invalidCPF = () => {
-      const errorMsg = currentCPF.length
-        ? inputErrorMsgs.cpf
+  const validateDocument = currentDoc => {
+    const isDocCPF = cpfValidation(currentDoc);
+    const isDocPassport = currentDoc.length >= 4;
+    const isValid = isDocCPF || isDocPassport;
+
+    const invalidDoc = () => {
+      const errorMsg = currentDoc.length
+        ? 'Documento inválido.'
         : inputErrorMsgs.global.empty;
       setCPFValidation({ errorMsg, isValid: false });
     };
     if (!isValid) {
-      invalidCPF();
+      invalidDoc();
       return false;
     }
-    const valid = () => setCPFValidation({ isValid: true });
+    const valid = () => setCPFValidation({ isValid: true, errorMsg: '' });
     !CPFValidation.isValid && valid();
     return true;
   };
-
-  const maskedCPFInputProps = useMaskedInputProps({
-    value: inputValue,
-    onChangeText: cpfChanged => {
-      setInputValue(cpfChanged);
-      !CPFValidation.isValid && validCPF(cpfChanged);
-    },
-    mask: [
-      /\d/,
-      /\d/,
-      /\d/,
-      '.',
-      /\d/,
-      /\d/,
-      /\d/,
-      '.',
-      /\d/,
-      /\d/,
-      /\d/,
-      '-',
-      /\d/,
-      /\d/,
-    ],
-  });
 
   return (
     <View style={{ ...GStyles.view }}>
@@ -271,12 +250,13 @@ const ChangeEmail = ({ navigation }) => {
         ) : (
           <>
             <Input
-              // value={inputValue}
-              label="Busque pelo CPF"
-              {...maskedCPFInputProps}
-              // onChangeText={value =>
-              //   setInputValue(value.trim().replace(/\s/g, ''))
-              // }
+              value={inputValue}
+              label="Busque por CPF ou Passaporte"
+              onChangeText={value => {
+                const newValue = value.trim().replace(/\s/g, '');
+                setInputValue(newValue);
+                !CPFValidation.isValid && validateDocument(newValue);
+              }}
               errorMessage={
                 !CPFValidation.isValid ? CPFValidation.errorMsg : ''
               }

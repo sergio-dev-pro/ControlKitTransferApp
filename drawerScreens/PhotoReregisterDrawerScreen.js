@@ -31,7 +31,7 @@ function PhotoReregisterDrawerScreen({ navigation }) {
 
   const handleUserFound = userFounded => {
 
-    if(!userFounded){
+    if (!userFounded) {
       return setAlertMessage('Usuário não encontrado');
     }
 
@@ -46,11 +46,11 @@ function PhotoReregisterDrawerScreen({ navigation }) {
   const clearState = () => {
     setUser(undefined);
     setIsVisible(true);
-    setDocumentUser("")
+    setDocumentUser("");
   };
-  
+
   const handleSavePhoto = async (imgPath) => {
-  
+
     const formData = new FormData();
     formData.append("file", {
       uri: imgPath,
@@ -61,10 +61,10 @@ function PhotoReregisterDrawerScreen({ navigation }) {
     formData.append("document", documentUser);
 
     setIsLoading(true);
-  
+
     try {
       var response = await saveUserPhotoAgain(formData, authContext.userToken);
-  
+
       if (response) {
         clearState();
         setAlertMessage("Foto atualizada com sucesso!", "#32cd32");
@@ -75,12 +75,12 @@ function PhotoReregisterDrawerScreen({ navigation }) {
       setAlertMessage(error.response.data.message)
       console.error("Erro no handleSavePhoto:", error.response.data);
     }
-  
+
     toggleCamVisibility();
     setIsLoading(false);
   };
-  
-  
+
+
 
   console.log(user);
   return (
@@ -120,14 +120,25 @@ function PhotoReregisterDrawerScreen({ navigation }) {
           </>
         )}
         {!user && (
-          <SearchUserByCompanyModal
-            onUserFound={handleUserFound}
-            isVisible={isVisible}
-            onClose={() => {
-              setIsVisible(false);
-              navigation.navigate('Mudar evento');
-            }}
-          />
+          <View style={[{ alignItems: 'center', width: '100%' }]}>
+            <Button
+              size="lg"
+              titleStyle={{ fontSize: 18 }}
+              type="outline"
+              containerStyle={{ width: '60%', marginTop: 10 }}
+              onPress={() => setIsVisible(true)}
+            >
+              Buscar Usuário
+            </Button>
+            <SearchUserByCompanyModal
+              onUserFound={handleUserFound}
+              isVisible={isVisible}
+              onClose={() => {
+                setIsVisible(false);
+                navigation.openDrawer();
+              }}
+            />
+          </View>
         )}
         {user && (
           <TakePictureModal

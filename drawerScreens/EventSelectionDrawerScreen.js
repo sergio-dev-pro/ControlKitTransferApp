@@ -48,10 +48,10 @@ function EventSelectionDrawerScreen({ navigation }) {
   const [changingCompany, setChangingCompany] = useState(false);
   const [kitDelivery, setKitDelivery] = useState(null)
 
- useEffect(() => {
+  useEffect(() => {
     const loadCompanies = async () => {
       try {
-        const storedCompanyId = await AsyncStorage.getItem('userCompanyId'); 
+        const storedCompanyId = await AsyncStorage.getItem('userCompanyId');
         setCurrentCompanyId(storedCompanyId);
 
         const stored = await AsyncStorage.getItem('userCompanies');
@@ -67,18 +67,18 @@ function EventSelectionDrawerScreen({ navigation }) {
   }, []);
 
   const fetchEvents = async (companyId = null) => {
-      setIsLoading(true);
-      try {
-        const storedCompanyId = await AsyncStorage.getItem('userCompanyId'); // <--- CORRETO
-        const parsedCompanyId = companyId != null ? companyId : storedCompanyId;
-        const eventsData = await getEventsList(userToken, parsedCompanyId);
-        setKitDelivery(eventsData.kitDeliveryMode)
-        setEvents(eventsData);
-      } catch (error) {
-        console.error('Erro ao buscar eventos:', error);
-      } finally {
-        setIsLoading(false);
-      }
+    setIsLoading(true);
+    try {
+      const storedCompanyId = await AsyncStorage.getItem('userCompanyId'); // <--- CORRETO
+      const parsedCompanyId = companyId != null ? companyId : storedCompanyId;
+      const eventsData = await getEventsList(userToken, parsedCompanyId);
+      setKitDelivery(eventsData.kitDeliveryMode)
+      setEvents(eventsData);
+    } catch (error) {
+      console.error('Erro ao buscar eventos:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -147,12 +147,12 @@ function EventSelectionDrawerScreen({ navigation }) {
           <Divider />
         </View>
         {changingCompany === false && (<View style={{
-                                        width: '100%',
-                                        padding: 10,
-                                        alignItems: 'center',
-                                        flex:0.6
-                                      }}>
-                                              {isLoading ? (
+          width: '100%',
+          padding: 10,
+          alignItems: 'center',
+          flex: 0.6
+        }}>
+          {isLoading ? (
             <Loading isActive={true} />
           ) : (
             <FlatList
@@ -176,17 +176,17 @@ function EventSelectionDrawerScreen({ navigation }) {
 
         {changingCompany === false && (
           <View style={{ marginTop: 10, justifyContent: 'center', alignItems: 'center' }}>
-              <TouchableOpacity
-                onPress={() => setChangingCompany(true)}
-                style={{
-                  backgroundColor: 'transparent',
-                  paddingVertical: 10,
-                }}
-              >
-                <Text style={{ color: 'black', fontSize: 16, fontWeight: 'bold' }}>
-                  Mudar empresa
-                </Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setChangingCompany(true)}
+              style={{
+                backgroundColor: 'transparent',
+                paddingVertical: 10,
+              }}
+            >
+              <Text style={{ color: 'black', fontSize: 16, fontWeight: 'bold' }}>
+                Mudar empresa
+              </Text>
+            </TouchableOpacity>
           </View>)}
 
         {changingCompany && (<View style={GStyles.container}>
@@ -215,7 +215,6 @@ function EventSelectionDrawerScreen({ navigation }) {
           )}
         </View>)}
       </View>
-      <Loading isActive={isLoading} />
     </>
   );
 }
