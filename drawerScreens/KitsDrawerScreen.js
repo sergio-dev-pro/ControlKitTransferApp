@@ -762,51 +762,67 @@ function KitsDrawerScreen({ navigation }) {
             mustSelectShirtSize={mustSelectShirtSize}
           />
         )}
-      </View>
-      {showQrCodeReader && (
-        <QrCodeReader
-          onRead={handleQRCodeRead}
-          onClose={() => setShowQrcodereader(false)}
-        />
-      )}
 
 
 
-      {qrCodeReader && (
-        <Text style={{ color: 'black' }}>codigo do qr code: {qrCodeReader}</Text>
-      )}
+        {qrCodeReader && (
+          <Text style={{ color: 'black' }}>codigo do qr code: {qrCodeReader}</Text>
+        )}
 
-      {showQrCodeCamisa && (
-        <QrCodeReader
-          onRead={previewResumeTicket}
-          onClose={() => setShowQrCodeCamisa(false)} // Fecha o QR Code
-        />
-      )}
-      {showModalResponse && (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <CustomModal
-            visible={showModalResponse}
-            title="Informações do Kit"
-            content={
-              <View>
-                <Text style={{ fontWeight: 'bold' }}>Setor:</Text>
-                <Text>{showResponseCamisa?.sectorName || 'Não informado'}</Text>
-                <Text style={{ fontWeight: 'bold' }}>Dia:</Text>
-                <Text>{showResponseCamisa?.day || 'Não informado'}</Text>
-                <Text style={{ fontWeight: 'bold' }}>Tamanho da Camisa:</Text>
-                <Text>{showResponseCamisa?.shirtSize || 'Não informado'}</Text>
-              </View>
-            }
-            onClose={() => setShowModalResponse(false)}
-            confirm={() => { addToArray() }}
-            disableConfirm={showResponseCamisa?.wasDelivered}
-            alertText={showResponseCamisa?.wasDelivered ? 'Este kit já foi entregue.' : null}
-          />
+        {showQrCodeCamisa && (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'white', zIndex: 1000 }]}>
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              {(() => {
+                const currentTicketData = nextTicketToScan ? ticketFounds.find(t => t.ticketId === nextTicketToScan) : null;
+                return (
+                  <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center' }}>
+                    {currentTicketData?.accessPolicy || `${currentTicketData?.sector || 'Setor não informado'} - ${currentTicketData?.day || 'Dia não informado'}`}
+                  </Text>
+                );
+              })()}
+            </View>
+            <View
+              style={{
+                flex: 1,
+                position: 'relative',
+                borderWidth: 4,
+                borderColor: 'white',
+                borderRadius: 15,
+                overflow: 'hidden',
+                margin: 20,
+              }}>
+              <QrCodeReader
+                onRead={previewResumeTicket}
+                onClose={() => setShowQrCodeCamisa(false)}
+              />
+            </View>
+          </View>
+        )}
+        {showModalResponse && (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <CustomModal
+              visible={showModalResponse}
+              title="Informações do Kit"
+              content={
+                <View>
+                  <Text style={{ fontWeight: 'bold' }}>Setor:</Text>
+                  <Text>{showResponseCamisa?.sectorName || 'Não informado'}</Text>
+                  <Text style={{ fontWeight: 'bold' }}>Dia:</Text>
+                  <Text>{showResponseCamisa?.day || 'Não informado'}</Text>
+                  <Text style={{ fontWeight: 'bold' }}>Tamanho da Camisa:</Text>
+                  <Text>{showResponseCamisa?.shirtSize || 'Não informado'}</Text>
+                </View>
+              }
+              onClose={() => setShowModalResponse(false)}
+              confirm={() => { addToArray() }}
+              disableConfirm={showResponseCamisa?.wasDelivered}
+              alertText={showResponseCamisa?.wasDelivered ? 'Este kit já foi entregue.' : null}
+            />
 
-        </View>
-      )}
+          </View>
+        )}
 
-      {/* <JustificationModal
+        {/* <JustificationModal
         modalVisible={isValidBoolean}
         setModalVisible={setIsValidBoolean}
         onSubmit={handleJustificationSubmit}
@@ -816,21 +832,28 @@ function KitsDrawerScreen({ navigation }) {
         message={`Cadastro do usuário ínvalido. Informe um motivo para continuar com a entrega do kit.`}
       /> */}
 
-      <ScanPreviewModal
-        isVisible={previewModalVisible}
-        onCancel={() => {
-          setPreviewModalVisible(false);
-          setScannedCodeToConfirm(null);
-        }}
-        onConfirm={() => {
-          setPreviewModalVisible(false);
-          handleQRCodeCamisa(scannedCodeToConfirm);
-        }}
-        scannedCode={scannedCodeToConfirm}
-        ticketData={nextTicketToScan ? ticketFounds.find(t => t.ticketId === nextTicketToScan) : null}
-        labelCode="Código do Kit"
-      />
+        <ScanPreviewModal
+          isVisible={previewModalVisible}
+          onCancel={() => {
+            setPreviewModalVisible(false);
+            setScannedCodeToConfirm(null);
+          }}
+          onConfirm={() => {
+            setPreviewModalVisible(false);
+            handleQRCodeCamisa(scannedCodeToConfirm);
+          }}
+          scannedCode={scannedCodeToConfirm}
+          ticketData={nextTicketToScan ? ticketFounds.find(t => t.ticketId === nextTicketToScan) : null}
+          labelCode="Código do Kit"
+        />
+      </View>
 
+      {showQrCodeReader && (
+        <QrCodeReader
+          onRead={handleQRCodeRead}
+          onClose={() => setShowQrcodereader(false)}
+        />
+      )}
     </View>
   );
 }
@@ -1191,6 +1214,8 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
   };
 
 
+  const dadosAtuais = user?.tickets?.find(ingressoAtual => ingressoAtual.id === selectedTicketsAvailable?.[0]);
+
   return (
     <View style={{ flex: 1 }}>
       <SearchUserModal
@@ -1472,10 +1497,26 @@ const DeliveryByCPF = ({ onCancelDeliveryByCPF, mustSelectShirtSize }) => {
       </ReactNativeModal>
 
       {showQrCodeCamisa && (
-        <QrCodeReader
-          onRead={previewResumeTicket}
-          onClose={() => setShowQrCodeCamisa(false)}
-        />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'white', zIndex: 1000 }]}>
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center' }}>
+              {dadosAtuais?.accessPolicy || `${dadosAtuais?.sector || 'Setor não informado'} - ${dadosAtuais?.day || 'Dia não informado'}`}
+            </Text>
+          </View>
+          <View style={{
+            flex: 1, position: 'relative',
+            borderWidth: 4,
+            borderColor: 'white',
+            borderRadius: 15,
+            overflow: 'hidden',
+            margin: 20,
+          }}>
+            <QrCodeReader
+              onRead={previewResumeTicket}
+              onClose={() => setShowQrCodeCamisa(false)}
+            />
+          </View>
+        </View>
       )}
 
       <ScanPreviewModal
