@@ -39,25 +39,37 @@ const SearchUserByCompanyModal = ({
   }, [isFocused, isVisible]);
 
   const validateInputValue = () => {
-    if (!inputValue)
-      return invalidInputValue ? setInvalidInputValue(null) : null;
-
-    const isValid = isValidEmail(inputValue);
-    const isValidCPF = cpfValidation(inputValue);
-    const isValidPassport = inputValue.length >= 4;
-
-    const isInputValueValid = isValid || isValidCPF || isValidPassport;
-    if (!isInputValueValid) {
-      return !invalidInputValue
-        ? setInvalidInputValue('E-mail ou documento inválido.')
-        : null;
+    if (!inputValue) {
+      if (invalidInputValue) setInvalidInputValue(null);
+      return null;
     }
 
-    invalidInputValue && setInvalidInputValue(null);
+    const cleanedValue = inputValue.trim();
 
-    if (isValid) return INPUT_VALUE_TYPE.email;
-    if (isValidCPF) return INPUT_VALUE_TYPE.cpf;
-    if (isValidPassport) return INPUT_VALUE_TYPE.passport;
+    if (isValidEmail(cleanedValue)) {
+      if (invalidInputValue) setInvalidInputValue(null);
+      return INPUT_VALUE_TYPE.email;
+    }
+
+    const hasLetters = /[a-zA-Z]/.test(cleanedValue);
+
+    if (hasLetters) {
+      if (cleanedValue.length >= 5) {
+        if (invalidInputValue) setInvalidInputValue(null);
+        return INPUT_VALUE_TYPE.passport;
+      }
+      setInvalidInputValue('O passaporte deve ter no mínimo 5 caracteres.');
+      return null;
+    } else {
+      const numericValue = cleanedValue.replace(/\D/g, '');
+      if (cpfValidation(numericValue)) {
+        if (invalidInputValue) setInvalidInputValue(null);
+        return INPUT_VALUE_TYPE.cpf;
+      } else {
+        setInvalidInputValue('CPF inválido.');
+        return null;
+      }
+    }
   };
 
   const handleSearch = async () => {
@@ -152,8 +164,17 @@ const SearchUserByCompanyModal = ({
           ref={ref}
           value={inputValue}
           placeholder={placeholderText}
-          onChangeText={value => setInputValue(value.trim().replace(/\s/g, ''))}
+          onChangeText={value => {
+            let cleaned = value.trim().replace(/\s/g, '');
+            if (cleaned.includes('@')) {
+              cleaned = cleaned.toLowerCase();
+            } else if (/[a-zA-Z]/.test(cleaned)) {
+              cleaned = cleaned.toUpperCase();
+            }
+            setInputValue(cleaned);
+          }}
           errorMessage={invalidInputValue}
+          autoCapitalize="none"
         />
         <View
           style={{

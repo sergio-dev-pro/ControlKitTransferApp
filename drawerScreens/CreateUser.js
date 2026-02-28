@@ -13,6 +13,7 @@ import { createUser } from '../api/UserApi';
 import SelectModal from '../components/SelectModal';
 import TakePictureScreen from './ManualRegisterScreen/TakePictureScreen';
 import { RegisterStateContext } from './ManualRegisterScreen/registerContext';
+import { cpfValidation } from '../helpers/validation';
 
 const DOMAINS = [
     'gmail.com',
@@ -71,9 +72,11 @@ const CreateUser = () => {
     const handleUserNotFound = (searchedValue) => {
         console.log('@@@handleUserNotFound=' + searchedValue);
 
+        const isPassport = /[a-zA-Z]/.test(searchedValue);
+
         setUser({
-            documentType: 'CPF',
-            document: searchedValue,
+            documentType: isPassport ? 'Passport' : 'CPF',
+            document: isPassport ? searchedValue.toUpperCase() : searchedValue,
             firstName: '',
             lastName: '',
             email: ''
@@ -90,7 +93,12 @@ const CreateUser = () => {
         if (firstName.length < 2) return 'O primeiro nome é obrigatório e deve ter no mínimo 2 caracteres.';
         if (lastName.length < 2) return 'O sobrenome é obrigatório e deve ter no mínimo 2 caracteres.';
         if (!email || !email.includes('@')) return 'E-mail inválido.';
-        if (document.length < 3) return 'Documento inválido.';
+
+        if (user.documentType === 'CPF') {
+            if (!cpfValidation(document)) return 'CPF inválido.';
+        } else {
+            if (document.length < 5) return 'Passaporte deve ter no mínimo 5 caracteres.';
+        }
 
         return null;
     };
@@ -160,6 +168,16 @@ const CreateUser = () => {
                     name: 'userImage.jpg',
                 });
             }
+
+            console.log("🚀 Payload sendo enviado para a API (Criar Conta):", {
+                DocumentType: user.documentType === 'CPF' ? 1 : 2,
+                Document: user.document,
+                Firstname: user.firstName,
+                Lastname: user.lastName,
+                Email: user.email,
+                EventId: selectedEventId,
+                Face: photoPath ? photoPath : 'Sem foto'
+            });
 
             const response = await createUser(data, userToken);
 
@@ -275,7 +293,8 @@ const CreateUser = () => {
                                             <Input
                                                 label={`Documento (Passaporte)`}
                                                 value={user.document}
-                                                onChangeText={text => setUser({ ...user, document: text })}
+                                                onChangeText={text => setUser({ ...user, document: text.toUpperCase() })}
+                                                autoCapitalize="characters"
                                             />
                                         )}
 
