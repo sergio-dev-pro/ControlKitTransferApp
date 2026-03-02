@@ -114,9 +114,10 @@ export function AuthProvider({ children }) {
 
     if (token) {
       const eventInJsonFormat = await AsyncStorage.getItem('event');
-      const operatorName = await AsyncStorage.getItem('userToken');
+      const operatorName = await AsyncStorage.getItem('userName');
       const event = JSON.parse(eventInJsonFormat);
       var decodedToken = jwt_decode(token);
+      console.log('operatorName=' + operatorName);
       // const events = decodedToken?.Events ? JSON.parse(decodedToken.Events) : [];
       const companies = companiesString ? JSON.parse(companiesString) : [];
       setAuthState({

@@ -1890,7 +1890,7 @@ const TicketCodeSelectionModal = ({
                 uncheckedIcon="checkbox-blank-outline"
               />
               <Text h5 style={{ fontSize: 15, paddingRight: 4, flex: 1 }}>
-                {[ticket.accessPolicy || '', ticket.sector || '', ticket.day || '', ticket.hasBraceletCode ? "ENTREGUE" : null]
+                {[ticket.ticketProviderExternalId || '', ticket.accessPolicy || '', ticket.sector || '', ticket.day || '', ticket.hasBraceletCode ? "ENTREGUE" : null]
                   .filter(Boolean)
                   .join(' - ')}
               </Text>

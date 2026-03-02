@@ -310,7 +310,7 @@ export const completeTicketRegister = async (data, userToken) => {
 
 export const updateEmail = async (data, userToken) => {
 
-  return axios({
+  return await axios({
     url: BASE_URL_V2 + '/users/email',
     method: 'PATCH',
     data: data,

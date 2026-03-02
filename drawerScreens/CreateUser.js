@@ -9,7 +9,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { useAlert } from '../context/AlertContext';
 import SearchUserByCompanyModal from '../components/SearchUserByCompanyModal';
-import { createUser } from '../api/UserApi';
+import { createUser, getBasicUserByEmail } from '../api/UserApi';
 import SelectModal from '../components/SelectModal';
 import TakePictureScreen from './ManualRegisterScreen/TakePictureScreen';
 import { RegisterStateContext } from './ManualRegisterScreen/registerContext';
@@ -84,7 +84,7 @@ const CreateUser = () => {
         setShowCreateForm(true);
     };
 
-    const validateUserData = () => {
+    const validateUserData = async (checkEmail = true) => {
         const firstName = (user.firstName || '').trim();
         const lastName = (user.lastName || '').trim();
         const email = (user.email || '').trim();
@@ -100,11 +100,32 @@ const CreateUser = () => {
             if (document.length < 5) return 'Passaporte deve ter no mínimo 5 caracteres.';
         }
 
+        const isCPF = (user.documentType || '').toLowerCase() === 'cpf';
+
+        const cleanDocument = isCPF ? document.replace(/[^\d]/g, '') : document.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        
+        if (email && cleanDocument && checkEmail) {
+            try {
+             console.log('Check if exists document by email...');
+            const userDocument = await getBasicUserByEmail(email.toLowerCase(), selectedEventId, userToken);
+            console.log('user by email returned ' + userDocument);
+
+            const existing = isCPF ? (userDocument.document || '').replace(/[^\d]/g, '') : (userDocument.document || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    
+            if (existing && existing !== cleanDocument) {
+                const docLabel = isCPF ? 'CPF' : 'passaporte';
+                return `O email enviado está vinculado ao ${docLabel}: ${userDocument.document}`;
+            }
+            } catch (error) {
+            console.log(error);
+            }
+        }
+
         return null;
     };
 
-    const handleContinue = () => {
-        const validationError = validateUserData();
+    const handleContinue = async () => {
+        const validationError = await validateUserData();
         if (validationError) {
             setAlertMessage(validationError, '#ffa500');
             return;
@@ -145,7 +166,7 @@ const CreateUser = () => {
 
     const completeUserCreation = async (photoPath) => {
         // Validação antes do envio
-        const validationError = validateUserData();
+        const validationError = await validateUserData(false);
         if (validationError) {
             setAlertMessage(validationError, '#ffa500');
             return;

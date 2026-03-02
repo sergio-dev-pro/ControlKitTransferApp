@@ -149,7 +149,7 @@ const ChangeEmail = ({ navigation }) => {
 
       if (res) {
         clearStates();
-        alert('E-mail alterado com sucesso', '#32cd32');
+        Alert.alert('Sucesso', 'E-mail atualizado com sucesso.');
       }
 
 
